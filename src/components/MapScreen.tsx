@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { MapPin, Calendar } from "lucide-react";
-import { EVENTS } from "@/data/mockData";
+import { useEvents } from "@/hooks/useEvents";
+
+// Fallback city coordinates (as % on simulated map)
+const cityPositions: Record<string, { x: number; y: number }> = {
+  Barcelona: { x: 38, y: 62 },
+  Madrid: { x: 52, y: 40 },
+  Seville: { x: 35, y: 75 },
+};
+
+const defaultPosition = { x: 50, y: 50 };
 
 export function MapScreen() {
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
+  const { data: events = [], isLoading } = useEvents();
 
-  const selectedEvent = selectedPin ? EVENTS.find((e) => e.id === selectedPin) : null;
-
-  // Fake pin positions (percentage-based on the map area)
-  const pins = [
-    { id: "1", x: 38, y: 62, city: "Barcelona" },
-    { id: "2", x: 52, y: 40, city: "Madrid" },
-    { id: "3", x: 38, y: 62, city: "Barcelona" },
-    { id: "4", x: 52, y: 40, city: "Madrid" },
-    { id: "5", x: 35, y: 75, city: "Seville" },
-  ];
+  const selectedEvent = selectedPin ? events.find((e) => e.id === selectedPin) : null;
 
   const categoryColors: Record<string, string> = {
     "Food & Dining": "hsl(15 60% 55%)",
     "Arts & Crafts": "hsl(280 38% 55%)",
     Wellness: "hsl(140 35% 45%)",
     Entrepreneurship: "hsl(200 50% 45%)",
+    Culture: "hsl(340 50% 55%)",
   };
 
   return (
@@ -33,14 +35,13 @@ export function MapScreen() {
 
       {/* Map area */}
       <div className="mx-5 rounded-2xl overflow-hidden shadow-card relative" style={{ height: 340 }}>
-        {/* Simulated map with gradient background */}
         <div
           className="w-full h-full relative"
           style={{
             background: "linear-gradient(145deg, hsl(200 30% 88%), hsl(140 20% 82%), hsl(200 25% 79%))",
           }}
         >
-          {/* Map grid lines */}
+          {/* Grid lines */}
           <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
             {Array.from({ length: 8 }).map((_, i) => (
               <line key={`h${i}`} x1="0" y1={`${(i + 1) * 12.5}%`} x2="100%" y2={`${(i + 1) * 12.5}%`} stroke="hsl(200 30% 60%)" strokeWidth="0.5" />
@@ -50,7 +51,7 @@ export function MapScreen() {
             ))}
           </svg>
 
-          {/* Simulated roads */}
+          {/* Roads */}
           <svg className="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
             <path d="M0 45% Q30% 40%, 60% 50% T100% 48%" stroke="hsl(0 0% 95%)" strokeWidth="3" fill="none" />
             <path d="M20% 0 Q25% 35%, 30% 70% T28% 100%" stroke="hsl(0 0% 95%)" strokeWidth="2" fill="none" />
@@ -59,18 +60,21 @@ export function MapScreen() {
           </svg>
 
           {/* Event pins */}
-          {pins.map((pin) => {
-            const event = EVENTS.find((e) => e.id === pin.id);
-            if (!event) return null;
-            const color = categoryColors[event.category] || "hsl(20 42% 38%)";
-            const isSelected = selectedPin === pin.id;
+          {events.map((event) => {
+            const pos = cityPositions[event.city] ?? defaultPosition;
+            // Slight offset per event id so overlapping pins spread out
+            const offset = parseInt(event.id.slice(-2), 16) % 8;
+            const x = pos.x + (offset - 4);
+            const y = pos.y + (offset % 3) - 1;
+            const color = categoryColors[event.category] ?? event.categoryColor;
+            const isSelected = selectedPin === event.id;
 
             return (
               <button
-                key={`${pin.id}-${pin.x}-${pin.y}`}
-                onClick={() => setSelectedPin(isSelected ? null : pin.id)}
+                key={event.id}
+                onClick={() => setSelectedPin(isSelected ? null : event.id)}
                 className="absolute transform -translate-x-1/2 -translate-y-full transition-all duration-200"
-                style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                style={{ left: `${x}%`, top: `${y}%` }}
               >
                 <div
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium shadow-floating transition-all duration-200 ${
@@ -85,10 +89,7 @@ export function MapScreen() {
                   <MapPin size={10} />
                   {event.city}
                 </div>
-                <div
-                  className="w-2 h-2 mx-auto rounded-full -mt-px"
-                  style={{ background: color }}
-                />
+                <div className="w-2 h-2 mx-auto rounded-full -mt-px" style={{ background: color }} />
               </button>
             );
           })}
@@ -110,7 +111,11 @@ export function MapScreen() {
         <div className="mx-5 mt-4 bg-card rounded-2xl overflow-hidden shadow-floating animate-fade-up">
           <div className="flex gap-0">
             <div className="w-20 flex-shrink-0">
-              <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover" style={{ minHeight: 80 }} />
+              {selectedEvent.image ? (
+                <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover" style={{ minHeight: 80 }} />
+              ) : (
+                <div className="w-full h-full" style={{ minHeight: 80, background: selectedEvent.categoryColor }} />
+              )}
             </div>
             <div className="flex-1 p-3">
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{selectedEvent.category}</span>
@@ -132,24 +137,28 @@ export function MapScreen() {
       {/* Nearby events list */}
       <div className="px-5 mt-5 pb-24">
         <h2 className="font-serif text-lg font-medium text-foreground mb-3">Nearby events</h2>
-        <div className="space-y-2.5">
-          {EVENTS.slice(0, 3).map((event) => (
-            <button
-              key={event.id}
-              onClick={() => setSelectedPin(event.id === selectedPin ? null : event.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left ${
-                selectedPin === event.id ? "border-primary" : "border-border"
-              } shadow-soft`}
-            >
-              <MapPin size={14} className="text-primary flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
-                <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
-              </div>
-              <span className="text-xs font-medium text-primary">{event.spotsLeft} left</span>
-            </button>
-          ))}
-        </div>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <div className="space-y-2.5">
+            {events.slice(0, 3).map((event) => (
+              <button
+                key={event.id}
+                onClick={() => setSelectedPin(event.id === selectedPin ? null : event.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left ${
+                  selectedPin === event.id ? "border-primary" : "border-border"
+                } shadow-soft`}
+              >
+                <MapPin size={14} className="text-primary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
+                  <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
+                </div>
+                <span className="text-xs font-medium text-primary">{event.spotsLeft} left</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

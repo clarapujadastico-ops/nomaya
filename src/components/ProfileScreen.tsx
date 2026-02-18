@@ -1,18 +1,31 @@
 import { ChevronRight, Globe, Bell, Heart, Star, LogOut } from "lucide-react";
-import { EVENTS, GROUPS } from "@/data/mockData";
+import { GROUPS } from "@/data/mockData";
+import { useProfile } from "@/hooks/useProfile";
+import { useBookings } from "@/hooks/useBookings";
 
 interface ProfileScreenProps {
   onLogout?: () => void;
 }
 
+function formatDate(dateStr: string): string {
+  const [, month, day] = dateStr.split('-')
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${months[parseInt(month) - 1]} ${parseInt(day)}`
+}
+
 export function ProfileScreen({ onLogout }: ProfileScreenProps) {
-  const attended = EVENTS.slice(0, 3);
+  const { data: profile } = useProfile();
+  const { data: bookings = [] } = useBookings();
   const myGroups = GROUPS.filter((g) => g.joined);
 
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : 'Recently';
+
   const settingsItems = [
-    { icon: Globe, label: "Language", value: "English" },
+    { icon: Globe, label: "Language", value: profile?.language === 'es' ? 'Español' : 'English' },
     { icon: Bell, label: "Notifications", value: "On" },
-    { icon: Heart, label: "My interests", value: "6 selected" },
+    { icon: Heart, label: "My interests", value: profile?.interests?.length ? `${profile.interests.length} selected` : "None" },
     { icon: Star, label: "Referrals", value: "Invite friends" },
   ];
 
@@ -30,55 +43,72 @@ export function ProfileScreen({ onLogout }: ProfileScreenProps) {
             🌸
           </div>
           <div className="flex-1">
-            <h2 className="font-serif text-xl font-medium text-foreground">Sofia M.</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Barcelona · Member since Feb 2026</p>
-            <p className="text-sm text-muted-foreground mt-1 leading-snug">
-              Designer. Ceramics enthusiast. Dog mum.
+            <h2 className="font-serif text-xl font-medium text-foreground">
+              {profile?.name || 'Member'}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {profile?.city ? `${profile.city} · ` : ''}Member since {memberSince}
             </p>
+            {profile?.bio && (
+              <p className="text-sm text-muted-foreground mt-1 leading-snug">{profile.bio}</p>
+            )}
           </div>
         </div>
 
         <div className="flex gap-4 mt-4 pt-4 border-t border-border">
           <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">5</p>
+            <p className="font-serif text-2xl font-medium text-foreground">{bookings.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">Events</p>
           </div>
           <div className="w-px bg-border" />
           <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">2</p>
+            <p className="font-serif text-2xl font-medium text-foreground">{myGroups.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">Circles</p>
           </div>
           <div className="w-px bg-border" />
           <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">18</p>
+            <p className="font-serif text-2xl font-medium text-foreground">0</p>
             <p className="text-xs text-muted-foreground mt-0.5">Connections</p>
           </div>
         </div>
       </div>
 
       {/* Past events */}
-      <div className="px-5 mt-5">
-        <h2 className="font-serif text-lg font-medium text-foreground mb-3">Events attended</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {attended.map((event) => (
-            <div
-              key={event.id}
-              className="flex-shrink-0 w-32 rounded-xl overflow-hidden shadow-soft"
-            >
-              <div className="h-20 relative">
-                <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-foreground/30" />
-                <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-card font-medium">
-                  {event.date}
-                </span>
-              </div>
-              <div className="bg-card px-2.5 py-2">
-                <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{event.title}</p>
-              </div>
-            </div>
-          ))}
+      {bookings.length > 0 && (
+        <div className="px-5 mt-5">
+          <h2 className="font-serif text-lg font-medium text-foreground mb-3">Events attended</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {bookings.map((booking) => {
+              const ev = booking.event;
+              if (!ev) return null;
+              return (
+                <div
+                  key={booking.id}
+                  className="flex-shrink-0 w-32 rounded-xl overflow-hidden shadow-soft"
+                >
+                  <div className="h-20 relative">
+                    {ev.image_url ? (
+                      <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div
+                        className="w-full h-full"
+                        style={{ background: ev.category?.color ?? 'hsl(252 30% 45%)' }}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-foreground/30" />
+                    <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-card font-medium">
+                      {formatDate(ev.date)}
+                    </span>
+                  </div>
+                  <div className="bg-card px-2.5 py-2">
+                    <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* My circles */}
       <div className="px-5 mt-5">

@@ -1,21 +1,10 @@
 import { Calendar, MapPin, Users } from "lucide-react";
+import type { AppEvent } from "@/types/database";
 
-export interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  city: string;
-  spotsLeft: number;
-  totalSpots: number;
-  category: string;
-  image: string;
-  price?: string;
-  featured?: boolean;
-}
+export type { AppEvent as Event };
 
 interface EventCardProps {
-  event: Event;
+  event: AppEvent;
   variant?: "featured" | "default";
   onClick?: () => void;
 }
@@ -31,7 +20,10 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
         className="relative w-72 flex-shrink-0 rounded-2xl overflow-hidden shadow-card text-left transition-transform duration-200 active:scale-[0.98]"
         style={{ height: 340 }}
       >
-        <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
+        {event.image
+          ? <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
+          : <div className="absolute inset-0 w-full h-full" style={{ background: event.categoryColor }} />
+        }
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-card backdrop-blur-sm mb-2 inline-block">
@@ -67,7 +59,10 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
       className="w-full bg-card rounded-2xl overflow-hidden shadow-soft flex gap-0 text-left transition-transform duration-200 active:scale-[0.98]"
     >
       <div className="w-28 flex-shrink-0">
-        <img src={event.image} alt={event.title} className="w-full h-full object-cover" style={{ minHeight: 112 }} />
+        {event.image
+          ? <img src={event.image} alt={event.title} className="w-full h-full object-cover" style={{ minHeight: 112 }} />
+          : <div className="w-full h-full" style={{ minHeight: 112, background: event.categoryColor }} />
+        }
       </div>
       <div className="flex-1 p-3.5 flex flex-col justify-between">
         <div>

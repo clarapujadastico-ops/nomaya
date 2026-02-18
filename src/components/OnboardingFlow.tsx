@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronRight, Check } from "lucide-react";
 import { INTERESTS } from "@/data/mockData";
+import { useUpdateProfile } from "@/hooks/useProfile";
 
 type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile";
 
@@ -45,6 +46,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const [welcomeIndex, setWelcomeIndex] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profile, setProfile] = useState({ name: "", city: "", bio: "" });
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
 
   const toggleInterest = (id: string) => {
     setSelectedInterests((prev) =>
@@ -367,18 +370,41 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         </div>
 
         <div className="mt-6 space-y-3">
+          {saveError && (
+            <p className="text-xs text-destructive px-1">{saveError}</p>
+          )}
           <button
-            onClick={onComplete}
-            className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
+            onClick={() => {
+              setSaveError(null);
+              updateProfile(
+                { name: profile.name, city: profile.city, bio: profile.bio || null, language, interests: selectedInterests },
+                {
+                  onSuccess: () => onComplete(),
+                  onError: (err) => setSaveError((err as Error).message),
+                }
+              );
+            }}
+            disabled={isSaving}
+            className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",
               color: "hsl(252 75% 97%)",
               boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
             }}
           >
-            Enter Nomaya ✦
+            {isSaving ? "Saving…" : "Enter Nomaya ✦"}
           </button>
-          <button onClick={onComplete} className="w-full py-2 text-muted-foreground text-sm">
+          <button
+            onClick={() => {
+              setSaveError(null);
+              updateProfile(
+                { name: profile.name || "Member", city: profile.city || "", bio: profile.bio || null, language, interests: selectedInterests },
+                { onSuccess: () => onComplete(), onError: () => onComplete() }
+              );
+            }}
+            disabled={isSaving}
+            className="w-full py-2 text-muted-foreground text-sm"
+          >
             Skip
           </button>
         </div>
