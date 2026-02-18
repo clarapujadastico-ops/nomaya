@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronRight, Check } from "lucide-react";
-import onboardingHero from "@/assets/onboarding-hero.jpg";
 import { INTERESTS } from "@/data/mockData";
 
 type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile";
@@ -13,19 +12,32 @@ const welcomeScreens = [
   {
     title: "Discover curated\nexperiences",
     subtitle: "Handpicked events designed for depth — not scale. Every gathering, carefully chosen.",
-    emoji: "✦",
   },
   {
     title: "Meet women through\nshared interests",
     subtitle: "Connection built on what you love, not algorithms. Show up. Be seen.",
-    emoji: "◯",
   },
   {
     title: "Belong to a circle\nover time",
     subtitle: "From one event to a small community. Real belonging comes from showing up again.",
-    emoji: "◈",
   },
 ];
+
+/* ─── Video background (reused across landing + welcome screens) ─── */
+function VideoBackground({ opacity = 1 }: { opacity?: number }) {
+  return (
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover"
+      style={{ opacity }}
+    >
+      <source src="/videos/nomaya-hero.mov" type="video/mp4" />
+    </video>
+  );
+}
 
 export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState<Step>("language");
@@ -40,100 +52,156 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     );
   };
 
+  /* ── LANGUAGE / LANDING ── */
   if (step === "language") {
     return (
-      <div className="mobile-container flex flex-col bg-background">
-        {/* Top image */}
-        <div className="relative h-64 overflow-hidden">
-          <img src={onboardingHero} alt="Nomaya" className="w-full h-full object-cover object-top" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
-        </div>
+      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
+        {/* Full-bleed video */}
+        <VideoBackground />
 
-        <div className="flex-1 flex flex-col px-6 pt-2 pb-10">
-        <div className="text-center mb-8">
-          <h1 className="font-serif text-5xl font-normal text-primary leading-none mb-1 tracking-display">
-            Nomaya
-          </h1>
-          <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1.5">
-            women · circles · belonging
-          </p>
-        </div>
+        {/* Multi-layer overlay: dark base + soft vignette */}
+        <div className="absolute inset-0 bg-foreground/50" />
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 50% 60%, transparent 30%, hsl(252 30% 8% / 0.7) 100%)"
+        }} />
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(to bottom, transparent 30%, hsl(252 30% 8% / 0.95) 100%)"
+        }} />
 
-          <p className="text-sm text-muted-foreground text-center mb-6">
-            Choose your language
-          </p>
+        {/* Content */}
+        <div className="relative z-10 flex flex-col flex-1 px-6 pt-safe">
+          {/* Top spacer + wordmark */}
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            {/* Decorative line */}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-px w-10 bg-card/40" />
+              <span className="text-[10px] tracking-[0.35em] uppercase text-card/50">Est. 2026</span>
+              <div className="h-px w-10 bg-card/40" />
+            </div>
 
-          <div className="space-y-3">
-            {[
-              { code: "en" as const, label: "English", flag: "🇬🇧" },
-              { code: "es" as const, label: "Español", flag: "🇪🇸" },
-            ].map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => setLanguage(lang.code)}
-                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 transition-all duration-200 ${
-                  language === lang.code
-                    ? "border-primary bg-secondary"
-                    : "border-border bg-card"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{lang.flag}</span>
-                  <span className="font-medium text-foreground">{lang.label}</span>
-                </div>
-                {language === lang.code && (
-                  <Check size={18} className="text-primary" />
-                )}
-              </button>
-            ))}
+            <h1
+              className="font-serif font-normal leading-none text-card mb-3"
+              style={{ fontSize: "clamp(3.5rem, 16vw, 5rem)", letterSpacing: "-0.04em" }}
+            >
+              Nomaya
+            </h1>
+            <p className="text-xs text-card/50 tracking-[0.3em] uppercase">
+              women · circles · belonging
+            </p>
           </div>
 
-          <button
-            onClick={() => setStep("welcome1")}
-            className="mt-auto w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all duration-200 active:scale-[0.98]"
+          {/* Bottom card — glassy */}
+          <div
+            className="rounded-3xl p-6 mb-8 mt-4"
+            style={{
+              background: "hsl(252 30% 8% / 0.55)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid hsl(0 0% 100% / 0.10)",
+            }}
           >
-            Continue
-          </button>
+            <p className="text-xs text-card/50 tracking-widest uppercase text-center mb-5">
+              Choose your language
+            </p>
+
+            <div className="space-y-2.5 mb-6">
+              {[
+                { code: "en" as const, label: "English", flag: "🇬🇧" },
+                { code: "es" as const, label: "Español", flag: "🇪🇸" },
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200"
+                  style={{
+                    borderColor: language === lang.code
+                      ? "hsl(252 75% 93% / 0.5)"
+                      : "hsl(0 0% 100% / 0.10)",
+                    background: language === lang.code
+                      ? "hsl(252 75% 93% / 0.15)"
+                      : "hsl(0 0% 100% / 0.05)",
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{lang.flag}</span>
+                    <span className="font-medium text-card/90 text-sm">{lang.label}</span>
+                  </div>
+                  {language === lang.code && (
+                    <Check size={15} style={{ color: "hsl(252 75% 80%)" }} />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setStep("welcome1")}
+              className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
+              style={{
+                background: "hsl(252 30% 45%)",
+                color: "hsl(252 75% 97%)",
+                boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
+              }}
+            >
+              Enter Nomaya
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  /* ── WELCOME SLIDES (video continues in background) ── */
   if (step === "welcome1" || step === "welcome2" || step === "welcome3") {
     const screen = welcomeScreens[welcomeIndex];
     const stepMap: Step[] = ["welcome1", "welcome2", "welcome3"];
     const isLast = welcomeIndex === 2;
 
     return (
-      <div className="mobile-container flex flex-col bg-background">
-        <div className="relative flex-1 overflow-hidden">
-          <img src={onboardingHero} alt="background" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
+        <VideoBackground opacity={0.5} />
+        <div className="absolute inset-0 bg-foreground/60" />
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(to bottom, hsl(252 30% 8% / 0.4) 0%, hsl(252 30% 8% / 0.85) 70%, hsl(252 30% 8% / 0.98) 100%)"
+        }} />
 
-          <div className="relative z-10 flex flex-col h-full px-6 pt-16 pb-10">
-            {/* Progress dots */}
-            <div className="flex gap-2 justify-center mb-auto">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === welcomeIndex ? "w-6 bg-primary" : "w-2 bg-border"
-                  }`}
-                />
-              ))}
+        <div className="relative z-10 flex flex-col flex-1 px-6 pt-14 pb-10">
+          {/* Progress */}
+          <div className="flex gap-1.5 mb-auto">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-0.5 rounded-full transition-all duration-500"
+                style={{
+                  width: i === welcomeIndex ? "2rem" : "0.5rem",
+                  background: i === welcomeIndex
+                    ? "hsl(252 75% 80%)"
+                    : "hsl(0 0% 100% / 0.25)",
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="flex-1 flex flex-col justify-end pb-6">
+            <div
+              className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5"
+              style={{
+                background: "hsl(252 75% 93% / 0.15)",
+                color: "hsl(252 75% 85%)",
+                border: "1px solid hsl(252 75% 80% / 0.3)",
+              }}
+            >
+              {welcomeIndex + 1} of 3
             </div>
 
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="text-6xl mb-6 text-center text-primary opacity-40 font-serif">
-                {screen.emoji}
-              </div>
-              <h2 className="font-serif text-4xl font-normal text-foreground leading-tight mb-4 whitespace-pre-line tracking-display">
-                {screen.title}
-              </h2>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                {screen.subtitle}
-              </p>
-            </div>
+            <h2
+              className="font-serif font-normal text-card leading-tight mb-4 whitespace-pre-line"
+              style={{ fontSize: "clamp(2rem, 9vw, 2.75rem)", letterSpacing: "-0.042em" }}
+            >
+              {screen.title}
+            </h2>
+            <p className="text-sm text-card/60 leading-relaxed mb-8">
+              {screen.subtitle}
+            </p>
 
             <div className="space-y-3">
               <button
@@ -145,22 +213,29 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     setStep(stepMap[welcomeIndex + 1]);
                   }
                 }}
-                className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all duration-200 active:scale-[0.98]"
+                className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  background: "hsl(252 30% 45%)",
+                  color: "hsl(252 75% 97%)",
+                  boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
+                }}
               >
                 {isLast ? "Choose your interests" : "Continue"}
-                {!isLast && <ChevronRight size={18} className="inline ml-1" />}
+                {!isLast && <ChevronRight size={16} className="inline ml-1" />}
               </button>
-              {welcomeIndex > 0 && (
-                <button
-                  onClick={() => {
+              <button
+                onClick={() => {
+                  if (welcomeIndex > 0) {
                     setWelcomeIndex((i) => i - 1);
                     setStep(stepMap[welcomeIndex - 1]);
-                  }}
-                  className="w-full py-3 text-muted-foreground text-sm"
-                >
-                  Back
-                </button>
-              )}
+                  } else {
+                    setStep("language");
+                  }
+                }}
+                className="w-full py-3 text-card/40 text-sm"
+              >
+                Back
+              </button>
             </div>
           </div>
         </div>
@@ -168,12 +243,16 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     );
   }
 
+  /* ── INTERESTS ── */
   if (step === "interests") {
     return (
       <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 1 of 2</p>
-          <h2 className="font-serif text-3xl font-medium text-foreground leading-tight">
+          <h2
+            className="font-serif font-normal text-foreground leading-tight"
+            style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
+          >
             What do you love?
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
@@ -188,12 +267,17 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               <button
                 key={interest.id}
                 onClick={() => toggleInterest(interest.id)}
-                className={`px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className="px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-2"
+                style={
                   isSelected
-                    ? "border-transparent text-card"
-                    : "border-border bg-card text-muted-foreground"
-                }`}
-                style={isSelected ? { background: "hsl(var(--nomaya-purple))" } : {}}
+                    ? {
+                        background: "hsl(var(--nomaya-purple))",
+                        borderColor: "transparent",
+                        color: "hsl(252 75% 97%)",
+                        boxShadow: "0 2px 12px hsl(252 30% 45% / 0.3)",
+                      }
+                    : {}
+                }
               >
                 <span>{interest.emoji}</span>
                 {interest.label}
@@ -206,11 +290,16 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           <button
             onClick={() => setStep("profile")}
             disabled={selectedInterests.length < 2}
-            className={`w-full py-4 rounded-2xl font-medium text-base transition-all duration-200 active:scale-[0.98] ${
+            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98]"
+            style={
               selectedInterests.length >= 2
-                ? "gradient-cta text-primary-foreground shadow-soft"
-                : "bg-muted text-muted-foreground"
-            }`}
+                ? {
+                    background: "hsl(var(--nomaya-purple))",
+                    color: "hsl(252 75% 97%)",
+                    boxShadow: "0 4px 24px hsl(252 30% 45% / 0.35)",
+                  }
+                : {}
+            }
           >
             Continue · {selectedInterests.length} selected
           </button>
@@ -222,12 +311,16 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     );
   }
 
+  /* ── PROFILE ── */
   if (step === "profile") {
     return (
       <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 2</p>
-          <h2 className="font-serif text-3xl font-medium text-foreground leading-tight">
+          <h2
+            className="font-serif font-normal text-foreground leading-tight"
+            style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
+          >
             Tell us about you
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
@@ -235,7 +328,6 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           </p>
         </div>
 
-        {/* Avatar placeholder */}
         <div className="flex justify-center mb-6">
           <button className="w-24 h-24 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center text-3xl transition-all duration-200 active:scale-95">
             📸
@@ -243,33 +335,26 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         </div>
 
         <div className="space-y-4 flex-1">
+          {[
+            { key: "name", label: "Your name", placeholder: "Sofia" },
+            { key: "city", label: "City", placeholder: "Barcelona" },
+          ].map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
+                {label}
+              </label>
+              <input
+                type="text"
+                placeholder={placeholder}
+                value={profile[key as keyof typeof profile]}
+                onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
+                className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition"
+              />
+            </div>
+          ))}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              Your name
-            </label>
-            <input
-              type="text"
-              placeholder="Sofia"
-              value={profile.name}
-              onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
-              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition"
-            />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              City
-            </label>
-            <input
-              type="text"
-              placeholder="Barcelona"
-              value={profile.city}
-              onChange={(e) => setProfile((p) => ({ ...p, city: e.target.value }))}
-              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition"
-            />
-          </div>
-          <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              Short bio <span className="text-muted-foreground normal-case">(optional)</span>
+              Short bio <span className="normal-case">(optional)</span>
             </label>
             <textarea
               placeholder="Designer. Ceramics enthusiast. Dog mum."
@@ -284,7 +369,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         <div className="mt-6 space-y-3">
           <button
             onClick={onComplete}
-            className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all duration-200 active:scale-[0.98]"
+            className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
+            style={{
+              background: "hsl(var(--nomaya-purple))",
+              color: "hsl(252 75% 97%)",
+              boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
+            }}
           >
             Enter Nomaya ✦
           </button>
