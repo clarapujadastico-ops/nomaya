@@ -1,11 +1,35 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { BottomNav } from "@/components/BottomNav";
+import { EventsScreen } from "@/components/EventsScreen";
+import { MapScreen } from "@/components/MapScreen";
+import { GroupsScreen } from "@/components/GroupsScreen";
+import { ProfileScreen } from "@/components/ProfileScreen";
+
+type Tab = "events" | "map" | "groups" | "profile";
 
 const Index = () => {
+  const [onboarded, setOnboarded] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("events");
+
+  if (!onboarded) {
+    return (
+      <div className="min-h-screen bg-foreground/10 flex items-center justify-center">
+        <OnboardingFlow onComplete={() => setOnboarded(true)} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-foreground/10 flex items-center justify-center">
+      <div className="mobile-container relative overflow-hidden">
+        {activeTab === "events" && <EventsScreen />}
+        {activeTab === "map" && <MapScreen />}
+        {activeTab === "groups" && <GroupsScreen />}
+        {activeTab === "profile" && (
+          <ProfileScreen onLogout={() => setOnboarded(false)} />
+        )}
+        <BottomNav active={activeTab} onChange={setActiveTab} />
       </div>
     </div>
   );
