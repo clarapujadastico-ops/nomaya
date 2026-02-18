@@ -1,117 +1,122 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Nomaya Design System — warm, editorial, premium */
+/*
+  Nomaya Brand Guidelines
+  ─────────────────────────────────────────
+  Blue:    #428eb5 → hsl(204 44% 48%)
+  Purple:  #5f5095 → hsl(252 30% 45%)
+  Lavender:#e4defa → hsl(252 75% 93%)
+  Gold:    #eeb64e → hsl(38 82% 62%)
+  Cream:   #f1e2c2 → hsl(38 65% 85%)
+  Rose:    #f796a6 → hsl(347 86% 77%)
+  
+  Typography: Times New Roman, -42 tracking (≈ -0.042em)
+*/
+
 @layer base {
   :root {
-    /* Warm cream base */
-    --background: 38 35% 97%;
-    --foreground: 25 20% 18%;
+    /* Backgrounds */
+    --background: 38 55% 95%;        /* soft cream white */
+    --foreground: 252 35% 18%;       /* deep purple-navy */
 
     --card: 0 0% 100%;
-    --card-foreground: 25 20% 18%;
+    --card-foreground: 252 35% 18%;
 
-    --popover: 38 30% 98%;
-    --popover-foreground: 25 20% 18%;
+    --popover: 38 55% 97%;
+    --popover-foreground: 252 35% 18%;
 
-    /* Warm terracotta primary */
-    --primary: 20 42% 38%;
-    --primary-foreground: 38 60% 98%;
+    /* Primary — deep purple #5f5095 */
+    --primary: 252 30% 45%;
+    --primary-foreground: 252 75% 97%;
 
-    /* Soft blush secondary */
-    --secondary: 20 30% 92%;
-    --secondary-foreground: 20 30% 28%;
+    /* Secondary — lavender #e4defa */
+    --secondary: 252 75% 93%;
+    --secondary-foreground: 252 35% 32%;
 
-    --muted: 30 20% 93%;
-    --muted-foreground: 25 12% 48%;
+    /* Muted — warm cream #f1e2c2 */
+    --muted: 38 65% 88%;
+    --muted-foreground: 252 20% 48%;
 
-    /* Rose accent */
-    --accent: 350 28% 82%;
-    --accent-foreground: 25 30% 22%;
+    /* Accent — rose pink #f796a6 */
+    --accent: 347 86% 77%;
+    --accent-foreground: 252 35% 18%;
 
-    --destructive: 0 72% 50%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 18% 88%;
-    --input: 30 18% 88%;
-    --ring: 20 42% 38%;
+    --border: 252 30% 88%;
+    --input: 252 30% 88%;
+    --ring: 252 30% 45%;
 
     --radius: 1rem;
 
     /* Sidebar */
-    --sidebar-background: 38 35% 97%;
-    --sidebar-foreground: 25 20% 18%;
-    --sidebar-primary: 20 42% 38%;
-    --sidebar-primary-foreground: 38 60% 98%;
-    --sidebar-accent: 20 30% 92%;
-    --sidebar-accent-foreground: 25 20% 18%;
-    --sidebar-border: 30 18% 88%;
-    --sidebar-ring: 20 42% 38%;
+    --sidebar-background: 38 55% 95%;
+    --sidebar-foreground: 252 35% 18%;
+    --sidebar-primary: 252 30% 45%;
+    --sidebar-primary-foreground: 252 75% 97%;
+    --sidebar-accent: 252 75% 93%;
+    --sidebar-accent-foreground: 252 35% 18%;
+    --sidebar-border: 252 30% 88%;
+    --sidebar-ring: 252 30% 45%;
 
-    /* Extended palette */
-    --sand: 38 35% 97%;
-    --sand-deep: 35 28% 90%;
-    --terracotta: 20 42% 38%;
-    --terracotta-light: 20 38% 52%;
-    --blush: 350 28% 82%;
-    --blush-deep: 350 25% 70%;
-    --warm-gray: 25 12% 58%;
+    /* Extended brand tokens */
+    --nomaya-blue: 204 44% 48%;        /* #428eb5 */
+    --nomaya-purple: 252 30% 45%;      /* #5f5095 */
+    --nomaya-lavender: 252 75% 93%;    /* #e4defa */
+    --nomaya-gold: 38 82% 62%;         /* #eeb64e */
+    --nomaya-cream: 38 65% 85%;        /* #f1e2c2 */
+    --nomaya-rose: 347 86% 77%;        /* #f796a6 */
 
     /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(38 40% 94%), hsl(30 35% 97%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(38 30% 98%));
-    --gradient-cta: linear-gradient(135deg, hsl(20 42% 38%), hsl(20 38% 46%));
-    --gradient-warm: linear-gradient(180deg, hsl(25 35% 95%), hsl(38 35% 97%));
+    --gradient-hero: linear-gradient(180deg, hsl(38 55% 95%), hsl(252 40% 96%));
+    --gradient-cta: linear-gradient(135deg, hsl(252 30% 45%), hsl(204 44% 48%));
+    --gradient-warm: linear-gradient(145deg, hsl(38 65% 88%), hsl(347 86% 92%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(252 40% 98%));
 
     /* Shadows */
-    --shadow-soft: 0 2px 16px hsl(20 30% 30% / 0.07);
-    --shadow-card: 0 4px 24px hsl(20 30% 30% / 0.09);
-    --shadow-floating: 0 8px 40px hsl(20 30% 30% / 0.13);
+    --shadow-soft: 0 2px 16px hsl(252 30% 45% / 0.08);
+    --shadow-card: 0 4px 24px hsl(252 30% 45% / 0.10);
+    --shadow-floating: 0 8px 40px hsl(252 30% 45% / 0.14);
 
     /* Typography */
-    --font-display: "Playfair Display", ui-serif, Georgia, serif;
+    --font-display: "Times New Roman", ui-serif, Georgia, serif;
     --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --tracking-display: -0.042em; /* -42 Figma tracking */
 
     --transition-smooth: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 
     /* Charts */
-    --chart-1: 20 42% 38%;
-    --chart-2: 350 28% 72%;
-    --chart-3: 38 40% 75%;
-    --chart-4: 25 30% 55%;
-    --chart-5: 10 35% 48%;
+    --chart-1: 252 30% 45%;
+    --chart-2: 204 44% 48%;
+    --chart-3: 38 82% 62%;
+    --chart-4: 347 86% 77%;
+    --chart-5: 252 75% 75%;
   }
 
   .dark {
-    --background: 25 20% 10%;
-    --foreground: 38 30% 92%;
-
-    --card: 25 18% 13%;
-    --card-foreground: 38 30% 92%;
-
-    --popover: 25 18% 12%;
-    --popover-foreground: 38 30% 92%;
-
-    --primary: 20 42% 58%;
-    --primary-foreground: 25 20% 10%;
-
-    --secondary: 25 20% 20%;
-    --secondary-foreground: 38 30% 88%;
-
-    --muted: 25 15% 18%;
-    --muted-foreground: 30 15% 55%;
-
-    --accent: 350 20% 35%;
-    --accent-foreground: 38 30% 92%;
-
+    --background: 252 30% 10%;
+    --foreground: 38 55% 92%;
+    --card: 252 28% 13%;
+    --card-foreground: 38 55% 92%;
+    --popover: 252 28% 12%;
+    --popover-foreground: 38 55% 92%;
+    --primary: 252 50% 65%;
+    --primary-foreground: 252 30% 10%;
+    --secondary: 252 25% 22%;
+    --secondary-foreground: 252 75% 90%;
+    --muted: 252 20% 20%;
+    --muted-foreground: 252 25% 60%;
+    --accent: 347 70% 65%;
+    --accent-foreground: 252 30% 10%;
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 25 15% 22%;
-    --input: 25 15% 22%;
-    --ring: 20 42% 58%;
+    --border: 252 20% 22%;
+    --input: 252 20% 22%;
+    --ring: 252 50% 65%;
   }
 }
 
@@ -126,34 +131,32 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .font-display {
+  /* Nomaya display headings — Times New, tight tracking */
+  .font-display, h1, h2, h3 {
     font-family: var(--font-display);
+    letter-spacing: var(--tracking-display);
   }
 }
 
-/* Mobile container */
 @layer utilities {
   .mobile-container {
     @apply mx-auto w-full max-w-sm min-h-screen relative overflow-hidden;
   }
 
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-floating { box-shadow: var(--shadow-floating); }
 
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
+  .gradient-hero { background: var(--gradient-hero); }
+  .gradient-cta { background: var(--gradient-cta); }
+  .gradient-warm { background: var(--gradient-warm); }
 
-  .shadow-floating {
-    box-shadow: var(--shadow-floating);
-  }
-
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-
-  .gradient-cta {
-    background: var(--gradient-cta);
-  }
+  /* Brand color utilities */
+  .bg-nomaya-blue { background-color: hsl(var(--nomaya-blue)); }
+  .bg-nomaya-gold { background-color: hsl(var(--nomaya-gold)); }
+  .bg-nomaya-cream { background-color: hsl(var(--nomaya-cream)); }
+  .bg-nomaya-rose { background-color: hsl(var(--nomaya-rose)); }
+  .text-nomaya-blue { color: hsl(var(--nomaya-blue)); }
+  .text-nomaya-gold { color: hsl(var(--nomaya-gold)); }
+  .text-nomaya-rose { color: hsl(var(--nomaya-rose)); }
 }

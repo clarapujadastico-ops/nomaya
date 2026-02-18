@@ -55,10 +55,24 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Nomaya brand palette
+        nomaya: {
+          blue: "hsl(var(--nomaya-blue))",
+          purple: "hsl(var(--nomaya-purple))",
+          lavender: "hsl(var(--nomaya-lavender))",
+          gold: "hsl(var(--nomaya-gold))",
+          cream: "hsl(var(--nomaya-cream))",
+          rose: "hsl(var(--nomaya-rose))",
+        },
       },
       fontFamily: {
+        // Body
         sans: ["DM Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        serif: ["Playfair Display", "ui-serif", "Georgia", "serif"],
+        // Display — Times New with tight tracking
+        serif: ["Times New Roman", "ui-serif", "Georgia", "serif"],
+      },
+      letterSpacing: {
+        display: "-0.042em", // -42 Figma tracking
       },
       borderRadius: {
         lg: "var(--radius)",
