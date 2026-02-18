@@ -89,7 +89,7 @@ export function GroupsScreen() {
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Your community</p>
-        <h1 className="font-serif text-3xl font-medium text-foreground">Circles</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Circles</h1>
       </div>
 
       {/* Intro note */}

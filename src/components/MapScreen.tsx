@@ -28,7 +28,7 @@ export function MapScreen() {
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Discover nearby</p>
-        <h1 className="font-serif text-3xl font-medium text-foreground">Map</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Map</h1>
       </div>
 
       {/* Map area */}

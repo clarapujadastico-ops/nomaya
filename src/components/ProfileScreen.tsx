@@ -20,7 +20,7 @@ export function ProfileScreen({ onLogout }: ProfileScreenProps) {
     <div className="mobile-container flex flex-col bg-background pb-24">
       {/* Header */}
       <div className="px-5 pt-14 pb-2">
-        <h1 className="font-serif text-3xl font-medium text-foreground">Profile</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Profile</h1>
       </div>
 
       {/* Profile card */}

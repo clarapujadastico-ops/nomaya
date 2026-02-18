@@ -28,10 +28,10 @@ export function EventsScreen() {
             ←
           </button>
           <div className="absolute bottom-4 left-4 right-4">
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-card/20 text-card backdrop-blur-sm border border-card/20 mb-2 inline-block">
-              {event.category}
-            </span>
-            <h2 className="font-serif text-2xl font-medium text-card">{event.title}</h2>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full mb-2 inline-block" style={{ background: "hsl(347 86% 77%)", color: "hsl(0 0% 100%)" }}>
+            {event.category}
+          </span>
+          <h2 className="font-serif text-2xl font-medium text-card">{event.title}</h2>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export function EventsScreen() {
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Barcelona · Mar 2026</p>
-        <h1 className="font-serif text-3xl font-medium text-foreground">Experiences</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Experiences</h1>
       </div>
 
       {/* Search */}

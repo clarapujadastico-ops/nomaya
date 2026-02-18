@@ -34,7 +34,7 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
         <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
-          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-card/20 text-card backdrop-blur-sm border border-card/20 mb-2 inline-block">
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-card backdrop-blur-sm mb-2 inline-block">
             {event.category}
           </span>
           <h3 className="font-serif text-xl text-card font-medium leading-tight mb-1">{event.title}</h3>

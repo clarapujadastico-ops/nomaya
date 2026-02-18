@@ -50,14 +50,14 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         </div>
 
         <div className="flex-1 flex flex-col px-6 pt-2 pb-10">
-          <div className="text-center mb-8">
-            <h1 className="font-serif text-4xl font-medium text-foreground leading-tight mb-1">
-              Nomaya
-            </h1>
-            <p className="text-sm text-muted-foreground tracking-widest uppercase">
-              women · circles · belonging
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="font-serif text-5xl font-normal text-primary leading-none mb-1 tracking-display">
+            Nomaya
+          </h1>
+          <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1.5">
+            women · circles · belonging
+          </p>
+        </div>
 
           <p className="text-sm text-muted-foreground text-center mb-6">
             Choose your language
@@ -127,7 +127,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               <div className="text-6xl mb-6 text-center text-primary opacity-40 font-serif">
                 {screen.emoji}
               </div>
-              <h2 className="font-serif text-3xl font-medium text-foreground leading-tight mb-4 whitespace-pre-line">
+              <h2 className="font-serif text-4xl font-normal text-foreground leading-tight mb-4 whitespace-pre-line tracking-display">
                 {screen.title}
               </h2>
               <p className="text-base text-muted-foreground leading-relaxed">
@@ -190,9 +190,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                 onClick={() => toggleInterest(interest.id)}
                 className={`px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                   isSelected
-                    ? "border-primary bg-secondary text-foreground"
+                    ? "border-transparent text-card"
                     : "border-border bg-card text-muted-foreground"
                 }`}
+                style={isSelected ? { background: "hsl(var(--nomaya-purple))" } : {}}
               >
                 <span>{interest.emoji}</span>
                 {interest.label}
