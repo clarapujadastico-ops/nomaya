@@ -30,24 +30,30 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
             {event.category}
           </span>
           <h3 className="font-serif text-xl text-card font-medium leading-tight mb-1">{event.title}</h3>
-          <div className="flex items-center gap-3 text-card/80 text-xs">
-            <span className="flex items-center gap-1">
-              <Calendar size={11} />
-              {event.date}
-            </span>
-            <span className="flex items-center gap-1">
-              <MapPin size={11} />
-              {event.city}
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className={`text-xs font-medium ${isAlmostFull ? "text-accent" : "text-card/70"}`}>
-              {event.spotsLeft} spots left
-            </span>
-            {event.price && (
-              <span className="text-xs font-medium text-card/90">{event.price}</span>
-            )}
-          </div>
+          {event.isTbc ? (
+            <span className="text-xs font-medium text-card/70 italic">Coming soon</span>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 text-card/80 text-xs">
+                <span className="flex items-center gap-1">
+                  <Calendar size={11} />
+                  {event.date}
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin size={11} />
+                  {event.city}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className={`text-xs font-medium ${isAlmostFull ? "text-accent" : "text-card/70"}`}>
+                  {event.spotsLeft} spots left
+                </span>
+                {event.price && (
+                  <span className="text-xs font-medium text-card/90">{event.price}</span>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </button>
     );
@@ -69,24 +75,28 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{event.category}</span>
           <h3 className="font-serif text-base font-medium text-foreground leading-snug mt-0.5">{event.title}</h3>
         </div>
-        <div className="space-y-1 mt-2">
-          <div className="flex items-center gap-3 text-muted-foreground text-xs">
-            <span className="flex items-center gap-1">
-              <Calendar size={10} />
-              {event.date} · {event.time}
-            </span>
+        {event.isTbc ? (
+          <p className="text-xs text-muted-foreground italic mt-2">Coming soon</p>
+        ) : (
+          <div className="space-y-1 mt-2">
+            <div className="flex items-center gap-3 text-muted-foreground text-xs">
+              <span className="flex items-center gap-1">
+                <Calendar size={10} />
+                {event.date} · {event.time}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                <MapPin size={10} />
+                {event.city}
+              </span>
+              <span className={`text-xs font-medium ${isAlmostFull ? "text-primary" : "text-muted-foreground"}`}>
+                <Users size={10} className="inline mr-0.5" />
+                {event.spotsLeft} left
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1 text-muted-foreground text-xs">
-              <MapPin size={10} />
-              {event.city}
-            </span>
-            <span className={`text-xs font-medium ${isAlmostFull ? "text-primary" : "text-muted-foreground"}`}>
-              <Users size={10} className="inline mr-0.5" />
-              {event.spotsLeft} left
-            </span>
-          </div>
-        </div>
+        )}
       </div>
     </button>
   );

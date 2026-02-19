@@ -12,6 +12,12 @@ export interface Database {
           avatar_url: string | null
           language: string
           interests: string[]
+          birthday: string | null
+          horoscope: string | null
+          instagram_url: string | null
+          linkedin_url: string | null
+          tiktok_url: string | null
+          verification_status: 'unverified' | 'pending' | 'verified'
           created_at: string
         }
         Insert: {
@@ -22,6 +28,12 @@ export interface Database {
           avatar_url?: string | null
           language?: string
           interests?: string[]
+          birthday?: string | null
+          horoscope?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          tiktok_url?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified'
           created_at?: string
         }
         Update: {
@@ -32,6 +44,12 @@ export interface Database {
           avatar_url?: string | null
           language?: string
           interests?: string[]
+          birthday?: string | null
+          horoscope?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          tiktok_url?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified'
           created_at?: string
         }
       }
@@ -69,6 +87,7 @@ export interface Database {
           category_id: string | null
           image_url: string | null
           is_featured: boolean
+          is_tbc: boolean
           latitude: number | null
           longitude: number | null
           created_at: string
@@ -86,6 +105,7 @@ export interface Database {
           category_id?: string | null
           image_url?: string | null
           is_featured?: boolean
+          is_tbc?: boolean
           latitude?: number | null
           longitude?: number | null
           created_at?: string
@@ -103,6 +123,7 @@ export interface Database {
           category_id?: string | null
           image_url?: string | null
           is_featured?: boolean
+          is_tbc?: boolean
           latitude?: number | null
           longitude?: number | null
           created_at?: string
@@ -166,6 +187,29 @@ export interface Database {
           created_at?: string
         }
       }
+      device_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          token: string
+          platform: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token: string
+          platform?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token?: string
+          platform?: string
+          created_at?: string
+        }
+      }
       circle_memberships: {
         Row: {
           id: string
@@ -187,6 +231,29 @@ export interface Database {
           user_id?: string
           role?: 'admin' | 'member'
           joined_at?: string
+        }
+      }
+      circle_messages: {
+        Row: {
+          id: string
+          circle_id: string
+          user_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          circle_id: string
+          user_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          circle_id?: string
+          user_id?: string
+          content?: string
+          created_at?: string
         }
       }
     }
@@ -222,6 +289,7 @@ export interface Database {
           category_id: string | null
           image_url: string | null
           is_featured: boolean
+          is_tbc: boolean
           latitude: number | null
           longitude: number | null
           created_at: string
@@ -304,6 +372,7 @@ export interface AppEvent {
   image: string       // URL or empty string
   price: string       // "€28" or "Free"
   featured: boolean
+  isTbc: boolean
   latitude: number | null
   longitude: number | null
 }
@@ -353,6 +422,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     image: row.image_url ?? '',
     price: formatPrice(row.price_cents, row.currency),
     featured: row.is_featured,
+    isTbc: row.is_tbc ?? false,
     latitude: row.latitude,
     longitude: row.longitude,
   }

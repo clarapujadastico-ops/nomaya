@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ChevronRight, Check } from "lucide-react";
+import { ChevronRight, Check, Camera, Shield, SkipForward } from "lucide-react";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { INTERESTS } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 
-type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile";
+type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile" | "verify_intro" | "verify_id" | "verify_selfie";
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -47,6 +48,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profile, setProfile] = useState({ name: "", city: "", bio: "" });
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [idPhotoPreview, setIdPhotoPreview] = useState<string | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
 
   const toggleInterest = (id: string) => {
@@ -249,8 +252,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   /* ── INTERESTS ── */
   if (step === "interests") {
     return (
-      <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
-        <div className="mb-8">
+      <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 1 of 2</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
@@ -259,37 +262,47 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             What do you love?
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
-            Select all that speak to you. We'll use these to surface events you'll actually enjoy.
+            Select all that speak to you.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5 mb-8">
+        <div className="grid grid-cols-2 gap-3 px-6 pb-4 overflow-y-auto">
           {INTERESTS.map((interest) => {
             const isSelected = selectedInterests.includes(interest.id);
             return (
               <button
                 key={interest.id}
                 onClick={() => toggleInterest(interest.id)}
-                className="px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-2"
-                style={
-                  isSelected
-                    ? {
-                        background: "hsl(var(--nomaya-purple))",
-                        borderColor: "transparent",
-                        color: "hsl(252 75% 97%)",
-                        boxShadow: "0 2px 12px hsl(252 30% 45% / 0.3)",
-                      }
-                    : {}
-                }
+                className="relative rounded-2xl overflow-hidden text-left transition-all duration-200 active:scale-[0.97]"
+                style={{
+                  height: 160,
+                  background: interest.color,
+                  outline: isSelected ? "3px solid hsl(252 75% 90%)" : "none",
+                  outlineOffset: "2px",
+                  transform: isSelected ? "scale(1.03)" : "scale(1)",
+                }}
               >
-                <span>{interest.emoji}</span>
-                {interest.label}
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+                {/* Checkmark */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
+                    <Check size={14} style={{ color: interest.color }} />
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <span style={{ fontSize: "2.25rem", lineHeight: 1 }}>{interest.emoji}</span>
+                  <p className="text-sm font-medium text-white mt-1 leading-tight">{interest.label}</p>
+                </div>
               </button>
             );
           })}
         </div>
 
-        <div className="mt-auto space-y-3">
+        <div className="px-6 space-y-3 mt-auto">
           <button
             onClick={() => setStep("profile")}
             disabled={selectedInterests.length < 2}
@@ -301,10 +314,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     color: "hsl(252 75% 97%)",
                     boxShadow: "0 4px 24px hsl(252 30% 45% / 0.35)",
                   }
-                : {}
+                : { background: "hsl(252 25% 38%)", color: "hsl(252 55% 70%)" }
             }
           >
-            Continue · {selectedInterests.length} selected
+            {selectedInterests.length >= 2 ? `Continue · ${selectedInterests.length} selected` : "Select at least 2"}
           </button>
           <button onClick={() => setStep("profile")} className="w-full py-2 text-muted-foreground text-sm">
             Skip for now
@@ -319,7 +332,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     return (
       <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 2</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 3</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
@@ -340,7 +353,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         <div className="space-y-4 flex-1">
           {[
             { key: "name", label: "Your name", placeholder: "Sofia" },
-            { key: "city", label: "City", placeholder: "Barcelona" },
+            { key: "city", label: "City", placeholder: "Madrid" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
               <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
@@ -379,7 +392,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               updateProfile(
                 { name: profile.name, city: profile.city, bio: profile.bio || null, language, interests: selectedInterests },
                 {
-                  onSuccess: () => onComplete(),
+                  onSuccess: () => setStep("verify_intro"),
                   onError: (err) => setSaveError((err as Error).message),
                 }
               );
@@ -392,20 +405,270 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
             }}
           >
-            {isSaving ? "Saving…" : "Enter Nomaya ✦"}
+            {isSaving ? "Saving…" : "Continue"}
           </button>
           <button
             onClick={() => {
               setSaveError(null);
               updateProfile(
                 { name: profile.name || "Member", city: profile.city || "", bio: profile.bio || null, language, interests: selectedInterests },
-                { onSuccess: () => onComplete(), onError: () => onComplete() }
+                { onSuccess: () => setStep("verify_intro"), onError: () => setStep("verify_intro") }
               );
             }}
             disabled={isSaving}
             className="w-full py-2 text-muted-foreground text-sm"
           >
             Skip
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── VERIFY INTRO ── */
+  if (step === "verify_intro") {
+    return (
+      <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
+        <div className="mb-8">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 3 of 3</p>
+          <h2
+            className="font-serif font-normal text-foreground leading-tight"
+            style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
+          >
+            Verify you're a woman
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Nomaya is a women-only space. We verify members to keep the community safe.
+          </p>
+        </div>
+
+        <div className="flex-1 space-y-4">
+          {/* What we'll ask */}
+          <div className="bg-card rounded-2xl p-4 shadow-soft">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <Shield size={18} className="text-foreground" />
+              </div>
+              <div>
+                <h3 className="font-serif text-base font-medium text-foreground">We'll ask for</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Two quick photos — takes under a minute</p>
+              </div>
+            </div>
+            <div className="space-y-2.5 mt-3">
+              {[
+                { icon: "🪪", label: "A photo of your ID", note: "Passport, DNI, or driver's licence" },
+                { icon: "🤳", label: "A selfie", note: "So we can match your face to your ID" },
+              ].map(({ icon, label, note }) => (
+                <div key={label} className="flex items-center gap-3 py-2 border-t border-border">
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Privacy note */}
+          <div className="bg-card rounded-2xl p-4 shadow-soft">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              🔒 Your photos are used only for verification and are deleted after review. We never store your ID long-term.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <button
+            onClick={() => setStep("verify_id")}
+            className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+            style={{
+              background: "hsl(var(--nomaya-purple))",
+              color: "hsl(252 75% 97%)",
+              boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
+            }}
+          >
+            <Camera size={16} />
+            Start verification
+          </button>
+          <button
+            onClick={() => {
+              updateProfile({ verification_status: "unverified" }, { onSuccess: () => onComplete(), onError: () => onComplete() });
+            }}
+            className="w-full py-3 text-muted-foreground text-sm flex items-center justify-center gap-1"
+          >
+            <SkipForward size={14} />
+            Skip for now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── VERIFY ID SCAN ── */
+  if (step === "verify_id") {
+    async function captureId() {
+      try {
+        const photo = await CapCamera.getPhoto({
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          quality: 80,
+        });
+        setIdPhotoPreview(photo.dataUrl ?? null);
+      } catch {
+        // user cancelled
+      }
+    }
+
+    return (
+      <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-4">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">ID verification · 1/2</p>
+          <h2
+            className="font-serif font-normal text-foreground leading-tight"
+            style={{ fontSize: "1.75rem", letterSpacing: "-0.042em" }}
+          >
+            Scan your ID
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Passport, DNI, or driver's licence.
+          </p>
+        </div>
+
+        {/* Camera frame */}
+        <div className="mx-6 rounded-2xl overflow-hidden relative bg-muted flex-1" style={{ minHeight: 260 }}>
+          {idPhotoPreview ? (
+            <img src={idPhotoPreview} alt="ID preview" className="w-full h-full object-cover" style={{ minHeight: 260 }} />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center" style={{ minHeight: 260 }}>
+              {/* Corner brackets */}
+              {[
+                "top-3 left-3 border-t-2 border-l-2 rounded-tl-lg",
+                "top-3 right-3 border-t-2 border-r-2 rounded-tr-lg",
+                "bottom-3 left-3 border-b-2 border-l-2 rounded-bl-lg",
+                "bottom-3 right-3 border-b-2 border-r-2 rounded-br-lg",
+              ].map((cls, i) => (
+                <div key={i} className={`absolute ${cls} w-8 h-8 border-white/70`} />
+              ))}
+              <div className="w-3/4 h-0.5 bg-white/20 rounded-full mb-2" />
+              <p className="text-xs text-muted-foreground">Tap to scan ID</p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 mt-5 space-y-3">
+          {idPhotoPreview ? (
+            <>
+              <button
+                onClick={() => setStep("verify_selfie")}
+                className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98]"
+                style={{ background: "hsl(var(--nomaya-purple))", color: "hsl(252 75% 97%)" }}
+              >
+                Looks good → Continue
+              </button>
+              <button
+                onClick={() => setIdPhotoPreview(null)}
+                className="w-full py-2 text-muted-foreground text-sm"
+              >
+                Retake photo
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={captureId}
+              className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+              style={{ background: "hsl(var(--nomaya-purple))", color: "hsl(252 75% 97%)" }}
+            >
+              <Camera size={16} />
+              Take photo
+            </button>
+          )}
+          <button onClick={() => setStep("verify_intro")} className="w-full py-2 text-muted-foreground text-sm">
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── VERIFY SELFIE ── */
+  if (step === "verify_selfie") {
+    async function captureSelfie() {
+      try {
+        const photo = await CapCamera.getPhoto({
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          quality: 80,
+        });
+        setSelfiePreview(photo.dataUrl ?? null);
+      } catch {
+        // user cancelled
+      }
+    }
+
+    function finishVerification() {
+      updateProfile(
+        { verification_status: "pending" },
+        { onSuccess: () => onComplete(), onError: () => onComplete() }
+      );
+    }
+
+    return (
+      <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-4">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">ID verification · 2/2</p>
+          <h2
+            className="font-serif font-normal text-foreground leading-tight"
+            style={{ fontSize: "1.75rem", letterSpacing: "-0.042em" }}
+          >
+            Take a selfie
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Look at the camera and take a clear photo of your face.
+          </p>
+        </div>
+
+        {/* Camera frame — circular for selfie */}
+        <div className="mx-auto mt-4 rounded-full overflow-hidden relative bg-muted" style={{ width: 220, height: 220 }}>
+          {selfiePreview ? (
+            <img src={selfiePreview} alt="Selfie preview" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <span className="text-4xl">🤳</span>
+              <p className="text-xs text-muted-foreground mt-2">Tap to take selfie</p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 mt-8 space-y-3">
+          {selfiePreview ? (
+            <>
+              <button
+                onClick={finishVerification}
+                className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98]"
+                style={{ background: "hsl(var(--nomaya-purple))", color: "hsl(252 75% 97%)" }}
+              >
+                Submit for review ✦
+              </button>
+              <button
+                onClick={() => setSelfiePreview(null)}
+                className="w-full py-2 text-muted-foreground text-sm"
+              >
+                Retake photo
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={captureSelfie}
+              className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+              style={{ background: "hsl(var(--nomaya-purple))", color: "hsl(252 75% 97%)" }}
+            >
+              <Camera size={16} />
+              Take selfie
+            </button>
+          )}
+          <button onClick={() => setStep("verify_id")} className="w-full py-2 text-muted-foreground text-sm">
+            ← Back
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { EventCard } from "./EventCard";
+import { Logo } from "./Logo";
 import { FILTERS } from "@/data/mockData";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings, useBookEvent } from "@/hooks/useBookings";
@@ -58,19 +59,34 @@ export function EventsScreen() {
 
         {/* Details */}
         <div className="px-5 py-5 space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Date", value: `${event.date} · ${event.time}` },
-              { label: "Location", value: event.city },
-              { label: "Spots left", value: `${event.spotsLeft} of ${event.totalSpots}` },
-              { label: "Price", value: event.price },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
-                <p className="text-sm font-medium text-foreground mt-0.5">{value}</p>
+          {event.isTbc ? (
+            <div className="bg-card rounded-2xl p-4 shadow-soft">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Location</p>
+              <p className="text-sm font-medium text-foreground">{event.city}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Register to see address</p>
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-sm text-muted-foreground italic">Details coming soon</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Date", value: `${event.date} · ${event.time}` },
+                { label: "Spots left", value: `${event.spotsLeft} of ${event.totalSpots}` },
+                { label: "Price", value: event.price },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+                  <p className="text-sm font-medium text-foreground mt-0.5">{value}</p>
+                </div>
+              ))}
+              <div className="bg-card rounded-xl p-3.5 shadow-soft">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Location</p>
+                <p className="text-sm font-medium text-foreground mt-0.5">{event.city}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Register to see address</p>
+              </div>
+            </div>
+          )}
 
           <div className="bg-card rounded-2xl p-4 shadow-soft">
             <h3 className="font-serif text-lg font-medium text-foreground mb-2">About this event</h3>
@@ -97,19 +113,29 @@ export function EventsScreen() {
             </div>
           </div>
 
-          <button
-            onClick={() => !isBooked && bookEvent(selectedEvent)}
-            disabled={isBooked || isBooking || event.spotsLeft === 0}
-            className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
-          >
-            {isBooked
-              ? "✓ Spot reserved"
-              : isBooking
-              ? "Reserving…"
-              : event.spotsLeft === 0
-              ? "Fully booked"
-              : `Reserve my spot · ${event.price}`}
-          </button>
+          {event.isTbc ? (
+            <button
+              onClick={() => !isBooked && bookEvent(selectedEvent)}
+              disabled={isBooked || isBooking}
+              className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
+            >
+              {isBooked ? "✓ Interest registered" : isBooking ? "Registering…" : "Register interest"}
+            </button>
+          ) : (
+            <button
+              onClick={() => !isBooked && bookEvent(selectedEvent)}
+              disabled={isBooked || isBooking || event.spotsLeft === 0}
+              className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
+            >
+              {isBooked
+                ? "✓ Spot reserved"
+                : isBooking
+                ? "Reserving…"
+                : event.spotsLeft === 0
+                ? "Fully booked"
+                : `Reserve my spot · ${event.price}`}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -119,7 +145,8 @@ export function EventsScreen() {
     <div className="mobile-container flex flex-col bg-background pb-24">
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Barcelona · Mar 2026</p>
+        <Logo />
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1 mt-3">Madrid · Mar 2026</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Experiences</h1>
       </div>
 

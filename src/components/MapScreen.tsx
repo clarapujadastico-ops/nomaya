@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { MapPin, Calendar } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
+import { Logo } from "./Logo";
 
-// Fallback city coordinates (as % on simulated map)
+// Madrid neighbourhood positions (as % on simulated map)
 const cityPositions: Record<string, { x: number; y: number }> = {
-  Barcelona: { x: 38, y: 62 },
-  Madrid: { x: 52, y: 40 },
-  Seville: { x: 35, y: 75 },
+  Madrid: { x: 50, y: 50 },
+  Malasaña: { x: 40, y: 38 },
+  Chueca: { x: 52, y: 35 },
+  Lavapiés: { x: 48, y: 58 },
+  Salamanca: { x: 65, y: 30 },
+  "La Latina": { x: 40, y: 62 },
+  Chamberi: { x: 45, y: 25 },
 };
 
 const defaultPosition = { x: 50, y: 50 };
 
 export function MapScreen() {
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
-  const { data: events = [], isLoading } = useEvents();
+  const { data: allEvents = [], isLoading } = useEvents();
+
+  // Show only Madrid events on the map
+  const events = allEvents.filter((e) => e.city === "Madrid");
 
   const selectedEvent = selectedPin ? events.find((e) => e.id === selectedPin) : null;
 
@@ -29,7 +37,8 @@ export function MapScreen() {
     <div className="mobile-container flex flex-col bg-background">
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Discover nearby</p>
+        <Logo />
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1 mt-3">Madrid · Feb 2026</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Map</h1>
       </div>
 

@@ -18,27 +18,27 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: 38 55% 95%;        /* soft cream white */
-    --foreground: 252 35% 18%;       /* deep purple-navy */
+    /* Backgrounds — deep purple brand theme */
+    --background: 252 30% 45%;       /* #5f5095 deep purple */
+    --foreground: 252 75% 93%;       /* #e4defa light lavender */
 
-    --card: 0 0% 100%;
-    --card-foreground: 252 35% 18%;
+    --card: 252 28% 52%;             /* slightly lighter purple for cards */
+    --card-foreground: 252 75% 93%;
 
-    --popover: 38 55% 97%;
-    --popover-foreground: 252 35% 18%;
+    --popover: 252 28% 50%;
+    --popover-foreground: 252 75% 93%;
 
-    /* Primary — deep purple #5f5095 */
+    /* Primary — keep as-is for buttons */
     --primary: 252 30% 45%;
     --primary-foreground: 252 75% 97%;
 
-    /* Secondary — lavender #e4defa */
-    --secondary: 252 75% 93%;
-    --secondary-foreground: 252 35% 32%;
+    /* Secondary */
+    --secondary: 252 28% 50%;
+    --secondary-foreground: 252 75% 93%;
 
-    /* Muted — warm cream #f1e2c2 */
-    --muted: 38 65% 88%;
-    --muted-foreground: 252 20% 48%;
+    /* Muted — darker purple */
+    --muted: 252 25% 38%;
+    --muted-foreground: 252 55% 78%;
 
     /* Accent — rose pink #f796a6 */
     --accent: 347 86% 77%;
@@ -47,9 +47,9 @@
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 252 30% 88%;
-    --input: 252 30% 88%;
-    --ring: 252 30% 45%;
+    --border: 252 22% 58%;
+    --input: 252 25% 50%;
+    --ring: 252 75% 80%;
 
     --radius: 1rem;
 

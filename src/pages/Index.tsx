@@ -8,6 +8,7 @@ import { EventsScreen } from "@/components/EventsScreen";
 import { MapScreen } from "@/components/MapScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 type Tab = "events" | "map" | "groups" | "profile";
 
@@ -23,6 +24,7 @@ const Index = () => {
   const { session, loading: authLoading, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
+  usePushNotifications();
 
   if (authLoading) return <LoadingScreen />;
   if (!session) return <AuthScreen />;
