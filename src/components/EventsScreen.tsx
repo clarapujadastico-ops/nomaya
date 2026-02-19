@@ -41,10 +41,11 @@ export function EventsScreen() {
   const { data: bookings = [] } = useBookings();
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
 
-  // Dynamic category pills from real events
+  // Fixed category order — only show if events exist in that category
+  const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness"];
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(events.map((e) => e.category).filter(Boolean)));
-    return ["All", ...cats];
+    const existing = new Set(events.map((e) => e.category).filter(Boolean));
+    return ["All", ...ALLOWED_CATEGORIES.filter((c) => existing.has(c))];
   }, [events]);
 
   const featured = events.filter((e) => e.featured);

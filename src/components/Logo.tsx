@@ -9,7 +9,7 @@ export function Logo({ className }: LogoProps) {
     <img
       src={nomayaLogo}
       alt="Nomaya"
-      className={className ?? "h-14 w-14 mx-auto mb-3 rounded-xl object-contain"}
+      className={className ?? "h-20 w-20 mx-auto mb-4 rounded-2xl object-contain"}
     />
   );
 }
