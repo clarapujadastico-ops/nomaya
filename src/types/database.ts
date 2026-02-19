@@ -1,3 +1,5 @@
+import { resolveEventImage } from '@/assets/eventImages'
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
@@ -421,7 +423,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     totalSpots: row.total_spots,
     category: row.category_name ?? 'General',
     categoryColor: row.category_color ?? 'hsl(252 30% 45%)',
-    image: row.image_url ?? '',
+    image: resolveEventImage(row.title, row.image_url ?? ''),
     price: formatPrice(row.price_cents, row.currency),
     featured: row.is_featured,
     isTbc: row.is_tbc ?? false,

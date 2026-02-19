@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Users, Plus, ChevronRight, Lock, Send, MessageCircle } from "lucide-react";
-import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle } from "@/hooks/useCircles";
+import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
@@ -108,9 +108,31 @@ function CircleDetail({
 }) {
   const { mutate: join, isPending: isJoining } = useJoinCircle();
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
+  const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
+  const { data: myRequests = [] } = useMyJoinRequests();
   const [activeTab, setActiveTab] = useState<"about" | "chat">("about");
+  const [showJoinRequest, setShowJoinRequest] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
 
   const isMember = circle.isMember || circle.isAdmin;
+  const hasPendingRequest = myRequests.some(
+    (r) => r.circle_id === circle.id && r.status === "pending"
+  );
+
+  function handleJoinPress() {
+    if (circle.isPrivate) {
+      setShowJoinRequest(true);
+    } else {
+      join(circle.id);
+    }
+  }
+
+  function submitJoinRequest() {
+    requestJoin(
+      { circleId: circle.id, message: requestMessage.trim() },
+      { onSuccess: () => { setShowJoinRequest(false); setRequestMessage(""); } }
+    );
+  }
 
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
@@ -217,13 +239,17 @@ function CircleDetail({
               >
                 {isLeaving ? "Leaving…" : "Leave circle"}
               </button>
+            ) : hasPendingRequest ? (
+              <div className="w-full py-4 rounded-2xl bg-muted text-muted-foreground font-medium text-base border border-border text-center">
+                Request pending…
+              </div>
             ) : (
               <button
-                onClick={() => join(circle.id)}
-                disabled={isJoining}
+                onClick={handleJoinPress}
+                disabled={isJoining || isRequesting}
                 className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60"
               >
-                {isJoining ? "Joining…" : "Join circle"}
+                {isJoining || isRequesting ? "Sending…" : circle.isPrivate ? "Request to join" : "Join circle"}
               </button>
             )}
           </>
@@ -231,6 +257,45 @@ function CircleDetail({
           <ChatPanel circleId={circle.id} isMember={isMember} />
         )}
       </div>
+
+      {/* Join request sheet */}
+      {showJoinRequest && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowJoinRequest(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Request to join</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                This is a private circle. Tell the admin a bit about yourself.
+              </p>
+            </div>
+            <textarea
+              value={requestMessage}
+              onChange={(e) => setRequestMessage(e.target.value)}
+              placeholder="Hi! I'd love to join because…"
+              rows={4}
+              maxLength={300}
+              className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowJoinRequest(false)}
+                className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitJoinRequest}
+                disabled={isRequesting}
+                className="flex-1 py-3 rounded-2xl gradient-cta text-primary-foreground text-sm font-medium shadow-soft disabled:opacity-50"
+              >
+                {isRequesting ? "Sending…" : "Send request"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

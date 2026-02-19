@@ -49,6 +49,14 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [notificationsOn, setNotificationsOn] = useState(true);
 
+  const ritualBadge = bookings.length >= 5
+    ? { label: "Keeper of the Circle", icon: "🔮" }
+    : bookings.length >= 3
+    ? { label: "Inner Circle", icon: "✨" }
+    : bookings.length >= 1
+    ? { label: "Founding Circle", icon: "🌸" }
+    : null;
+
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     : t("profile.recently");
@@ -90,10 +98,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
   function handleReferral() {
     const text = "Join me on Nomaya — curated experiences for women. Download the app: https://nomaya.app";
-    if (navigator.share) {
-      navigator.share({ title: "Join Nomaya", text }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text).then(() => alert("Link copied!")).catch(() => {});
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") {
+      window.open(waUrl, "_blank");
     }
   }
 
@@ -235,6 +242,13 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             <p className="text-xs text-muted-foreground mt-0.5">{t("profile.connections")}</p>
           </div>
         </div>
+
+        {ritualBadge && (
+          <div className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-2">
+            <span className="text-base">{ritualBadge.icon}</span>
+            <span className="text-xs font-medium text-primary tracking-wide">{ritualBadge.label}</span>
+          </div>
+        )}
       </div>
 
       {/* About me */}
@@ -455,10 +469,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showInterestsSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInterestsSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 pb-10 flex flex-col" style={{ maxHeight: "80vh" }}>
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "80vh" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
             <h2 className="font-serif text-xl font-medium text-foreground mb-4 px-6">{t("profile.select_interests")}</h2>
-            <div className="grid grid-cols-2 gap-3 px-6 overflow-y-auto flex-1 pb-4">
+            <div className="flex flex-wrap gap-2 px-6 overflow-y-auto flex-1 pb-4">
               {INTERESTS.map((interest) => {
                 const isSelected = selectedInterests.includes(interest.id);
                 return (
@@ -467,29 +481,18 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                     onClick={() => setSelectedInterests((prev) =>
                       prev.includes(interest.id) ? prev.filter((i) => i !== interest.id) : [...prev, interest.id]
                     )}
-                    className="relative rounded-2xl overflow-hidden text-left transition-all duration-200 active:scale-[0.97]"
-                    style={{
-                      height: 120,
-                      background: interest.color,
-                      outline: isSelected ? "3px solid hsl(38 82% 62%)" : "none",
-                      outlineOffset: "2px",
-                    }}
+                    className={`px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 active:scale-[0.97] ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-foreground border-border"
+                    }`}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
-                        <Check size={14} style={{ color: interest.color }} />
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 p-2.5">
-                      <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{interest.emoji}</span>
-                      <p className="text-xs font-medium text-white mt-0.5 leading-tight">{interest.label}</p>
-                    </div>
+                    {interest.label}
                   </button>
                 );
               })}
             </div>
-            <div className="px-6 pt-3 border-t border-border">
+            <div className="px-6 py-4 border-t border-border">
               <button
                 onClick={saveInterests}
                 className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"

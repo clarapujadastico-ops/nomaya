@@ -3,7 +3,7 @@ import { Search, SlidersHorizontal, ChevronDown, X } from "lucide-react";
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
 import { useEvents } from "@/hooks/useEvents";
-import { useBookings, useBookEvent } from "@/hooks/useBookings";
+import { useBookings, useBookEvent, useCancelBooking } from "@/hooks/useBookings";
 import type { AppEvent } from "@/types/database";
 
 interface FilterState {
@@ -40,6 +40,7 @@ export function EventsScreen() {
   const { data: events = [], isLoading } = useEvents();
   const { data: bookings = [] } = useBookings();
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
+  const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
 
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness"];
@@ -87,7 +88,8 @@ export function EventsScreen() {
       );
     }
 
-    const isBooked = bookings.some((b) => b.event_id === selectedEvent);
+    const booking = bookings.find((b) => b.event_id === selectedEvent);
+    const isBooked = !!booking;
 
     return (
       <div className="mobile-container flex flex-col bg-background pb-24">
@@ -175,7 +177,7 @@ export function EventsScreen() {
               disabled={isBooked || isBooking}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
-              {isBooked ? "✓ Interest registered" : isBooking ? "Registering…" : "Register interest"}
+              {isBooked ? "✓ On the waitlist" : isBooking ? "Joining…" : "Join the waitlist"}
             </button>
           ) : (
             <button
@@ -190,6 +192,16 @@ export function EventsScreen() {
                 : event.spotsLeft === 0
                 ? "Fully booked"
                 : `Reserve my spot · ${event.price}`}
+            </button>
+          )}
+
+          {isBooked && (
+            <button
+              onClick={() => booking && cancelBooking(booking.id)}
+              disabled={isCancelling}
+              className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {isCancelling ? "Cancelling…" : "Cancel reservation"}
             </button>
           )}
         </div>
@@ -308,7 +320,7 @@ export function EventsScreen() {
       {showFilterSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilterSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-5">
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-5 max-h-[85vh] overflow-y-auto">
             <div className="w-10 h-1 bg-border rounded-full mx-auto" />
             <div className="flex items-center justify-between">
               <h2 className="font-serif text-xl font-medium text-foreground">Filters</h2>

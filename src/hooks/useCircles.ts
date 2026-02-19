@@ -109,6 +109,40 @@ export function useLeaveCircle() {
   })
 }
 
+// ─── Mutation: request to join a private circle ───────────────────────────────
+
+export function useRequestJoinCircle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ circleId, message }: { circleId: string; message: string }) => {
+      const { error } = await supabase
+        .from('circle_join_requests')
+        .insert({ circle_id: circleId, user_id: user!.id, message, status: 'pending' })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['join_requests'] })
+    },
+  })
+}
+
+export function useMyJoinRequests() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['join_requests', user?.id],
+    queryFn: async (): Promise<{ circle_id: string; status: string }[]> => {
+      const { data, error } = await supabase
+        .from('circle_join_requests')
+        .select('circle_id, status')
+        .eq('user_id', user!.id)
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!user,
+  })
+}
+
 // ─── Mutation: create a circle ────────────────────────────────────────────────
 
 export function useCreateCircle() {
