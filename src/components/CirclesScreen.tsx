@@ -1,0 +1,339 @@
+import { useState } from "react";
+import { Users, Plus, ChevronRight, Lock } from "lucide-react";
+import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle } from "@/hooks/useCircles";
+import type { AppCircle } from "@/types/database";
+
+const EMOJIS = ["🌸", "🌿", "✨", "🎨", "🌊", "🍀", "🦋", "🌺", "💫", "🍃", "🌙", "🎋"];
+
+// ─── Detail view ──────────────────────────────────────────────────────────────
+
+function CircleDetail({
+  circle,
+  onBack,
+}: {
+  circle: AppCircle;
+  onBack: () => void;
+}) {
+  const { mutate: join, isPending: isJoining } = useJoinCircle();
+  const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
+
+  return (
+    <div className="mobile-container flex flex-col bg-background pb-24">
+      {/* Hero */}
+      <div className="relative h-56">
+        {circle.coverUrl ? (
+          <img src={circle.coverUrl} alt={circle.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: circle.categoryColor }} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+        <button
+          onClick={onBack}
+          className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+        >
+          ←
+        </button>
+        <div className="absolute bottom-4 left-4 right-4">
+          {circle.category !== "General" && (
+            <span
+              className="text-xs font-medium px-2.5 py-1 rounded-full mb-2 inline-block text-white"
+              style={{ background: circle.categoryColor }}
+            >
+              {circle.category}
+            </span>
+          )}
+          <h2 className="font-serif text-2xl font-medium text-card">{circle.name}</h2>
+          <p className="text-xs text-card/70 mt-0.5">
+            {circle.city} · {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
+          </p>
+        </div>
+      </div>
+
+      <div className="px-5 py-5 space-y-4">
+        {/* About */}
+        <div className="bg-card rounded-2xl p-4 shadow-soft">
+          <h3 className="font-serif text-base font-medium text-foreground mb-2">About</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{circle.description}</p>
+        </div>
+
+        {/* Members */}
+        <div className="bg-card rounded-2xl p-4 shadow-soft">
+          <h3 className="font-serif text-base font-medium text-foreground mb-3">Members</h3>
+          <div className="flex -space-x-2">
+            {Array.from({ length: Math.min(circle.memberCount, 8) }).map((_, i) => (
+              <div
+                key={i}
+                className="w-9 h-9 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm"
+              >
+                {EMOJIS[i % EMOJIS.length]}
+              </div>
+            ))}
+            {circle.memberCount > 8 && (
+              <div className="w-9 h-9 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[10px] text-muted-foreground">
+                +{circle.memberCount - 8}
+              </div>
+            )}
+            {circle.memberCount === 0 && (
+              <p className="text-sm text-muted-foreground">Be the first to join.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Private note */}
+        {circle.isPrivate && (
+          <div className="bg-card rounded-2xl p-4 shadow-soft flex items-start gap-3">
+            <Lock size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground">
+              This is a private circle. Only members can see its contents.
+            </p>
+          </div>
+        )}
+
+        {/* Action */}
+        {circle.isAdmin ? (
+          <div className="w-full py-4 rounded-2xl bg-secondary text-secondary-foreground font-medium text-base border border-border text-center">
+            You admin this circle
+          </div>
+        ) : circle.isMember ? (
+          <button
+            onClick={() => leave(circle.id)}
+            disabled={isLeaving}
+            className="w-full py-4 rounded-2xl bg-secondary text-secondary-foreground font-medium text-base border border-border transition-all active:scale-[0.98] disabled:opacity-60"
+          >
+            {isLeaving ? "Leaving…" : "Leave circle"}
+          </button>
+        ) : (
+          <button
+            onClick={() => join(circle.id)}
+            disabled={isJoining}
+            className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60"
+          >
+            {isJoining ? "Joining…" : "Join circle"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Create form ──────────────────────────────────────────────────────────────
+
+function CreateCircleSheet({ onClose }: { onClose: () => void }) {
+  const { mutate: create, isPending } = useCreateCircle();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [city, setCity] = useState("Barcelona");
+  const [isPrivate, setIsPrivate] = useState(false);
+
+  function handleSubmit() {
+    if (!name.trim()) return;
+    create(
+      { name: name.trim(), description: description.trim(), city: city.trim(), is_private: isPrivate },
+      { onSuccess: onClose }
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
+        <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+        <h2 className="font-serif text-xl font-medium text-foreground">New circle</h2>
+
+        <div className="space-y-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Circle name"
+            maxLength={60}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What's this circle about?"
+            rows={3}
+            maxLength={280}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+          />
+          <input
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="City"
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+        </div>
+
+        <button
+          onClick={() => setIsPrivate((p) => !p)}
+          className="flex items-center gap-3 w-full"
+        >
+          <div
+            className={`w-10 h-6 rounded-full transition-colors ${isPrivate ? "bg-primary" : "bg-border"} relative`}
+          >
+            <span
+              className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${isPrivate ? "left-5" : "left-1"}`}
+            />
+          </div>
+          <span className="text-sm text-foreground">Private circle</span>
+        </button>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim() || isPending}
+          className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          {isPending ? "Creating…" : "Create circle"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Circle card ──────────────────────────────────────────────────────────────
+
+function CircleCard({
+  circle,
+  onClick,
+  dimmed = false,
+}: {
+  circle: AppCircle;
+  onClick: () => void;
+  dimmed?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full bg-card rounded-2xl overflow-hidden shadow-soft flex text-left transition-all active:scale-[0.98] ${dimmed ? "opacity-70" : ""}`}
+    >
+      <div className="w-20 flex-shrink-0 relative">
+        {circle.coverUrl ? (
+          <img
+            src={circle.coverUrl}
+            alt={circle.name}
+            className={`w-full h-full object-cover ${dimmed ? "grayscale" : ""}`}
+            style={{ minHeight: 80 }}
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{ minHeight: 80, background: circle.categoryColor, opacity: dimmed ? 0.5 : 1 }}
+          />
+        )}
+        {dimmed && (
+          <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
+            <Lock size={14} className="text-card" />
+          </div>
+        )}
+      </div>
+      <div className="flex-1 px-4 py-3.5 flex flex-col justify-between">
+        <div>
+          <h3 className="font-serif text-base font-medium text-foreground">{circle.name}</h3>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <Users size={11} />
+            {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{circle.city}</p>
+      </div>
+      <div className="flex items-center pr-3">
+        <ChevronRight size={16} className="text-muted-foreground" />
+      </div>
+    </button>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
+
+export function CirclesScreen() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const { data: circles = [], isLoading } = useCircles();
+
+  if (selectedId) {
+    const circle = circles.find((c) => c.id === selectedId);
+    if (!circle) return null;
+    return <CircleDetail circle={circle} onBack={() => setSelectedId(null)} />;
+  }
+
+  const myCircles = circles.filter((c) => c.isMember || c.isAdmin);
+  const discover = circles.filter((c) => !c.isMember && !c.isAdmin);
+
+  return (
+    <div className="mobile-container flex flex-col bg-background pb-24">
+      {/* Header */}
+      <div className="px-5 pt-14 pb-4 flex items-end justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Your community</p>
+          <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Circles</h1>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft mb-1"
+        >
+          <Plus size={18} className="text-primary-foreground" />
+        </button>
+      </div>
+
+      {/* Intro note */}
+      <div className="mx-5 mb-5 bg-secondary rounded-2xl p-4 border border-border">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          ✦ Circles are intimate groups built around shared interests. Join one or start your own.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">Loading circles…</p>
+        </div>
+      ) : (
+        <>
+          {/* My circles */}
+          {myCircles.length > 0 && (
+            <div className="px-5 mb-6">
+              <h2 className="font-serif text-lg font-medium text-foreground mb-3">My circles</h2>
+              <div className="space-y-3">
+                {myCircles.map((circle) => (
+                  <CircleCard
+                    key={circle.id}
+                    circle={circle}
+                    onClick={() => setSelectedId(circle.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Discover */}
+          {discover.length > 0 && (
+            <div className="px-5">
+              <h2 className="font-serif text-lg font-medium text-foreground mb-1">Discover circles</h2>
+              <p className="text-xs text-muted-foreground mb-3">Open circles you can join now.</p>
+              <div className="space-y-3">
+                {discover.map((circle) => (
+                  <CircleCard
+                    key={circle.id}
+                    circle={circle}
+                    onClick={() => setSelectedId(circle.id)}
+                    dimmed={circle.isPrivate}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {circles.length === 0 && (
+            <div className="flex-1 flex flex-col items-center justify-center px-10 gap-3">
+              <Users size={36} className="text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                No circles yet. Be the first to create one.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {showCreate && <CreateCircleSheet onClose={() => setShowCreate(false)} />}
+    </div>
+  );
+}

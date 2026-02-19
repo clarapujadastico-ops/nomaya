@@ -131,8 +131,83 @@ export interface Database {
           created_at?: string
         }
       }
+      circles: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category_id: string | null
+          cover_url: string | null
+          city: string
+          is_private: boolean
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          category_id?: string | null
+          cover_url?: string | null
+          city?: string
+          is_private?: boolean
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          category_id?: string | null
+          cover_url?: string | null
+          city?: string
+          is_private?: boolean
+          created_by?: string
+          created_at?: string
+        }
+      }
+      circle_memberships: {
+        Row: {
+          id: string
+          circle_id: string
+          user_id: string
+          role: 'admin' | 'member'
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          circle_id: string
+          user_id: string
+          role?: 'admin' | 'member'
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          circle_id?: string
+          user_id?: string
+          role?: 'admin' | 'member'
+          joined_at?: string
+        }
+      }
     }
     Views: {
+      circles_with_members: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          category_id: string | null
+          cover_url: string | null
+          city: string
+          is_private: boolean
+          created_by: string
+          created_at: string
+          member_count: number
+          category_name: string | null
+          category_slug: string | null
+          category_color: string | null
+        }
+      }
       events_with_spots: {
         Row: {
           id: string
@@ -162,6 +237,57 @@ export interface Database {
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type EventRow = Database['public']['Views']['events_with_spots']['Row']
+export type CircleRow = Database['public']['Views']['circles_with_members']['Row']
+
+/** The shape UI components use for circles */
+export interface AppCircle {
+  id: string
+  name: string
+  description: string
+  city: string
+  coverUrl: string
+  isPrivate: boolean
+  createdBy: string
+  memberCount: number
+  category: string
+  categoryColor: string
+  isMember: boolean
+  isAdmin: boolean
+}
+
+/** Membership row with nested circle data */
+export interface MembershipWithCircle {
+  id: string
+  circle_id: string
+  role: 'admin' | 'member'
+  joined_at: string
+  circle: {
+    id: string
+    name: string
+    description: string
+    city: string
+    cover_url: string | null
+    is_private: boolean
+    category: { name: string; color: string } | null
+  } | null
+}
+
+export function toAppCircle(row: CircleRow, userId: string, membershipRole: 'admin' | 'member' | null): AppCircle {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    city: row.city,
+    coverUrl: row.cover_url ?? '',
+    isPrivate: row.is_private,
+    createdBy: row.created_by,
+    memberCount: row.member_count,
+    category: row.category_name ?? 'General',
+    categoryColor: row.category_color ?? 'hsl(252 30% 45%)',
+    isMember: membershipRole !== null,
+    isAdmin: membershipRole === 'admin',
+  }
+}
 
 /** The shape all UI components use for events */
 export interface AppEvent {

@@ -6,7 +6,7 @@ import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { BottomNav } from "@/components/BottomNav";
 import { EventsScreen } from "@/components/EventsScreen";
 import { MapScreen } from "@/components/MapScreen";
-import { GroupsScreen } from "@/components/GroupsScreen";
+import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 
 type Tab = "events" | "map" | "groups" | "profile";
@@ -41,7 +41,7 @@ const Index = () => {
       <div className="mobile-container relative overflow-hidden">
         {activeTab === "events" && <EventsScreen />}
         {activeTab === "map" && <MapScreen />}
-        {activeTab === "groups" && <GroupsScreen />}
+        {activeTab === "groups" && <CirclesScreen />}
         {activeTab === "profile" && <ProfileScreen onLogout={signOut} />}
         <BottomNav active={activeTab} onChange={setActiveTab} />
       </div>

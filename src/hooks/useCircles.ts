@@ -1,0 +1,146 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { toAppCircle } from '@/types/database'
+import type { AppCircle, MembershipWithCircle } from '@/types/database'
+
+// ─── Read: all public circles ─────────────────────────────────────────────────
+
+export function useCircles() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['circles'],
+    queryFn: async (): Promise<AppCircle[]> => {
+      const [{ data: circles, error: circlesError }, { data: memberships, error: membershipsError }] =
+        await Promise.all([
+          supabase.from('circles_with_members').select('*').order('created_at', { ascending: false }),
+          supabase
+            .from('circle_memberships')
+            .select('circle_id, role')
+            .eq('user_id', user!.id),
+        ])
+
+      if (circlesError) throw circlesError
+      if (membershipsError) throw membershipsError
+
+      const membershipMap = new Map<string, 'admin' | 'member'>(
+        (memberships ?? []).map((m) => [m.circle_id, m.role as 'admin' | 'member'])
+      )
+
+      return (circles ?? []).map((row) =>
+        toAppCircle(row, user!.id, membershipMap.get(row.id) ?? null)
+      )
+    },
+    enabled: !!user,
+  })
+}
+
+// ─── Read: only circles the current user belongs to ───────────────────────────
+
+export function useMyCircles() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['circles', 'mine', user?.id],
+    queryFn: async (): Promise<MembershipWithCircle[]> => {
+      const { data, error } = await supabase
+        .from('circle_memberships')
+        .select(`
+          id,
+          circle_id,
+          role,
+          joined_at,
+          circle:circles (
+            id,
+            name,
+            description,
+            city,
+            cover_url,
+            is_private,
+            category:categories ( name, color )
+          )
+        `)
+        .eq('user_id', user!.id)
+        .order('joined_at', { ascending: false })
+      if (error) throw error
+      return (data ?? []) as MembershipWithCircle[]
+    },
+    enabled: !!user,
+  })
+}
+
+// ─── Mutation: join a circle ───────────────────────────────────────────────────
+
+export function useJoinCircle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (circleId: string) => {
+      const { data, error } = await supabase
+        .from('circle_memberships')
+        .insert({ circle_id: circleId, user_id: user!.id, role: 'member' })
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
+// ─── Mutation: leave a circle ──────────────────────────────────────────────────
+
+export function useLeaveCircle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (circleId: string) => {
+      const { error } = await supabase
+        .from('circle_memberships')
+        .delete()
+        .eq('circle_id', circleId)
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
+// ─── Mutation: create a circle ────────────────────────────────────────────────
+
+export function useCreateCircle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      name: string
+      description?: string
+      city?: string
+      category_id?: string | null
+      cover_url?: string | null
+      is_private?: boolean
+    }) => {
+      // 1. create the circle
+      const { data: circle, error: circleError } = await supabase
+        .from('circles')
+        .insert({ ...input, created_by: user!.id })
+        .select()
+        .single()
+      if (circleError) throw circleError
+
+      // 2. auto-join as admin
+      const { error: memberError } = await supabase
+        .from('circle_memberships')
+        .insert({ circle_id: circle.id, user_id: user!.id, role: 'admin' })
+      if (memberError) throw memberError
+
+      return circle
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
