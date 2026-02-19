@@ -363,6 +363,7 @@ export interface AppEvent {
   title: string
   description: string
   date: string        // formatted "Mar 2"
+  rawDate: string     // ISO "2026-02-22" for filtering
   time: string        // "11:00"
   city: string
   spotsLeft: number
@@ -413,6 +414,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     title: row.title,
     description: row.description,
     date: formatDate(row.date),
+    rawDate: row.date,
     time: row.time.substring(0, 5),
     city: row.city,
     spotsLeft: row.spots_left ?? row.total_spots,

@@ -1,11 +1,15 @@
 import nomayaLogo from "@/assets/Nomaya copy.png";
 
-export function Logo() {
+interface LogoProps {
+  className?: string;
+}
+
+export function Logo({ className }: LogoProps) {
   return (
     <img
       src={nomayaLogo}
       alt="Nomaya"
-      className="h-10 w-10 rounded-xl object-contain"
+      className={className ?? "h-14 w-14 mx-auto mb-3 rounded-xl object-contain"}
     />
   );
 }

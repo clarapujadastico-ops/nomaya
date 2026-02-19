@@ -20,25 +20,25 @@
   :root {
     /* Backgrounds — deep purple brand theme */
     --background: 252 30% 45%;       /* #5f5095 deep purple */
-    --foreground: 252 75% 93%;       /* #e4defa light lavender */
+    --foreground: 0 0% 100%;         /* white — max readability on purple */
 
-    --card: 252 28% 52%;             /* slightly lighter purple for cards */
-    --card-foreground: 252 75% 93%;
+    --card: 252 26% 58%;             /* clearly lighter than background */
+    --card-foreground: 0 0% 100%;    /* white */
 
-    --popover: 252 28% 50%;
-    --popover-foreground: 252 75% 93%;
+    --popover: 252 26% 56%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary — keep as-is for buttons */
-    --primary: 252 30% 45%;
-    --primary-foreground: 252 75% 97%;
+    /* Primary — gold, jumps off deep purple background */
+    --primary: 38 82% 62%;           /* #eeb64e gold */
+    --primary-foreground: 252 35% 15%; /* dark text on gold */
 
     /* Secondary */
     --secondary: 252 28% 50%;
-    --secondary-foreground: 252 75% 93%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted — darker purple */
-    --muted: 252 25% 38%;
-    --muted-foreground: 252 55% 78%;
+    --muted: 252 22% 36%;
+    --muted-foreground: 252 50% 82%;  /* lighter lavender for secondary text */
 
     /* Accent — rose pink #f796a6 */
     --accent: 347 86% 77%;
@@ -47,9 +47,9 @@
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 252 22% 58%;
-    --input: 252 25% 50%;
-    --ring: 252 75% 80%;
+    --border: 252 24% 62%;
+    --input: 252 26% 56%;
+    --ring: 38 82% 62%;
 
     --radius: 1rem;
 
@@ -73,7 +73,7 @@
 
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(38 55% 95%), hsl(252 40% 96%));
-    --gradient-cta: linear-gradient(135deg, hsl(252 30% 45%), hsl(204 44% 48%));
+    --gradient-cta: linear-gradient(135deg, hsl(38 82% 62%), hsl(347 70% 60%));
     --gradient-warm: linear-gradient(145deg, hsl(38 65% 88%), hsl(347 86% 92%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(252 40% 98%));
 

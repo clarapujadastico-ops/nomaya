@@ -241,7 +241,7 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
   const { mutate: create, isPending } = useCreateCircle();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [city, setCity] = useState("Barcelona");
+  const [city, setCity] = useState("Madrid");
   const [isPrivate, setIsPrivate] = useState(false);
 
   function handleSubmit() {
@@ -364,8 +364,12 @@ function CircleCard({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-export function CirclesScreen() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+interface CirclesScreenProps {
+  initialCircleId?: string;
+}
+
+export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
   const [showCreate, setShowCreate] = useState(false);
   const { data: circles = [], isLoading } = useCircles();
 
@@ -381,18 +385,20 @@ export function CirclesScreen() {
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
       {/* Header */}
-      <div className="px-5 pt-14 pb-4 flex items-end justify-between">
-        <div>
+      <div className="px-5 pt-14 pb-4">
+        <div className="flex justify-end mb-1">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft"
+          >
+            <Plus size={18} className="text-primary-foreground" />
+          </button>
+        </div>
+        <div className="text-center">
           <Logo />
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1 mt-3">Your community</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Your community</p>
           <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Circles</h1>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft mb-1"
-        >
-          <Plus size={18} className="text-primary-foreground" />
-        </button>
       </div>
 
       {/* Intro note */}

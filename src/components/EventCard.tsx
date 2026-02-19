@@ -24,17 +24,17 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
           ? <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 w-full h-full" style={{ background: event.categoryColor }} />
         }
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
-          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-card backdrop-blur-sm mb-2 inline-block">
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-white backdrop-blur-sm mb-2 inline-block">
             {event.category}
           </span>
-          <h3 className="font-serif text-xl text-card font-medium leading-tight mb-1">{event.title}</h3>
+          <h3 className="font-serif text-xl text-white font-medium leading-tight mb-1">{event.title}</h3>
           {event.isTbc ? (
-            <span className="text-xs font-medium text-card/70 italic">Coming soon</span>
+            <span className="text-xs font-medium text-white/70 italic">Coming soon</span>
           ) : (
             <>
-              <div className="flex items-center gap-3 text-card/80 text-xs">
+              <div className="flex items-center gap-3 text-white/80 text-xs">
                 <span className="flex items-center gap-1">
                   <Calendar size={11} />
                   {event.date}
@@ -45,11 +45,11 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
                 </span>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className={`text-xs font-medium ${isAlmostFull ? "text-accent" : "text-card/70"}`}>
+                <span className={`text-xs font-medium ${isAlmostFull ? "text-nomaya-rose" : "text-white/70"}`}>
                   {event.spotsLeft} spots left
                 </span>
                 {event.price && (
-                  <span className="text-xs font-medium text-card/90">{event.price}</span>
+                  <span className="text-xs font-medium text-white/90">{event.price}</span>
                 )}
               </div>
             </>

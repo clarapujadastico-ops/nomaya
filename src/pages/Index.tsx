@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthScreen } from "@/components/AuthScreen";
 import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { BottomNav } from "@/components/BottomNav";
@@ -14,16 +15,17 @@ type Tab = "events" | "map" | "groups" | "profile";
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-foreground/10 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-muted-foreground text-sm tracking-wide">Loading…</div>
     </div>
   );
 }
 
-const Index = () => {
+function AppShell() {
   const { session, loading: authLoading, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
+  const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
   usePushNotifications();
 
   if (authLoading) return <LoadingScreen />;
@@ -32,23 +34,41 @@ const Index = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-foreground/10 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <OnboardingFlow onComplete={() => {}} />
       </div>
     );
   }
 
+  function handleOpenCircle(id: string) {
+    setOpenCircleId(id);
+    setActiveTab("groups");
+  }
+
+  function handleTabChange(tab: Tab) {
+    if (tab !== "groups") setOpenCircleId(undefined);
+    setActiveTab(tab);
+  }
+
   return (
-    <div className="min-h-screen bg-foreground/10 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="mobile-container relative overflow-hidden">
         {activeTab === "events" && <EventsScreen />}
         {activeTab === "map" && <MapScreen />}
-        {activeTab === "groups" && <CirclesScreen />}
-        {activeTab === "profile" && <ProfileScreen onLogout={signOut} />}
-        <BottomNav active={activeTab} onChange={setActiveTab} />
+        {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} />}
+        {activeTab === "profile" && (
+          <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
+        )}
+        <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>
     </div>
   );
-};
+}
+
+const Index = () => (
+  <LanguageProvider>
+    <AppShell />
+  </LanguageProvider>
+);
 
 export default Index;

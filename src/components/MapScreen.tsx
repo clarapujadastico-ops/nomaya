@@ -1,147 +1,152 @@
-import { useState } from "react";
-import { MapPin, Calendar } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Calendar } from "lucide-react";
+import Map, { Marker, Popup } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { Logo } from "./Logo";
 
-// Madrid neighbourhood positions (as % on simulated map)
-const cityPositions: Record<string, { x: number; y: number }> = {
-  Madrid: { x: 50, y: 50 },
-  Malasaña: { x: 40, y: 38 },
-  Chueca: { x: 52, y: 35 },
-  Lavapiés: { x: 48, y: 58 },
-  Salamanca: { x: 65, y: 30 },
-  "La Latina": { x: 40, y: 62 },
-  Chamberi: { x: 45, y: 25 },
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
+
+// Madrid neighbourhood coordinates for events without lat/lon
+const NEIGHBOURHOOD_COORDS: Record<string, [number, number]> = {
+  Malasaña:   [-3.7045, 40.4262],
+  Chueca:     [-3.6985, 40.4227],
+  Lavapiés:   [-3.7026, 40.4092],
+  Salamanca:  [-3.6826, 40.4282],
+  "La Latina":[-3.7130, 40.4147],
+  Chamberi:   [-3.7002, 40.4330],
+  Madrid:     [-3.7038, 40.4168],
 };
 
-const defaultPosition = { x: 50, y: 50 };
+const NEIGHBOURHOOD_LIST = Object.entries(NEIGHBOURHOOD_COORDS);
+
+function getEventCoords(eventId: string, lat: number | null, lon: number | null): [number, number] {
+  if (lat !== null && lon !== null) return [lon, lat];
+  // Spread events across neighbourhoods based on id hash
+  const idx = eventId.charCodeAt(eventId.length - 1) % NEIGHBOURHOOD_LIST.length;
+  return NEIGHBOURHOOD_LIST[idx][1];
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Food & Dining":    "#d4835a",
+  "Arts & Crafts":    "#9b7bca",
+  "Wellness":         "#5a9e7a",
+  "Fitness":          "#5a9e7a",
+  "Entrepreneurship": "#5a8fb5",
+  "Culture":          "#c45a75",
+  "Ceramics":         "#c48a5a",
+  "Jewelry":          "#c4b55a",
+};
+
+function categoryColor(cat: string, fallback: string): string {
+  return CATEGORY_COLORS[cat] ?? fallback;
+}
 
 export function MapScreen() {
-  const [selectedPin, setSelectedPin] = useState<string | null>(null);
+  const [popupEventId, setPopupEventId] = useState<string | null>(null);
   const { data: allEvents = [], isLoading } = useEvents();
 
-  // Show only Madrid events on the map
-  const events = allEvents.filter((e) => e.city === "Madrid");
+  const events = allEvents.filter((e) => e.city === "Madrid" || !e.city);
+  const selectedEvent = popupEventId ? events.find((e) => e.id === popupEventId) : null;
 
-  const selectedEvent = selectedPin ? events.find((e) => e.id === selectedPin) : null;
-
-  const categoryColors: Record<string, string> = {
-    "Food & Dining": "hsl(15 60% 55%)",
-    "Arts & Crafts": "hsl(280 38% 55%)",
-    Wellness: "hsl(140 35% 45%)",
-    Entrepreneurship: "hsl(200 50% 45%)",
-    Culture: "hsl(340 50% 55%)",
-  };
+  const handleMarkerClick = useCallback((id: string) => {
+    setPopupEventId((prev) => (prev === id ? null : id));
+  }, []);
 
   return (
     <div className="mobile-container flex flex-col bg-background">
       {/* Header */}
-      <div className="px-5 pt-14 pb-4">
+      <div className="px-5 pt-14 pb-4 text-center">
         <Logo />
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1 mt-3">Madrid · Feb 2026</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Madrid · 2026</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Map</h1>
       </div>
 
-      {/* Map area */}
-      <div className="mx-5 rounded-2xl overflow-hidden shadow-card relative" style={{ height: 340 }}>
-        <div
-          className="w-full h-full relative"
-          style={{
-            background: "linear-gradient(145deg, hsl(200 30% 88%), hsl(140 20% 82%), hsl(200 25% 79%))",
-          }}
-        >
-          {/* Grid lines */}
-          <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <line key={`h${i}`} x1="0" y1={`${(i + 1) * 12.5}%`} x2="100%" y2={`${(i + 1) * 12.5}%`} stroke="hsl(200 30% 60%)" strokeWidth="0.5" />
-            ))}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <line key={`v${i}`} x1={`${(i + 1) * 12.5}%`} y1="0" x2={`${(i + 1) * 12.5}%`} y2="100%" stroke="hsl(200 30% 60%)" strokeWidth="0.5" />
-            ))}
-          </svg>
+      {/* Map */}
+      <div className="mx-5 rounded-2xl overflow-hidden shadow-card" style={{ height: 340 }}>
+        {isLoading ? (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">Loading map…</p>
+          </div>
+        ) : (
+          <Map
+            mapboxAccessToken={MAPBOX_TOKEN}
+            initialViewState={{ longitude: -3.7038, latitude: 40.4168, zoom: 12.5 }}
+            style={{ width: "100%", height: "100%" }}
+            mapStyle="mapbox://styles/mapbox/streets-v12"
+            onClick={() => setPopupEventId(null)}
+          >
+            {events.map((event) => {
+              const [lng, lat] = getEventCoords(event.id, event.latitude, event.longitude);
+              const color = categoryColor(event.category, event.categoryColor);
+              const isSelected = popupEventId === event.id;
+              return (
+                <Marker key={event.id} longitude={lng} latitude={lat} anchor="bottom">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleMarkerClick(event.id); }}
+                    className="transition-transform duration-200"
+                    style={{ transform: isSelected ? "scale(1.25)" : "scale(1)" }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center"
+                      style={{ background: color }}
+                    >
+                      <span className="text-white text-[10px] font-bold">
+                        {event.category.charAt(0)}
+                      </span>
+                    </div>
+                    <div className="w-0 h-0 mx-auto" style={{
+                      borderLeft: "5px solid transparent",
+                      borderRight: "5px solid transparent",
+                      borderTop: `7px solid ${color}`,
+                    }} />
+                  </button>
+                </Marker>
+              );
+            })}
 
-          {/* Roads */}
-          <svg className="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 45% Q30% 40%, 60% 50% T100% 48%" stroke="hsl(0 0% 95%)" strokeWidth="3" fill="none" />
-            <path d="M20% 0 Q25% 35%, 30% 70% T28% 100%" stroke="hsl(0 0% 95%)" strokeWidth="2" fill="none" />
-            <path d="M50% 0 Q55% 45%, 52% 100%" stroke="hsl(0 0% 95%)" strokeWidth="2.5" fill="none" />
-            <path d="M0 70% Q40% 65%, 100% 72%" stroke="hsl(0 0% 92%)" strokeWidth="1.5" fill="none" />
-          </svg>
-
-          {/* Event pins */}
-          {events.map((event) => {
-            const pos = cityPositions[event.city] ?? defaultPosition;
-            // Slight offset per event id so overlapping pins spread out
-            const offset = parseInt(event.id.slice(-2), 16) % 8;
-            const x = pos.x + (offset - 4);
-            const y = pos.y + (offset % 3) - 1;
-            const color = categoryColors[event.category] ?? event.categoryColor;
-            const isSelected = selectedPin === event.id;
-
-            return (
-              <button
-                key={event.id}
-                onClick={() => setSelectedPin(isSelected ? null : event.id)}
-                className="absolute transform -translate-x-1/2 -translate-y-full transition-all duration-200"
-                style={{ left: `${x}%`, top: `${y}%` }}
-              >
-                <div
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium shadow-floating transition-all duration-200 ${
-                    isSelected ? "scale-110" : ""
-                  }`}
-                  style={{
-                    background: color,
-                    color: "hsl(0 0% 98%)",
-                    boxShadow: `0 4px 16px ${color}40`,
-                  }}
+            {selectedEvent && (() => {
+              const [lng, lat] = getEventCoords(selectedEvent.id, selectedEvent.latitude, selectedEvent.longitude);
+              return (
+                <Popup
+                  longitude={lng}
+                  latitude={lat}
+                  anchor="bottom"
+                  offset={48}
+                  closeButton={false}
+                  closeOnClick={false}
+                  style={{ padding: 0 }}
                 >
-                  <MapPin size={10} />
-                  {event.city}
-                </div>
-                <div className="w-2 h-2 mx-auto rounded-full -mt-px" style={{ background: color }} />
-              </button>
-            );
-          })}
-        </div>
+                  <div className="bg-white rounded-xl overflow-hidden shadow-floating" style={{ width: 200 }}>
+                    {selectedEvent.image && (
+                      <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full object-cover" style={{ height: 80 }} />
+                    )}
+                    <div className="p-2.5">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">{selectedEvent.category}</p>
+                      <p className="text-sm font-serif font-medium text-gray-800 leading-snug mt-0.5">{selectedEvent.title}</p>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                        <Calendar size={10} />
+                        {selectedEvent.date}
+                        <span className="ml-1 font-medium text-gray-700">{selectedEvent.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              );
+            })()}
+          </Map>
+        )}
       </div>
 
       {/* Legend */}
       <div className="flex gap-3 px-5 mt-3 flex-wrap">
-        {Object.entries(categoryColors).map(([cat, color]) => (
+        {Array.from(new Set(events.map((e) => e.category))).map((cat) => (
           <div key={cat} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: categoryColor(cat, "hsl(252 30% 45%)") }} />
             {cat}
           </div>
         ))}
       </div>
-
-      {/* Selected event card */}
-      {selectedEvent && (
-        <div className="mx-5 mt-4 bg-card rounded-2xl overflow-hidden shadow-floating animate-fade-up">
-          <div className="flex gap-0">
-            <div className="w-20 flex-shrink-0">
-              {selectedEvent.image ? (
-                <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover" style={{ minHeight: 80 }} />
-              ) : (
-                <div className="w-full h-full" style={{ minHeight: 80, background: selectedEvent.categoryColor }} />
-              )}
-            </div>
-            <div className="flex-1 p-3">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{selectedEvent.category}</span>
-              <h3 className="font-serif text-sm font-medium text-foreground leading-snug">{selectedEvent.title}</h3>
-              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Calendar size={10} />{selectedEvent.date}</span>
-                <span className="flex items-center gap-1"><MapPin size={10} />{selectedEvent.city}</span>
-              </div>
-            </div>
-            <div className="pr-3 flex items-center">
-              <button className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-medium">
-                View
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Nearby events list */}
       <div className="px-5 mt-5 pb-24">
@@ -150,15 +155,18 @@ export function MapScreen() {
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="space-y-2.5">
-            {events.slice(0, 3).map((event) => (
+            {events.map((event) => (
               <button
                 key={event.id}
-                onClick={() => setSelectedPin(event.id === selectedPin ? null : event.id)}
+                onClick={() => setPopupEventId(event.id === popupEventId ? null : event.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left ${
-                  selectedPin === event.id ? "border-primary" : "border-border"
+                  popupEventId === event.id ? "border-primary" : "border-border"
                 } shadow-soft`}
               >
-                <MapPin size={14} className="text-primary flex-shrink-0" />
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ background: categoryColor(event.category, event.categoryColor) }}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
                   <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
