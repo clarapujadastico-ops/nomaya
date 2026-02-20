@@ -39,6 +39,7 @@ export function EventsScreen() {
 
   const { data: events = [], isLoading } = useEvents();
   const { data: bookings = [] } = useBookings();
+  const [bookingError, setBookingError] = useState<string | null>(null);
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
 
@@ -171,9 +172,15 @@ export function EventsScreen() {
             </div>
           </div>
 
+          {bookingError && (
+            <div className="bg-red-500/20 border border-red-400/40 rounded-xl px-4 py-3 text-xs text-red-200">
+              {bookingError}
+            </div>
+          )}
+
           {event.isTbc ? (
             <button
-              onClick={() => !isBooked && bookEvent(selectedEvent)}
+              onClick={() => { setBookingError(null); !isBooked && bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) }); }}
               disabled={isBooked || isBooking}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
@@ -181,7 +188,7 @@ export function EventsScreen() {
             </button>
           ) : (
             <button
-              onClick={() => !isBooked && bookEvent(selectedEvent)}
+              onClick={() => { setBookingError(null); !isBooked && bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) }); }}
               disabled={isBooked || isBooking || event.spotsLeft === 0}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >

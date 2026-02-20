@@ -43,7 +43,10 @@ export function useBookEvent() {
     mutationFn: async (eventId: string) => {
       const { data, error } = await supabase
         .from('bookings')
-        .insert({ user_id: user!.id, event_id: eventId, status: 'confirmed' })
+        .upsert(
+          { user_id: user!.id, event_id: eventId, status: 'confirmed' },
+          { onConflict: 'user_id,event_id' }
+        )
         .select()
         .single()
       if (error) throw error
