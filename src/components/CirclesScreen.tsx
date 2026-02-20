@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle } from "lucide-react";
-import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests } from "@/hooks/useCircles";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus } from "lucide-react";
+import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
@@ -109,8 +109,10 @@ function CircleDetail({
   const { mutate: join, isPending: isJoining } = useJoinCircle();
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
   const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
+  const { mutate: respond } = useRespondToJoinRequest();
   const { data: myRequests = [] } = useMyJoinRequests();
-  const [activeTab, setActiveTab] = useState<"about" | "chat">("about");
+  const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "requests">("about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
@@ -168,10 +170,10 @@ function CircleDetail({
 
       {/* Tabs */}
       <div className="flex border-b border-border mx-5 mt-4 gap-1">
-        {(["about", "chat"] as const).map((tab) => (
+        {(["about", "chat", ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveTab(tab as "about" | "chat" | "requests")}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 ${
               activeTab === tab
                 ? "border-primary text-foreground"
@@ -179,7 +181,13 @@ function CircleDetail({
             }`}
           >
             {tab === "chat" && <MessageCircle size={14} />}
+            {tab === "requests" && <UserPlus size={14} />}
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === "requests" && pendingRequests.length > 0 && (
+              <span className="ml-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                {pendingRequests.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -253,6 +261,48 @@ function CircleDetail({
               </button>
             )}
           </>
+        ) : activeTab === "requests" ? (
+          <div className="space-y-3">
+            {pendingRequests.length === 0 ? (
+              <div className="bg-card rounded-2xl p-6 shadow-soft text-center">
+                <p className="text-sm text-muted-foreground">No pending requests.</p>
+              </div>
+            ) : pendingRequests.map((req) => (
+              <div key={req.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-sm flex-shrink-0">
+                    {req.profile?.name?.[0] ?? "?"}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{req.profile?.name ?? "Member"}</p>
+                    <p className="text-xs text-muted-foreground">{req.profile?.city ?? ""}</p>
+                    {req.profile?.bio && (
+                      <p className="text-xs text-muted-foreground mt-1 leading-snug line-clamp-2">{req.profile.bio}</p>
+                    )}
+                  </div>
+                </div>
+                {req.message && (
+                  <p className="text-sm text-foreground leading-relaxed bg-muted rounded-xl px-3 py-2 italic">
+                    "{req.message}"
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => respond({ requestId: req.id, circleId: circle.id, userId: req.user_id, approve: false })}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium"
+                  >
+                    <X size={14} /> Decline
+                  </button>
+                  <button
+                    onClick={() => respond({ requestId: req.id, circleId: circle.id, userId: req.user_id, approve: true })}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl gradient-cta text-white text-sm font-medium"
+                  >
+                    <Check size={14} /> Approve
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <ChatPanel circleId={circle.id} isMember={isMember} />
         )}

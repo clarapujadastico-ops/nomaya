@@ -20,6 +20,7 @@ export interface Database {
           linkedin_url: string | null
           tiktok_url: string | null
           verification_status: 'unverified' | 'pending' | 'verified'
+          badges: string[]
           created_at: string
         }
         Insert: {
@@ -36,6 +37,7 @@ export interface Database {
           linkedin_url?: string | null
           tiktok_url?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
+          badges?: string[]
           created_at?: string
         }
         Update: {
@@ -52,6 +54,7 @@ export interface Database {
           linkedin_url?: string | null
           tiktok_url?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
+          badges?: string[]
           created_at?: string
         }
       }

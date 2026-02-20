@@ -40,6 +40,10 @@ export function EventsScreen() {
   const { data: events = [], isLoading } = useEvents();
   const { data: bookings = [] } = useBookings();
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
 
@@ -93,6 +97,7 @@ export function EventsScreen() {
     const isBooked = !!booking;
 
     return (
+      <>
       <div className="mobile-container flex flex-col bg-background pb-24">
         {/* Event hero */}
         <div className="relative h-72">
@@ -188,7 +193,15 @@ export function EventsScreen() {
             </button>
           ) : (
             <button
-              onClick={() => { setBookingError(null); !isBooked && bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) }); }}
+              onClick={() => {
+                setBookingError(null);
+                if (isBooked || isBooking || event.spotsLeft === 0) return;
+                if (event.price !== "Free") {
+                  setShowPayment(true);
+                } else {
+                  bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) });
+                }
+              }}
               disabled={isBooked || isBooking || event.spotsLeft === 0}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
@@ -213,6 +226,72 @@ export function EventsScreen() {
           )}
         </div>
       </div>
+
+      {/* Payment sheet */}
+      {showPayment && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPayment(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Payment</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{event.title} · <span className="font-medium text-foreground">{event.price}</span></p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="bg-muted rounded-xl px-4 py-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Card number</p>
+                <input
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim())}
+                  placeholder="1234 5678 9012 3456"
+                  inputMode="numeric"
+                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none tracking-wider"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 bg-muted rounded-xl px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Expiry</p>
+                  <input
+                    value={cardExpiry}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      setCardExpiry(v.length > 2 ? `${v.slice(0,2)}/${v.slice(2)}` : v);
+                    }}
+                    placeholder="MM/YY"
+                    inputMode="numeric"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  />
+                </div>
+                <div className="flex-1 bg-muted rounded-xl px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">CVC</p>
+                  <input
+                    value={cardCvc}
+                    onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                    placeholder="123"
+                    inputMode="numeric"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowPayment(false);
+                setBookingError(null);
+                bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) });
+              }}
+              disabled={isBooking}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60"
+            >
+              {isBooking ? "Processing…" : `Pay & Reserve · ${event.price}`}
+            </button>
+            <p className="text-center text-[10px] text-muted-foreground">Payments powered by Stripe</p>
+          </div>
+        </div>
+      )}
+      </>
     );
   }
 

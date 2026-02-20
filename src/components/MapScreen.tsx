@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, Ticket } from "lucide-react";
 import Map, { Marker, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
+import { useBookings } from "@/hooks/useBookings";
 import { Logo } from "./Logo";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
@@ -44,9 +45,12 @@ function categoryColor(cat: string, fallback: string): string {
 
 export function MapScreen() {
   const [popupEventId, setPopupEventId] = useState<string | null>(null);
-  const { data: allEvents = [], isLoading } = useEvents();
+  const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
 
-  const events = allEvents.filter((e) => e.city === "Madrid" || !e.city);
+  const isLoading = eventsLoading || bookingsLoading;
+  const bookedIds = new Set(bookings.map((b) => b.event_id));
+  const events = allEvents.filter((e) => bookedIds.has(e.id));
   const selectedEvent = popupEventId ? events.find((e) => e.id === popupEventId) : null;
 
   const handleMarkerClick = useCallback((id: string) => {
@@ -59,7 +63,7 @@ export function MapScreen() {
       <div className="px-5 pt-14 pb-4 text-center">
         <Logo />
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Madrid · 2026</p>
-        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Map</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">My Events</h1>
       </div>
 
       {/* Map */}
@@ -138,40 +142,35 @@ export function MapScreen() {
         )}
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-3 px-5 mt-3 flex-wrap">
-        {Array.from(new Set(events.map((e) => e.category))).map((cat) => (
-          <div key={cat} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: categoryColor(cat, "hsl(252 30% 45%)") }} />
-            {cat}
-          </div>
-        ))}
-      </div>
-
-      {/* Nearby events list */}
+      {/* My reservations list */}
       <div className="px-5 mt-5 pb-24">
-        <h2 className="font-serif text-lg font-medium text-foreground mb-3">Nearby events</h2>
+        <h2 className="font-serif text-lg font-medium text-foreground mb-3">My reservations</h2>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : events.length === 0 ? (
+          <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+            <Ticket size={28} className="text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Reserve an event to see it here on the map.
+            </p>
+          </div>
         ) : (
           <div className="space-y-2.5">
             {events.map((event) => (
               <button
                 key={event.id}
                 onClick={() => setPopupEventId(event.id === popupEventId ? null : event.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left shadow-soft ${
                   popupEventId === event.id ? "border-primary" : "border-border"
-                } shadow-soft`}
+                }`}
               >
-                <div
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ background: categoryColor(event.category, event.categoryColor) }}
-                />
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ background: categoryColor(event.category, event.categoryColor) }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
-                  <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
+                  <p className="text-xs text-muted-foreground">{event.city} · {event.date} · {event.time}</p>
                 </div>
-                <span className="text-xs font-medium text-primary">{event.spotsLeft} left</span>
+                <span className="text-xs font-medium text-primary flex-shrink-0">{event.price}</span>
               </button>
             ))}
           </div>

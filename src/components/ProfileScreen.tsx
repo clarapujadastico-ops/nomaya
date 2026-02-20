@@ -10,6 +10,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
 import { VerificationFlow } from "./VerificationFlow";
+import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 
 interface ProfileScreenProps {
   onLogout?: () => void;
@@ -48,6 +49,11 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [notificationsOn, setNotificationsOn] = useState(true);
+
+  useFoundingMemberBadge();
+
+  const badges: string[] = (profile as { badges?: string[] } | null)?.badges ?? [];
+  const isFoundingMember = badges.includes('founding_member');
 
   const ritualBadge = bookings.length >= 5
     ? { label: "Keeper of the Circle", icon: "🔮" }
@@ -243,10 +249,18 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </div>
         </div>
 
-        {ritualBadge && (
-          <div className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-2">
-            <span className="text-base">{ritualBadge.icon}</span>
-            <span className="text-xs font-medium text-primary tracking-wide">{ritualBadge.label}</span>
+        {(ritualBadge || isFoundingMember) && (
+          <div className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-3 flex-wrap">
+            {isFoundingMember && (
+              <span className="flex items-center gap-1.5 text-xs font-medium text-primary tracking-wide">
+                <span>🏛️</span> Founding Member
+              </span>
+            )}
+            {ritualBadge && (
+              <span className="flex items-center gap-1.5 text-xs font-medium text-primary tracking-wide">
+                <span>{ritualBadge.icon}</span> {ritualBadge.label}
+              </span>
+            )}
           </div>
         )}
       </div>

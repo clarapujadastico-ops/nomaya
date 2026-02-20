@@ -143,6 +143,62 @@ export function useMyJoinRequests() {
   })
 }
 
+// ─── Read: pending join requests for a circle (admin only) ───────────────────
+
+export interface JoinRequest {
+  id: string
+  circle_id: string
+  user_id: string
+  message: string
+  status: string
+  created_at: string
+  profile: { name: string; avatar_url: string | null; bio: string | null; city: string } | null
+}
+
+export function useCircleJoinRequests(circleId: string | null) {
+  return useQuery({
+    queryKey: ['join_requests', 'circle', circleId],
+    queryFn: async (): Promise<JoinRequest[]> => {
+      const { data, error } = await supabase
+        .from('circle_join_requests')
+        .select('id, circle_id, user_id, message, status, created_at, profile:profiles ( name, avatar_url, bio, city )')
+        .eq('circle_id', circleId!)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      return (data ?? []) as JoinRequest[]
+    },
+    enabled: !!circleId,
+  })
+}
+
+// ─── Mutation: approve or reject a join request ───────────────────────────────
+
+export function useRespondToJoinRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      requestId, circleId, userId, approve,
+    }: { requestId: string; circleId: string; userId: string; approve: boolean }) => {
+      if (approve) {
+        const { error: memberError } = await supabase
+          .from('circle_memberships')
+          .insert({ circle_id: circleId, user_id: userId, role: 'member' })
+        if (memberError) throw memberError
+      }
+      const { error } = await supabase
+        .from('circle_join_requests')
+        .update({ status: approve ? 'approved' : 'rejected' })
+        .eq('id', requestId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['join_requests'] })
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
 // ─── Mutation: create a circle ────────────────────────────────────────────────
 
 export function useCreateCircle() {
