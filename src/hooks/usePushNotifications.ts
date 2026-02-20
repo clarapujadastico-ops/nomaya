@@ -20,7 +20,7 @@ export function usePushNotifications() {
       await supabase
         .from('device_tokens')
         .upsert(
-          { user_id: user.id, token: token.value, platform: 'ios' },
+          { user_id: user.id, token: token.value, platform: Capacitor.getPlatform() },
           { onConflict: 'user_id,token' }
         )
     })
