@@ -32,8 +32,18 @@ function isThisMonth(dateStr: string) {
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
 
+const CAT_KEYS: Record<string, string> = {
+  "Arts & Crafts": "cat.arts_crafts",
+  "Food & Dining": "cat.food_dining",
+  "Fitness":       "cat.fitness",
+  "Wellness":      "cat.wellness",
+  "Culture":       "cat.culture",
+  "Entrepreneurship": "cat.entrepreneurship",
+};
+
 export function EventsScreen() {
   const { t } = useLang();
+  function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -354,7 +364,7 @@ export function EventsScreen() {
                 : "bg-card text-muted-foreground border-border"
             }`}
           >
-            {f === "All" ? t("cat.all") : f}
+            {f === "All" ? t("cat.all") : tCat(f)}
           </button>
         ))}
       </div>
@@ -518,7 +528,7 @@ export function EventsScreen() {
             </div>
 
             {/* Fixed footer — always visible */}
-            <div className="px-6 pt-3 pb-8 border-t border-border flex gap-3 flex-shrink-0">
+            <div className="px-6 pt-3 border-t border-border flex gap-3 flex-shrink-0" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
               <button
                 onClick={() => { setAppliedFilters(defaultFilters); setPendingFilters(defaultFilters); setShowFilterSheet(false); }}
                 className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
@@ -540,20 +550,23 @@ export function EventsScreen() {
       {showVerifyPrompt && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyPrompt(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4 text-center">
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 text-center"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto" />
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <Shield size={24} className="text-primary" />
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <Shield size={28} className="text-primary" />
             </div>
             <div>
-              <h2 className="font-serif text-xl font-medium text-foreground">Verify to join events</h2>
+              <h2 className="font-serif text-2xl font-medium text-foreground">Verify to join events</h2>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                 Nomaya is a women-only space. Complete verification to access and reserve events.
               </p>
             </div>
             <button
               onClick={() => setShowVerifyPrompt(false)}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm"
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
             >
               Go to Profile → Verify
             </button>

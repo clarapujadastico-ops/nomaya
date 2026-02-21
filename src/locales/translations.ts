@@ -182,4 +182,50 @@ export const translations: TranslationMap = {
   "general.loading":    { en: "Loading…",       es: "Cargando…" },
   "general.members":    { en: "{n} members",    es: "{n} miembros" },
   "general.spots_left": { en: "{n} left",       es: "{n} restantes" },
+
+  // Onboarding
+  "onboarding.est":           { en: "Est. 2026",                   es: "Est. 2026" },
+  "onboarding.tagline":       { en: "women · circles · belonging", es: "mujeres · círculos · pertenencia" },
+  "onboarding.choose_lang":   { en: "Choose your language",        es: "Elige tu idioma" },
+  "onboarding.enter":         { en: "Enter Nomaya",                es: "Entrar a Nomaya" },
+  "onboarding.continue":      { en: "Continue",                    es: "Continuar" },
+  "onboarding.back":          { en: "Back",                        es: "Volver" },
+  "onboarding.choose_interests": { en: "Choose your interests",    es: "Elige tus intereses" },
+  "onboarding.w1_title":      { en: "Discover curated\nevents",    es: "Descubre eventos\ncurados" },
+  "onboarding.w1_sub":        { en: "Handpicked events designed for depth — not scale. Every gathering, carefully chosen.", es: "Eventos seleccionados para la profundidad, no la escala. Cada reunión, cuidadosamente elegida." },
+  "onboarding.w2_title":      { en: "Meet women through\nshared interests", es: "Conoce mujeres con\nintereses comunes" },
+  "onboarding.w2_sub":        { en: "Connection built on what you love, not algorithms. Show up. Be seen.", es: "Conexiones basadas en lo que amas, no en algoritmos. Preséntate. Sé vista." },
+  "onboarding.w3_title":      { en: "Belong to a circle\nover time", es: "Pertenece a un círculo\ncon el tiempo" },
+  "onboarding.w3_sub":        { en: "From one event to a small community. Real belonging comes from showing up again.", es: "De un evento a una pequeña comunidad. La pertenencia real viene de volver." },
+  "onboarding.what_love":     { en: "What do you love?",           es: "¿Qué te apasiona?" },
+  "onboarding.select_all":    { en: "Select all that speak to you.", es: "Selecciona todo lo que te inspire." },
+  "onboarding.select_min2":   { en: "Select at least 2",           es: "Selecciona al menos 2" },
+  "onboarding.skip":          { en: "Skip for now",                es: "Saltar por ahora" },
+  "onboarding.step1":         { en: "Step 1 of 2",                 es: "Paso 1 de 2" },
+  "onboarding.step2":         { en: "Step 2 of 3",                 es: "Paso 2 de 3" },
+  "onboarding.tell_us":       { en: "Tell us about you",           es: "Cuéntanos sobre ti" },
+  "onboarding.simple_profile":{ en: "A simple profile so your circle knows who's coming.", es: "Un perfil sencillo para que tu círculo sepa quién viene." },
+  "onboarding.your_name":     { en: "Your name",                   es: "Tu nombre" },
+  "onboarding.city":          { en: "City",                        es: "Ciudad" },
+  "onboarding.short_bio":     { en: "Short bio",                   es: "Bio corta" },
+  "onboarding.optional":      { en: "optional",                    es: "opcional" },
+  "onboarding.saving":        { en: "Saving…",                     es: "Guardando…" },
+
+  // Badge rewards descriptions
+  "badge.founding_member_desc": { en: "You joined Nomaya in the very first cohort. A founding member forever.", es: "Te uniste a Nomaya en la primera cohorte. Miembro fundadora para siempre." },
+  "badge.inner_circle_desc":    { en: "You've attended 3+ events and are a true part of the Nomaya inner circle.", es: "Has asistido a más de 3 eventos y eres parte del círculo interior de Nomaya." },
+  "badge.keeper_desc":          { en: "You've attended 5+ events. You are a keeper of the circle.", es: "Has asistido a más de 5 eventos. Eres guardiana del círculo." },
+  "badge.unlock_next":          { en: "events to unlock next badge", es: "eventos para desbloquear el siguiente nivel" },
+
+  // Member card
+  "member_card.member_no":   { en: "Member",                      es: "Miembro" },
+  "member_card.your_card":   { en: "Your member card",            es: "Tu tarjeta de miembro" },
+
+  // Map toggle
+  "map.all_events":   { en: "All events",        es: "Todos los eventos" },
+  "map.my_events_tab":{ en: "My reservations",   es: "Mis reservas" },
+
+  // Circles — invite
+  "circles.invite_title": { en: "Invite to circle", es: "Invitar al círculo" },
+  "circles.search_members": { en: "Search by name…", es: "Buscar por nombre…" },
 };

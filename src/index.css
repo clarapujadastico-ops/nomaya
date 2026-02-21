@@ -28,9 +28,9 @@
     --popover: 252 26% 56%;
     --popover-foreground: 0 0% 100%;
 
-    /* Primary — lavender #e4defa on deep purple background */
-    --primary: 252 75% 93%;           /* #e4defa lavender */
-    --primary-foreground: 252 30% 45%; /* #5f5095 deep purple text on lavender */
+    /* Primary — gold #eeb64e — pops off deep purple */
+    --primary: 38 82% 62%;            /* #eeb64e gold */
+    --primary-foreground: 252 35% 15%; /* dark text on gold */
 
     /* Secondary */
     --secondary: 252 28% 50%;
@@ -49,7 +49,7 @@
 
     --border: 252 24% 62%;
     --input: 252 26% 56%;
-    --ring: 252 75% 93%;
+    --ring: 38 82% 62%;
 
     --radius: 1rem;
 
@@ -73,7 +73,7 @@
 
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(38 55% 95%), hsl(252 40% 96%));
-    --gradient-cta: linear-gradient(135deg, hsl(252 75% 93%), hsl(252 58% 82%));
+    --gradient-cta: linear-gradient(135deg, hsl(38 82% 62%), hsl(347 70% 60%)); /* gold → rose */
     --gradient-warm: linear-gradient(145deg, hsl(38 65% 88%), hsl(347 86% 92%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(252 40% 98%));
 

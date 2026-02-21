@@ -3,27 +3,13 @@ import { ChevronRight, Check } from "lucide-react";
 import { INTERESTS } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
+import { useLang } from "@/contexts/LanguageContext";
 
 type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile" | "verify";
 
 interface OnboardingProps {
   onComplete: () => void;
 }
-
-const welcomeScreens = [
-  {
-    title: "Discover curated\nexperiences",
-    subtitle: "Handpicked events designed for depth — not scale. Every gathering, carefully chosen.",
-  },
-  {
-    title: "Meet women through\nshared interests",
-    subtitle: "Connection built on what you love, not algorithms. Show up. Be seen.",
-  },
-  {
-    title: "Belong to a circle\nover time",
-    subtitle: "From one event to a small community. Real belonging comes from showing up again.",
-  },
-];
 
 /* ─── Video background (reused across landing + welcome screens) ─── */
 function VideoBackground({ opacity = 1 }: { opacity?: number }) {
@@ -42,8 +28,15 @@ function VideoBackground({ opacity = 1 }: { opacity?: number }) {
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingProps) {
+  const { t, setLang: setCtxLang } = useLang();
   const [step, setStep] = useState<Step>("language");
   const [language, setLanguage] = useState<"en" | "es">("en");
+
+  const welcomeScreens = [
+    { title: t("onboarding.w1_title"), subtitle: t("onboarding.w1_sub") },
+    { title: t("onboarding.w2_title"), subtitle: t("onboarding.w2_sub") },
+    { title: t("onboarding.w3_title"), subtitle: t("onboarding.w3_sub") },
+  ];
   const [welcomeIndex, setWelcomeIndex] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profile, setProfile] = useState({ name: "", city: "", bio: "" });
@@ -105,7 +98,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             }}
           >
             <p className="text-xs text-card/50 tracking-widest uppercase text-center mb-5">
-              Choose your language
+              {t("onboarding.choose_lang")}
             </p>
 
             <div className="space-y-2.5 mb-6">
@@ -115,7 +108,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               ].map((lang) => (
                 <button
                   key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
+                  onClick={() => { setLanguage(lang.code); setCtxLang(lang.code); }}
                   className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200"
                   style={{
                     borderColor: language === lang.code
@@ -146,7 +139,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                 boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
               }}
             >
-              Enter Nomaya
+              {t("onboarding.enter")}
             </button>
           </div>
         </div>
@@ -224,7 +217,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
                 }}
               >
-                {isLast ? "Choose your interests" : "Continue"}
+                {isLast ? t("onboarding.choose_interests") : t("onboarding.continue")}
                 {!isLast && <ChevronRight size={16} className="inline ml-1" />}
               </button>
               <button
@@ -238,7 +231,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                 }}
                 className="w-full py-3 text-card/40 text-sm"
               >
-                Back
+                {t("onboarding.back")}
               </button>
             </div>
           </div>
@@ -250,75 +243,53 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   /* ── INTERESTS ── */
   if (step === "interests") {
     return (
-      <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
-        <div className="px-6 pt-14 pb-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 1 of 2</p>
+      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step1")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
           >
-            What do you love?
+            {t("onboarding.what_love")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Select all that speak to you.
-          </p>
+          <p className="text-sm text-muted-foreground mt-2">{t("onboarding.select_all")}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 px-6 pb-4 overflow-y-auto">
+        {/* Bubble pills */}
+        <div className="flex flex-wrap gap-2.5 px-6 overflow-y-auto flex-1 content-start pb-4">
           {INTERESTS.map((interest) => {
             const isSelected = selectedInterests.includes(interest.id);
             return (
               <button
                 key={interest.id}
                 onClick={() => toggleInterest(interest.id)}
-                className="relative rounded-2xl overflow-hidden text-left transition-all duration-200 active:scale-[0.97]"
-                style={{
-                  height: 160,
-                  background: interest.color,
-                  outline: isSelected ? "3px solid hsl(252 75% 90%)" : "none",
-                  outlineOffset: "2px",
-                  transform: isSelected ? "scale(1.03)" : "scale(1)",
-                }}
+                className={`px-5 py-3 rounded-full text-sm font-medium border-2 transition-all duration-200 active:scale-[0.97] ${
+                  isSelected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground"
+                }`}
               >
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-
-                {/* Checkmark */}
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
-                    <Check size={14} style={{ color: interest.color }} />
-                  </div>
-                )}
-
-                {/* Content */}
-                <div className="absolute inset-x-0 bottom-0 p-3">
-                  <span style={{ fontSize: "2.25rem", lineHeight: 1 }}>{interest.emoji}</span>
-                  <p className="text-sm font-medium text-white mt-1 leading-tight">{interest.label}</p>
-                </div>
+                {interest.label}
               </button>
             );
           })}
         </div>
 
-        <div className="px-6 space-y-3 mt-auto">
+        <div
+          className="px-6 space-y-3"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}
+        >
           <button
             onClick={() => setStep("profile")}
             disabled={selectedInterests.length < 2}
-            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98]"
-            style={
-              selectedInterests.length >= 2
-                ? {
-                    background: "hsl(var(--nomaya-purple))",
-                    color: "hsl(252 75% 97%)",
-                    boxShadow: "0 4px 24px hsl(252 30% 45% / 0.35)",
-                  }
-                : { background: "hsl(252 25% 38%)", color: "hsl(252 55% 70%)" }
-            }
+            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white disabled:opacity-40"
           >
-            {selectedInterests.length >= 2 ? `Continue · ${selectedInterests.length} selected` : "Select at least 2"}
+            {selectedInterests.length >= 2
+              ? `${t("onboarding.continue")} · ${selectedInterests.length} selected`
+              : t("onboarding.select_min2")}
           </button>
           <button onClick={() => setStep("profile")} className="w-full py-2 text-muted-foreground text-sm">
-            Skip for now
+            {t("onboarding.skip")}
           </button>
         </div>
       </div>
@@ -330,15 +301,15 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     return (
       <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 3</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step2")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
           >
-            Tell us about you
+            {t("onboarding.tell_us")}
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
-            A simple profile so your circle knows who's coming.
+            {t("onboarding.simple_profile")}
           </p>
         </div>
 
@@ -350,8 +321,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
         <div className="space-y-4 flex-1">
           {[
-            { key: "name", label: "Your name", placeholder: "Sofia" },
-            { key: "city", label: "City", placeholder: "Madrid" },
+            { key: "name", label: t("onboarding.your_name"), placeholder: "Sofia" },
+            { key: "city", label: t("onboarding.city"), placeholder: "Madrid" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
               <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
@@ -368,7 +339,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           ))}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              Short bio <span className="normal-case">(optional)</span>
+              {t("onboarding.short_bio")} <span className="normal-case">({t("onboarding.optional")})</span>
             </label>
             <textarea
               placeholder="Designer. Ceramics enthusiast. Dog mum."
@@ -403,7 +374,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
             }}
           >
-            {isSaving ? "Saving…" : "Continue"}
+            {isSaving ? t("onboarding.saving") : t("onboarding.continue")}
           </button>
           <button
             onClick={() => {
@@ -416,7 +387,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             disabled={isSaving}
             className="w-full py-2 text-muted-foreground text-sm"
           >
-            Skip
+            {t("onboarding.skip")}
           </button>
         </div>
       </div>

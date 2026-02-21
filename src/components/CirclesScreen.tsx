@@ -115,6 +115,7 @@ function CircleDetail({
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "requests">("about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+  const [showInviteSheet, setShowInviteSheet] = useState(false);
 
   const isMember = circle.isMember || circle.isAdmin;
   const hasPendingRequest = myRequests.some(
@@ -236,8 +237,16 @@ function CircleDetail({
 
             {/* Action */}
             {circle.isAdmin ? (
-              <div className="w-full py-4 rounded-2xl bg-secondary text-secondary-foreground font-medium text-base border border-border text-center">
-                You admin this circle
+              <div className="flex gap-2">
+                <div className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground font-medium text-sm border border-border text-center flex items-center justify-center">
+                  You admin this circle
+                </div>
+                <button
+                  onClick={() => setShowInviteSheet(true)}
+                  className="flex items-center gap-1.5 px-4 py-3 rounded-2xl gradient-cta text-white text-sm font-medium"
+                >
+                  <UserPlus size={15} /> Invite
+                </button>
               </div>
             ) : circle.isMember ? (
               <button
@@ -308,11 +317,50 @@ function CircleDetail({
         )}
       </div>
 
+      {/* Invite sheet (admin only) */}
+      {showInviteSheet && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInviteSheet(false)} />
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <h2 className="font-serif text-xl font-medium text-foreground">Invite to circle</h2>
+            <p className="text-sm text-muted-foreground">Share this link to invite members directly.</p>
+            <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
+              <p className="text-sm text-foreground flex-1 truncate">nomaya.app/circles/{circle.id}</p>
+              <button
+                onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)}
+                className="text-xs font-medium text-primary flex-shrink-0"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                const url = `https://nomaya.app/circles/${circle.id}`;
+                const text = `Join me in the ${circle.name} circle on Nomaya!`;
+                if (navigator.share) { navigator.share({ title: circle.name, text, url }); }
+                else { navigator.clipboard?.writeText(`${text}\n${url}`); }
+                setShowInviteSheet(false);
+              }}
+              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+            >
+              Share invite link
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Join request sheet */}
       {showJoinRequest && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowJoinRequest(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <div>
               <h2 className="font-serif text-xl font-medium text-foreground">Request to join</h2>

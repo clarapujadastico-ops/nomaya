@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket } from "lucide-react";
+import { Calendar, Ticket, Globe } from "lucide-react";
 import Map, { Marker, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
 import { Logo } from "./Logo";
+import { useLang } from "@/contexts/LanguageContext";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
 
@@ -44,13 +45,15 @@ function categoryColor(cat: string, fallback: string): string {
 }
 
 export function MapScreen() {
+  const { t } = useLang();
   const [popupEventId, setPopupEventId] = useState<string | null>(null);
+  const [showMyOnly, setShowMyOnly] = useState(false);
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
 
   const isLoading = eventsLoading || bookingsLoading;
   const bookedIds = new Set(bookings.map((b) => b.event_id));
-  const events = allEvents.filter((e) => bookedIds.has(e.id));
+  const events = showMyOnly ? allEvents.filter((e) => bookedIds.has(e.id)) : allEvents;
   const selectedEvent = popupEventId ? events.find((e) => e.id === popupEventId) : null;
 
   const handleMarkerClick = useCallback((id: string) => {
@@ -60,10 +63,30 @@ export function MapScreen() {
   return (
     <div className="mobile-container flex flex-col bg-background">
       {/* Header */}
-      <div className="px-5 pt-14 pb-4 text-center">
+      <div className="px-5 pt-14 pb-3 text-center">
         <Logo />
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Madrid · 2026</p>
-        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">My Events</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("map.heading")}</h1>
+      </div>
+
+      {/* Toggle */}
+      <div className="flex gap-2 mx-5 mb-3">
+        <button
+          onClick={() => setShowMyOnly(false)}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all ${
+            !showMyOnly ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
+          }`}
+        >
+          <Globe size={12} /> {t("map.all_events")}
+        </button>
+        <button
+          onClick={() => setShowMyOnly(true)}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all ${
+            showMyOnly ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
+          }`}
+        >
+          <Ticket size={12} /> {t("map.my_events_tab")}
+        </button>
       </div>
 
       {/* Map */}
@@ -144,14 +167,16 @@ export function MapScreen() {
 
       {/* My reservations list */}
       <div className="px-5 mt-5 pb-24">
-        <h2 className="font-serif text-lg font-medium text-foreground mb-3">My reservations</h2>
+        <h2 className="font-serif text-lg font-medium text-foreground mb-3">
+          {showMyOnly ? t("map.my_reservations") : t("map.all_events")}
+        </h2>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
         ) : events.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
             <Ticket size={28} className="text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Reserve an event to see it here on the map.
+              {t("map.empty")}
             </p>
           </div>
         ) : (

@@ -47,6 +47,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showVerification, setShowVerification] = useState(false);
   const [showInterestsSheet, setShowInterestsSheet] = useState(false);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [showMemberCard, setShowMemberCard] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [notificationsOn, setNotificationsOn] = useState(true);
 
@@ -250,7 +252,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
 
         {(ritualBadge || isFoundingMember) && (
-          <div className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={() => setShowBadgeModal(true)}
+            className="mt-4 pt-4 border-t border-border flex items-center justify-center gap-3 flex-wrap w-full active:opacity-70"
+          >
             {isFoundingMember && (
               <span className="flex items-center gap-1.5 text-xs font-medium text-primary tracking-wide">
                 <span>🏛️</span> Founding Member
@@ -261,8 +266,18 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 <span>{ritualBadge.icon}</span> {ritualBadge.label}
               </span>
             )}
-          </div>
+            <ChevronRight size={12} className="text-muted-foreground ml-auto" />
+          </button>
         )}
+
+        {/* Member card */}
+        <button
+          onClick={() => setShowMemberCard(true)}
+          className="mt-4 pt-4 border-t border-border flex items-center justify-between w-full"
+        >
+          <span className="text-xs font-medium text-muted-foreground">{t("member_card.your_card")}</span>
+          <ChevronRight size={12} className="text-muted-foreground" />
+        </button>
       </div>
 
       {/* About me */}
@@ -457,7 +472,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showHoroscopeSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowHoroscopeSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10">
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
             <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("profile.your_star_sign")}</h2>
             <div className="grid grid-cols-3 gap-2">
@@ -483,9 +501,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showInterestsSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInterestsSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "80vh" }}>
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
-            <h2 className="font-serif text-xl font-medium text-foreground mb-4 px-6">{t("profile.select_interests")}</h2>
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "88vh" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
+            <h2 className="font-serif text-xl font-medium text-foreground mb-3 px-6">{t("profile.select_interests")}</h2>
             <div className="flex flex-wrap gap-2 px-6 overflow-y-auto flex-1 pb-4">
               {INTERESTS.map((interest) => {
                 const isSelected = selectedInterests.includes(interest.id);
@@ -495,7 +513,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                     onClick={() => setSelectedInterests((prev) =>
                       prev.includes(interest.id) ? prev.filter((i) => i !== interest.id) : [...prev, interest.id]
                     )}
-                    className={`px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 active:scale-[0.97] ${
+                    className={`px-4 py-2.5 rounded-full text-sm font-medium border transition-all duration-200 active:scale-[0.97] ${
                       isSelected
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-muted text-foreground border-border"
@@ -506,10 +524,13 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 );
               })}
             </div>
-            <div className="px-6 py-4 border-t border-border">
+            <div
+              className="px-6 pt-4 border-t border-border flex-shrink-0"
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}
+            >
               <button
                 onClick={saveInterests}
-                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
               >
                 {t("profile.save")} · {selectedInterests.length} selected
               </button>
@@ -522,7 +543,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showLanguageSheet && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLanguageSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-3">
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <h2 className="font-serif text-xl font-medium text-foreground">{t("settings.choose_language")}</h2>
             {[
@@ -545,6 +569,107 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 {lang === l.code && <Check size={15} className="text-primary" />}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Badge rewards modal */}
+      {showBadgeModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+            <h2 className="font-serif text-xl font-medium text-foreground mb-1">{t("badge.your_rewards")}</h2>
+            <p className="text-xs text-muted-foreground mb-5">Based on your events attended</p>
+
+            {/* Badge levels */}
+            {[
+              { icon: "🌸", label: "Founding Circle",     desc: "You showed up. That's everything.",      events: 1 },
+              { icon: "✨", label: "Inner Circle",         desc: "3+ events — you're a true regular.",     events: 3 },
+              { icon: "🔮", label: "Keeper of the Circle", desc: "5+ events — a pillar of the community.", events: 5 },
+            ].map((b) => {
+              const earned = bookings.length >= b.events;
+              return (
+                <div key={b.label} className={`flex items-center gap-3 py-3 border-b border-border ${!earned ? "opacity-40" : ""}`}>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
+                    {b.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{b.label}</p>
+                    <p className="text-xs text-muted-foreground">{b.desc}</p>
+                  </div>
+                  {earned && <Check size={14} className="text-primary flex-shrink-0" />}
+                  {!earned && <span className="text-[10px] text-muted-foreground">{b.events} events</span>}
+                </div>
+              );
+            })}
+
+            {isFoundingMember && (
+              <div className="flex items-center gap-3 py-3 mt-1">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">🏛️</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">Founding Member</p>
+                  <p className="text-xs text-muted-foreground">You joined Nomaya in the very first cohort.</p>
+                </div>
+                <Check size={14} className="text-primary flex-shrink-0" />
+              </div>
+            )}
+
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              {t("badge.progress")}: {bookings.length} events
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Member card modal */}
+      {showMemberCard && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+            <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("member_card.your_card")}</h2>
+
+            {/* The card */}
+            <div
+              className="rounded-2xl p-5 shadow-card mb-4 relative overflow-hidden"
+              style={{ background: "linear-gradient(135deg, hsl(252 30% 40%), hsl(252 30% 30%))" }}
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
+                style={{ background: "radial-gradient(circle, hsl(38 82% 62%), transparent)", transform: "translate(30%, -30%)" }} />
+              <p className="text-[10px] tracking-[0.25em] uppercase text-white/50 mb-3">Est. 2026</p>
+              <p className="font-serif text-2xl font-normal text-white">{profile?.name || "Member"}</p>
+              <p className="text-xs text-white/60 mt-0.5">{profile?.city || "Madrid"}</p>
+              <div className="flex items-end justify-between mt-6">
+                <div>
+                  {ritualBadge && (
+                    <span className="text-xs font-medium text-nomaya-gold flex items-center gap-1">
+                      <span>{ritualBadge.icon}</span> {ritualBadge.label}
+                    </span>
+                  )}
+                  <p className="text-[10px] text-white/40 mt-1">{t("member_card.member_no")} since {memberSince}</p>
+                </div>
+                <p className="font-serif text-lg text-white/90 tracking-widest">NOMAYA</p>
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mb-4">{t("member_card.wallet_soon")}</p>
+            <button
+              onClick={() => {
+                const text = `Nomaya Member — ${profile?.name || "Member"}\n${ritualBadge ? ritualBadge.label : "Member"}\nMember since ${memberSince}\nnomaya.app`;
+                if (navigator.share) { navigator.share({ title: "Nomaya Member Card", text }); }
+                else { navigator.clipboard?.writeText(text); }
+              }}
+              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+            >
+              {t("member_card.share")}
+            </button>
           </div>
         </div>
       )}
