@@ -319,7 +319,7 @@ function CircleDetail({
 
       {/* Invite sheet (admin only) */}
       {showInviteSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInviteSheet(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
@@ -355,7 +355,7 @@ function CircleDetail({
 
       {/* Join request sheet */}
       {showJoinRequest && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowJoinRequest(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
@@ -416,7 +416,7 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />

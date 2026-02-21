@@ -243,7 +243,7 @@ export function EventsScreen() {
 
       {/* Payment sheet */}
       {showPayment && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPayment(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -432,7 +432,7 @@ export function EventsScreen() {
 
       {/* Filter sheet — fixed header + scrollable content + fixed footer */}
       {showFilterSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilterSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl flex flex-col" style={{ maxHeight: "85vh" }}>
             {/* Fixed header */}
@@ -548,7 +548,7 @@ export function EventsScreen() {
 
       {/* Verify prompt sheet */}
       {showVerifyPrompt && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyPrompt(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 text-center"

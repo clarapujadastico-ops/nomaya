@@ -470,7 +470,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Horoscope sheet */}
       {showHoroscopeSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowHoroscopeSheet(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
@@ -499,7 +499,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Interests sheet */}
       {showInterestsSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInterestsSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "88vh" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
@@ -541,7 +541,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Language sheet */}
       {showLanguageSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLanguageSheet(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3"
@@ -575,7 +575,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Badge rewards modal */}
       {showBadgeModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
@@ -627,7 +627,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Member card modal */}
       {showMemberCard && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
