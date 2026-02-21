@@ -1,7 +1,8 @@
 import { useState } from "react";
 import {
   ChevronRight, Globe, Bell, Heart, Star, LogOut, Camera, Instagram,
-  Linkedin, Music2, Edit2, Check, X, Shield,
+  Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
+  HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings,
 } from "lucide-react";
 import { useCircles } from "@/hooks/useCircles";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
@@ -49,6 +50,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showMemberCard, setShowMemberCard] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [notificationsOn, setNotificationsOn] = useState(true);
 
@@ -149,6 +151,130 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         onComplete={() => { setShowVerification(false); refetchProfile(); }}
         onSkip={() => { setShowVerification(false); refetchProfile(); }}
       />
+    );
+  }
+
+  if (showSettings) {
+    const settingsSections = [
+      {
+        title: null,
+        items: [
+          { icon: Pencil,        label: "Edit Profile",       value: null,    onPress: () => setShowSettings(false) },
+          { icon: Bell,          label: t("profile.notifications"), value: notificationsOn ? t("profile.on") : t("profile.off"), onPress: handleNotifications },
+          { icon: Lock,          label: "Privacy settings",   value: null,    onPress: () => {} },
+        ],
+      },
+      {
+        title: "Plan and credits",
+        items: [
+          { icon: Sparkles,  label: "Subscription",  value: ritualBadge?.label ?? "Member", onPress: () => {} },
+          { icon: CreditCard, label: "Credits",       value: `${bookings.length * 4}`,       onPress: () => {} },
+        ],
+      },
+      {
+        title: "Help and support",
+        items: [
+          { icon: MessageCircle, label: "Chat with support", value: null, onPress: () => window.open("mailto:hola@nomaya.app") },
+          { icon: HelpCircle,    label: "Help Center",        value: null, onPress: () => {} },
+          { icon: Sparkles,      label: "Give us feedback",   value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Feedback") },
+        ],
+      },
+      {
+        title: "Legal",
+        items: [
+          { icon: FileText, label: "Terms of Service", value: null, onPress: () => {} },
+          { icon: FileText, label: "Privacy Policy",   value: null, onPress: () => {} },
+        ],
+      },
+    ];
+
+    return (
+      <div className="mobile-container flex flex-col bg-background pb-24">
+        {/* Header */}
+        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+          <button onClick={() => setShowSettings(false)} className="w-9 h-9 rounded-full bg-card flex items-center justify-center">
+            <ArrowLeft size={18} className="text-foreground" />
+          </button>
+          <h1 className="font-serif text-2xl font-normal text-foreground">{t("profile.settings")}</h1>
+        </div>
+
+        <div className="px-5 space-y-6">
+          {settingsSections.map((section) => (
+            <div key={section.title ?? "top"}>
+              {section.title && (
+                <p className="text-sm font-semibold text-foreground mb-2 px-1">{section.title}</p>
+              )}
+              <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
+                {section.items.map(({ icon: Icon, label, value, onPress }, i) => (
+                  <button
+                    key={label}
+                    onClick={onPress}
+                    className={`w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30 transition-all ${
+                      i < section.items.length - 1 ? "border-b border-border" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon size={16} className="text-muted-foreground" />
+                      <span className="text-sm text-foreground">{label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {value && <span className="text-sm text-muted-foreground">{value}</span>}
+                      <ChevronRight size={14} className="text-muted-foreground" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Language picker inline */}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-2 px-1">{t("profile.language")}</p>
+            <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
+              {[
+                { code: "en" as const, label: "English", flag: "🇬🇧" },
+                { code: "es" as const, label: "Español", flag: "🇪🇸" },
+              ].map((l, i) => (
+                <button
+                  key={l.code}
+                  onClick={() => saveLanguage(l.code)}
+                  className={`w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30 ${
+                    i === 0 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{l.flag}</span>
+                    <span className="text-sm text-foreground">{l.label}</span>
+                  </div>
+                  {lang === l.code && <Check size={15} className="text-primary" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Referrals */}
+          <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
+            <button
+              onClick={handleReferral}
+              className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30"
+            >
+              <div className="flex items-center gap-3">
+                <Star size={16} className="text-muted-foreground" />
+                <span className="text-sm text-foreground">{t("profile.invite_friends")}</span>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Log out */}
+          <button
+            onClick={onLogout}
+            className="text-primary text-sm font-medium px-1"
+          >
+            {t("profile.sign_out")}
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -432,40 +558,20 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
-      {/* Settings */}
+      {/* Settings button */}
       <div className="px-5 mt-5">
-        <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("profile.settings")}</h2>
         <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
-          {settingsItems.map(({ icon: Icon, label, value, onPress }, i) => (
-            <button
-              key={label}
-              onClick={onPress}
-              className={`w-full flex items-center justify-between px-4 py-4 text-left transition-all active:bg-muted/30 ${
-                i < settingsItems.length - 1 ? "border-b border-border" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon size={16} className="text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">{label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{value}</span>
-                <ChevronRight size={14} className="text-muted-foreground" />
-              </div>
-            </button>
-          ))}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30"
+          >
+            <div className="flex items-center gap-3">
+              <Settings size={16} className="text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{t("profile.settings")}</span>
+            </div>
+            <ChevronRight size={14} className="text-muted-foreground" />
+          </button>
         </div>
-      </div>
-
-      {/* Logout */}
-      <div className="px-5 mt-4">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-border text-muted-foreground text-sm font-medium bg-card shadow-soft"
-        >
-          <LogOut size={14} />
-          {t("profile.sign_out")}
-        </button>
       </div>
 
       {/* Horoscope sheet */}

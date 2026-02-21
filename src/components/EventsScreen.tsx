@@ -197,7 +197,14 @@ export function EventsScreen() {
             </div>
           )}
 
-          {event.isTbc ? (
+          {isUnverified ? (
+            <button
+              onClick={() => setShowVerifyPrompt(true)}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98]"
+            >
+              Verify to join this event →
+            </button>
+          ) : event.isTbc ? (
             <button
               onClick={() => { setBookingError(null); !isBooked && bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) }); }}
               disabled={isBooked || isBooking}
@@ -390,7 +397,8 @@ export function EventsScreen() {
                     key={event.id}
                     event={event}
                     variant="featured"
-                    onClick={() => setSelectedEvent(event.id)}
+                    locked={isUnverified}
+                    onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
                   />
                 ))}
               </div>

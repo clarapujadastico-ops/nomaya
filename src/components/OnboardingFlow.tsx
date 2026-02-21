@@ -56,13 +56,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         {/* Full-bleed video */}
         <VideoBackground />
 
-        {/* Multi-layer overlay: dark base + soft vignette */}
-        <div className="absolute inset-0 bg-foreground/50" />
+        {/* Soft overlay — light enough to read purple title against video */}
+        <div className="absolute inset-0" style={{ background: "hsl(0 0% 100% / 0.30)" }} />
         <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse at 50% 60%, transparent 30%, hsl(252 30% 8% / 0.7) 100%)"
-        }} />
-        <div className="absolute inset-0" style={{
-          background: "linear-gradient(to bottom, transparent 30%, hsl(252 30% 8% / 0.95) 100%)"
+          background: "linear-gradient(to bottom, hsl(0 0% 100% / 0.10) 0%, hsl(252 30% 45% / 0.85) 100%)"
         }} />
 
         {/* Content */}
@@ -71,33 +68,33 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             {/* Decorative line */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="h-px w-10 bg-card/40" />
-              <span className="text-[10px] tracking-[0.35em] uppercase text-card/50">Est. 2026</span>
-              <div className="h-px w-10 bg-card/40" />
+              <div className="h-px w-10" style={{ background: "hsl(252 30% 45% / 0.5)" }} />
+              <span className="text-[10px] tracking-[0.35em] uppercase" style={{ color: "hsl(252 30% 45%)" }}>{t("onboarding.est")}</span>
+              <div className="h-px w-10" style={{ background: "hsl(252 30% 45% / 0.5)" }} />
             </div>
 
             <h1
-              className="font-serif font-normal leading-none text-card mb-3"
-              style={{ fontSize: "clamp(3.5rem, 16vw, 5rem)", letterSpacing: "-0.04em" }}
+              className="font-serif font-normal leading-none mb-3"
+              style={{ fontSize: "clamp(3.5rem, 16vw, 5rem)", letterSpacing: "-0.04em", color: "#5f5095" }}
             >
               Nomaya
             </h1>
-            <p className="text-xs text-card/50 tracking-[0.3em] uppercase">
-              women · circles · belonging
+            <p className="text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(252 30% 45%)" }}>
+              {t("onboarding.tagline")}
             </p>
           </div>
 
-          {/* Bottom card — glassy */}
+          {/* Bottom card — brand lavender */}
           <div
             className="rounded-3xl p-6 mb-8 mt-4"
             style={{
-              background: "hsl(252 30% 8% / 0.55)",
+              background: "hsl(252 75% 96% / 0.92)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid hsl(0 0% 100% / 0.10)",
+              border: "1px solid hsl(252 30% 45% / 0.15)",
             }}
           >
-            <p className="text-xs text-card/50 tracking-widest uppercase text-center mb-5">
+            <p className="text-xs tracking-widest uppercase text-center mb-5" style={{ color: "hsl(252 30% 55%)" }}>
               {t("onboarding.choose_lang")}
             </p>
 
@@ -112,19 +109,19 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200"
                   style={{
                     borderColor: language === lang.code
-                      ? "hsl(252 75% 93% / 0.5)"
-                      : "hsl(0 0% 100% / 0.10)",
+                      ? "hsl(252 30% 45%)"
+                      : "hsl(252 30% 45% / 0.20)",
                     background: language === lang.code
-                      ? "hsl(252 75% 93% / 0.15)"
-                      : "hsl(0 0% 100% / 0.05)",
+                      ? "hsl(252 30% 45% / 0.10)"
+                      : "hsl(0 0% 100% / 0.60)",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{lang.flag}</span>
-                    <span className="font-medium text-card/90 text-sm">{lang.label}</span>
+                    <span className="font-medium text-sm" style={{ color: "hsl(252 30% 30%)" }}>{lang.label}</span>
                   </div>
                   {language === lang.code && (
-                    <Check size={15} style={{ color: "hsl(252 75% 80%)" }} />
+                    <Check size={15} style={{ color: "hsl(252 30% 45%)" }} />
                   )}
                 </button>
               ))}
@@ -132,12 +129,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
             <button
               onClick={() => setStep("welcome1")}
-              className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
-              style={{
-                background: "hsl(252 30% 45%)",
-                color: "hsl(252 75% 97%)",
-                boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
-              }}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
             >
               {t("onboarding.enter")}
             </button>
@@ -147,22 +139,16 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     );
   }
 
-  /* ── WELCOME SLIDES (video continues in background) ── */
+  /* ── WELCOME SLIDES — brand purple background, no dark video ── */
   if (step === "welcome1" || step === "welcome2" || step === "welcome3") {
     const screen = welcomeScreens[welcomeIndex];
     const stepMap: Step[] = ["welcome1", "welcome2", "welcome3"];
     const isLast = welcomeIndex === 2;
 
     return (
-      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
-        <VideoBackground opacity={0.5} />
-        <div className="absolute inset-0 bg-foreground/60" />
-        <div className="absolute inset-0" style={{
-          background: "linear-gradient(to bottom, hsl(252 30% 8% / 0.4) 0%, hsl(252 30% 8% / 0.85) 70%, hsl(252 30% 8% / 0.98) 100%)"
-        }} />
-
-        <div className="relative z-10 flex flex-col flex-1 px-6 pt-14 pb-10">
-          {/* Progress */}
+      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
+        <div className="flex flex-col flex-1 px-6 pt-14" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+          {/* Progress dots */}
           <div className="flex gap-1.5 mb-auto">
             {[0, 1, 2].map((i) => (
               <div
@@ -180,7 +166,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           <div className="flex-1 flex flex-col justify-end pb-6">
             <div
-              className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5"
+              className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5 self-start"
               style={{
                 background: "hsl(252 75% 93% / 0.15)",
                 color: "hsl(252 75% 85%)",
@@ -191,12 +177,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
 
             <h2
-              className="font-serif font-normal text-card leading-tight mb-4 whitespace-pre-line"
+              className="font-serif font-normal text-foreground leading-tight mb-4 whitespace-pre-line"
               style={{ fontSize: "clamp(2rem, 9vw, 2.75rem)", letterSpacing: "-0.042em" }}
             >
               {screen.title}
             </h2>
-            <p className="text-sm text-card/60 leading-relaxed mb-8">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-8">
               {screen.subtitle}
             </p>
 
@@ -210,12 +196,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     setStep(stepMap[welcomeIndex + 1]);
                   }
                 }}
-                className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  background: "hsl(252 30% 45%)",
-                  color: "hsl(252 75% 97%)",
-                  boxShadow: "0 4px 32px hsl(252 30% 45% / 0.5)",
-                }}
+                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98]"
               >
                 {isLast ? t("onboarding.choose_interests") : t("onboarding.continue")}
                 {!isLast && <ChevronRight size={16} className="inline ml-1" />}
@@ -229,7 +210,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     setStep("language");
                   }
                 }}
-                className="w-full py-3 text-card/40 text-sm"
+                className="w-full py-3 text-muted-foreground text-sm"
               >
                 {t("onboarding.back")}
               </button>
