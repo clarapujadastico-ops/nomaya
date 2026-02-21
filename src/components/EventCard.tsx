@@ -5,11 +5,12 @@ export type { AppEvent as Event };
 
 interface EventCardProps {
   event: AppEvent;
-  variant?: "featured" | "default";
+  variant?: "featured" | "default" | "grid";
   onClick?: () => void;
+  locked?: boolean;
 }
 
-export function EventCard({ event, variant = "default", onClick }: EventCardProps) {
+export function EventCard({ event, variant = "default", onClick, locked = false }: EventCardProps) {
   const spotsPercent = (event.spotsLeft / event.totalSpots) * 100;
   const isAlmostFull = spotsPercent <= 30;
 
@@ -59,6 +60,88 @@ export function EventCard({ event, variant = "default", onClick }: EventCardProp
     );
   }
 
+  if (variant === "grid") {
+    // Format date as DD.MM
+    const dateDisplay = event.rawDate
+      ? new Date(event.rawDate + "T12:00:00")
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" })
+          .replace("/", ".")
+      : event.date;
+
+    const statusBadge =
+      event.spotsLeft === 0
+        ? "Sold out"
+        : event.isTbc
+        ? "Waitlist"
+        : null;
+
+    const subtext = event.isTbc
+      ? "Waitlist"
+      : event.spotsLeft === 0
+      ? "Waitlist"
+      : isAlmostFull
+      ? `${event.spotsLeft} spots left`
+      : `${event.spotsLeft} spots`;
+
+    return (
+      <button
+        onClick={locked ? undefined : onClick}
+        className={`relative rounded-2xl overflow-hidden shadow-soft text-left transition-transform duration-200 active:scale-[0.97] flex flex-col bg-card ${
+          locked ? "cursor-default" : ""
+        }`}
+      >
+        {/* Square image */}
+        <div className="relative w-full" style={{ aspectRatio: "1 / 1" }}>
+          {event.image ? (
+            <img
+              src={event.image}
+              alt={event.title}
+              className={`w-full h-full object-cover absolute inset-0 ${locked ? "blur-sm scale-105" : ""}`}
+            />
+          ) : (
+            <div
+              className={`w-full h-full absolute inset-0 ${locked ? "opacity-40" : ""}`}
+              style={{ background: event.categoryColor }}
+            />
+          )}
+
+          {/* Lock overlay */}
+          {locked && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-foreground/30 backdrop-blur-sm">
+              <span className="text-2xl">🔒</span>
+            </div>
+          )}
+
+          {/* Status badge */}
+          {!locked && statusBadge && (
+            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
+              <span className="text-[10px] font-semibold text-gray-800">{statusBadge}</span>
+            </div>
+          )}
+
+          {/* "New" badge for recently added events */}
+          {!locked && event.featured && !statusBadge && (
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
+              <span className="text-[10px] font-semibold text-gray-800">New</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info below image */}
+        <div className="p-2.5">
+          <p className="text-[10px] text-muted-foreground">{dateDisplay}</p>
+          <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mt-0.5">
+            {event.title}
+          </h3>
+          <p className={`text-xs mt-0.5 ${isAlmostFull && !locked ? "text-primary font-medium" : "text-muted-foreground"}`}>
+            {locked ? "Verify to access" : subtext}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  // Default: horizontal list card
   return (
     <button
       onClick={onClick}

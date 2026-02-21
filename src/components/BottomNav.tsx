@@ -1,4 +1,5 @@
 import { Calendar, Map, Users, User } from "lucide-react";
+import { useLang } from "@/contexts/LanguageContext";
 
 type Tab = "events" | "map" | "groups" | "profile";
 
@@ -7,18 +8,22 @@ interface BottomNavProps {
   onChange: (tab: Tab) => void;
 }
 
-const tabs = [
-  { id: "events" as Tab, label: "Events", icon: Calendar },
-  { id: "map" as Tab, label: "Map", icon: Map },
-  { id: "groups" as Tab, label: "Circles", icon: Users },
-  { id: "profile" as Tab, label: "Profile", icon: User },
+const tabs: { id: Tab; labelKey: string; icon: typeof Calendar }[] = [
+  { id: "events",  labelKey: "nav.events",  icon: Calendar },
+  { id: "map",     labelKey: "nav.map",     icon: Map },
+  { id: "groups",  labelKey: "nav.circles", icon: Users },
+  { id: "profile", labelKey: "nav.profile", icon: User },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
+  const { t } = useLang();
+
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-card border-t border-border flex items-center justify-around px-2 pb-safe z-50"
-      style={{ boxShadow: "0 -4px 20px hsl(252 30% 30% / 0.15)" }}>
-      {tabs.map(({ id, label, icon: Icon }) => {
+    <nav
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-card border-t border-border flex items-center justify-around px-2 pb-safe z-50"
+      style={{ boxShadow: "0 -4px 20px hsl(252 30% 30% / 0.15)" }}
+    >
+      {tabs.map(({ id, labelKey, icon: Icon }) => {
         const isActive = active === id;
         return (
           <button
@@ -38,7 +43,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              {label}
+              {t(labelKey)}
             </span>
           </button>
         );

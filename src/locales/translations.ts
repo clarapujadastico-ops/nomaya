@@ -9,7 +9,7 @@ export const translations: TranslationMap = {
   "nav.profile":   { en: "Profile", es: "Perfil" },
 
   // Events screen
-  "events.heading":     { en: "Experiences",   es: "Experiencias" },
+  "events.heading":     { en: "Events",         es: "Eventos" },
   "events.city":        { en: "Madrid · 2026", es: "Madrid · 2026" },
   "events.search":      { en: "Search events...", es: "Buscar eventos..." },
   "events.featured":    { en: "Featured",      es: "Destacados" },
@@ -129,6 +129,54 @@ export const translations: TranslationMap = {
   // Settings
   "settings.language_title": { en: "Language", es: "Idioma" },
   "settings.choose_language": { en: "Choose your language", es: "Elige tu idioma" },
+
+  // Categories (for translation)
+  "cat.all":            { en: "All",            es: "Todas" },
+  "cat.arts_crafts":    { en: "Arts & Crafts",  es: "Arte y manualidades" },
+  "cat.food_dining":    { en: "Food & Dining",  es: "Comida y gastronomía" },
+  "cat.fitness":        { en: "Fitness",        es: "Fitness" },
+  "cat.wellness":       { en: "Wellness",       es: "Bienestar" },
+  "cat.culture":        { en: "Culture",        es: "Cultura" },
+  "cat.entrepreneurship": { en: "Entrepreneurship", es: "Emprendimiento" },
+
+  // Events screen additional
+  "events.all":         { en: "All",            es: "Todas" },
+  "events.verify_gate": { en: "Verify your identity to access events", es: "Verifica tu identidad para acceder a los eventos" },
+  "events.verify_cta":  { en: "Verify now →",   es: "Verificar ahora →" },
+  "events.cancel_reservation": { en: "Cancel reservation", es: "Cancelar reserva" },
+  "events.cancelling":  { en: "Cancelling…",    es: "Cancelando…" },
+  "events.waitlist":    { en: "Join the waitlist", es: "Unirse a la lista de espera" },
+  "events.on_waitlist": { en: "✓ On the waitlist", es: "✓ En lista de espera" },
+
+  // Map screen additional
+  "map.my_events":      { en: "My Events",      es: "Mis Eventos" },
+  "map.my_reservations": { en: "My reservations", es: "Mis reservas" },
+  "map.empty":          { en: "Reserve an event to see it here on the map.", es: "Reserva un evento para verlo aquí en el mapa." },
+
+  // Circles additional
+  "circles.invite":     { en: "Invite",         es: "Invitar" },
+  "circles.invite_member": { en: "Invite member", es: "Invitar miembro" },
+  "circles.search_members": { en: "Search members…", es: "Buscar miembros…" },
+  "circles.already_member": { en: "Member",     es: "Miembro" },
+  "circles.add":        { en: "Add",            es: "Añadir" },
+  "circles.adding":     { en: "Adding…",        es: "Añadiendo…" },
+  "circles.requests":   { en: "Requests",       es: "Solicitudes" },
+  "circles.verify_chat": { en: "Verify your identity to access the chat", es: "Verifica tu identidad para acceder al chat" },
+
+  // Profile badges / rewards
+  "badge.founding_circle":   { en: "Founding Circle",       es: "Círculo Fundador" },
+  "badge.inner_circle":      { en: "Inner Circle",          es: "Círculo Interior" },
+  "badge.keeper":            { en: "Keeper of the Circle",  es: "Guardiana del Círculo" },
+  "badge.founding_member":   { en: "Founding Member",       es: "Miembro Fundadora" },
+  "badge.your_rewards":      { en: "Your rewards",          es: "Tus recompensas" },
+  "badge.progress":          { en: "Progress to next level",es: "Progreso al siguiente nivel" },
+  "badge.events_to_next":    { en: "events to reach",       es: "eventos para alcanzar" },
+
+  // Member card
+  "member_card.title":       { en: "Nomaya Member",         es: "Miembro Nomaya" },
+  "member_card.share":       { en: "Share card",            es: "Compartir tarjeta" },
+  "member_card.wallet":      { en: "Save to Wallet",        es: "Guardar en Wallet" },
+  "member_card.wallet_soon": { en: "Apple Wallet available after App Store release", es: "Apple Wallet disponible tras el lanzamiento en App Store" },
 
   // General
   "general.loading":    { en: "Loading…",       es: "Cargando…" },
