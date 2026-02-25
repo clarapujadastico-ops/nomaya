@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield } from "lucide-react";
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
@@ -7,7 +8,35 @@ import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
+import { supabase } from "@/lib/supabase";
 import type { AppCircle } from "@/types/database";
+
+// ─── Photo upload helpers ──────────────────────────────────────────────────────
+
+async function uploadPhoto(base64: string, path: string): Promise<string> {
+  const chars = atob(base64);
+  const bytes = new Uint8Array(chars.length);
+  for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
+  const blob = new Blob([bytes], { type: 'image/jpeg' });
+  const { error } = await supabase.storage.from('Events').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+  if (error) throw error;
+  return supabase.storage.from('Events').getPublicUrl(path).data.publicUrl;
+}
+
+async function pickAndUpload(path: string): Promise<string | null> {
+  try {
+    const photo = await CapCamera.getPhoto({
+      quality: 85,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Photos,
+    });
+    if (!photo.base64String) return null;
+    return await uploadPhoto(photo.base64String, path);
+  } catch {
+    return null; // user cancelled or permission denied
+  }
+}
 
 const EMOJIS = ["🌸", "🌿", "✨", "🎨", "🌊", "🍀", "🦋", "🌺", "💫", "🍃", "🌙", "🎋"];
 
@@ -363,11 +392,19 @@ function CreateCircleEventSheet({
 
 function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () => void }) {
   const { mutate: updateCover, isPending } = useUpdateCircleCover();
-  const [url, setUrl] = useState(circle.coverUrl);
+  const [previewUrl, setPreviewUrl] = useState(circle.coverUrl ?? '');
+  const [isUploading, setIsUploading] = useState(false);
+
+  async function handlePickPhoto() {
+    setIsUploading(true);
+    const url = await pickAndUpload(`circles/${circle.id}.jpg`);
+    setIsUploading(false);
+    if (url) setPreviewUrl(url);
+  }
 
   function handleSave() {
     updateCover(
-      { circleId: circle.id, coverUrl: url.trim() || null },
+      { circleId: circle.id, coverUrl: previewUrl || null },
       { onSuccess: onClose }
     );
   }
@@ -384,21 +421,23 @@ function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () =>
 
         {/* Preview */}
         <div className="w-full h-36 rounded-2xl overflow-hidden bg-muted">
-          {url.trim() ? (
-            <img src={url.trim()} alt="Preview" className="w-full h-full object-cover" />
+          {previewUrl ? (
+            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <p className="text-xs text-muted-foreground">No image</p>
+              <p className="text-xs text-muted-foreground">No photo selected</p>
             </div>
           )}
         </div>
 
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste an image URL…"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
+        <button
+          onClick={handlePickPhoto}
+          disabled={isUploading || isPending}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-border bg-muted text-sm font-medium text-foreground disabled:opacity-50"
+        >
+          <Camera size={16} />
+          {isUploading ? "Uploading…" : previewUrl ? "Change photo" : "Choose from camera roll"}
+        </button>
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border">
@@ -406,7 +445,7 @@ function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () =>
           </button>
           <button
             onClick={handleSave}
-            disabled={isPending}
+            disabled={isPending || isUploading}
             className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium shadow-soft disabled:opacity-50"
           >
             {isPending ? "Saving…" : "Save"}
@@ -788,12 +827,20 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
   const [description, setDescription] = useState("");
   const [city, setCity] = useState("Madrid");
   const [coverUrl, setCoverUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+
+  async function handlePickCover() {
+    setIsUploading(true);
+    const url = await pickAndUpload(`circles/cover-${Date.now()}.jpg`);
+    setIsUploading(false);
+    if (url) setCoverUrl(url);
+  }
 
   function handleSubmit() {
     if (!name.trim()) return;
     create(
-      { name: name.trim(), description: description.trim(), city: city.trim(), cover_url: coverUrl.trim() || null, is_private: isPrivate },
+      { name: name.trim(), description: description.trim(), city: city.trim(), cover_url: coverUrl || null, is_private: isPrivate },
       { onSuccess: onClose }
     );
   }
@@ -805,7 +852,7 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
         <h2 className="font-serif text-xl font-medium text-foreground">New circle</h2>
 
-        {/* Cover image preview */}
+        {/* Cover image picker */}
         {coverUrl ? (
           <div className="relative w-full h-32 rounded-2xl overflow-hidden">
             <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
@@ -813,19 +860,17 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
               <X size={12} className="text-white" />
             </button>
           </div>
-        ) : (
-          <div className="w-full h-20 rounded-2xl bg-muted flex flex-col items-center justify-center gap-1 border border-dashed border-border">
-            <p className="text-xs text-muted-foreground">Paste an image URL below to set a cover photo</p>
-          </div>
-        )}
+        ) : null}
+        <button
+          onClick={handlePickCover}
+          disabled={isUploading}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border bg-muted text-sm text-muted-foreground disabled:opacity-50"
+        >
+          <Camera size={15} />
+          {isUploading ? "Uploading…" : coverUrl ? "Change cover photo" : "Add cover photo"}
+        </button>
 
         <div className="space-y-3">
-          <input
-            value={coverUrl}
-            onChange={(e) => setCoverUrl(e.target.value)}
-            placeholder="Cover image URL (optional)"
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -914,7 +959,10 @@ interface CirclesScreenProps { initialCircleId?: string; }
 export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
   const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showVerifyGate, setShowVerifyGate] = useState(false);
   const { data: circles = [], isLoading } = useCircles();
+  const { data: profile } = useProfile();
+  const isUnverified = profile?.verification_status !== 'verified';
 
   if (selectedId) {
     const circle = circles.find((c) => c.id === selectedId);
@@ -929,7 +977,7 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
     <div className="mobile-container flex flex-col bg-background pb-24">
       <div className="px-5 pt-14 pb-4">
         <div className="flex justify-end mb-1">
-          <button onClick={() => setShowCreate(true)} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
+          <button onClick={() => { if (isUnverified) { setShowVerifyGate(true); return; } setShowCreate(true); }} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
             <Plus size={18} className="text-primary-foreground" />
           </button>
         </div>
@@ -983,6 +1031,34 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
       )}
 
       {showCreate && <CreateCircleSheet onClose={() => setShowCreate(false)} />}
+
+      {/* Verification gate for creating circles */}
+      {showVerifyGate && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyGate(false)} />
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div className="flex flex-col items-center text-center gap-3 py-2">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <Shield size={28} className="text-primary-foreground" />
+              </div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Verification required</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Nomaya circles are a verified community for women. Verify your identity to create and join circles.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowVerifyGate(false)}
+              className="w-full py-2 text-sm text-muted-foreground text-center"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

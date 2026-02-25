@@ -4,6 +4,7 @@ import {
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
   HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings,
 } from "lucide-react";
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
@@ -12,6 +13,18 @@ import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
 import { VerificationFlow } from "./VerificationFlow";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
+import { supabase } from "@/lib/supabase";
+
+async function uploadAvatar(base64: string, userId: string): Promise<string> {
+  const chars = atob(base64);
+  const bytes = new Uint8Array(chars.length);
+  for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
+  const blob = new Blob([bytes], { type: 'image/jpeg' });
+  const path = `avatars/${userId}.jpg`;
+  const { error } = await supabase.storage.from('Events').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+  if (error) throw error;
+  return supabase.storage.from('Events').getPublicUrl(path).data.publicUrl;
+}
 
 interface ProfileScreenProps {
   onLogout?: () => void;
@@ -53,6 +66,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [notificationsOn, setNotificationsOn] = useState(true);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useFoundingMemberBadge();
 
@@ -317,7 +331,29 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             ) : (
               <div className="w-16 h-16 rounded-full bg-secondary border-2 border-border flex items-center justify-center text-2xl">🌸</div>
             )}
-            <button className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow">
+            <button
+              disabled={isUploadingAvatar}
+              onClick={async () => {
+                if (!profile?.id) return;
+                try {
+                  const photo = await CapCamera.getPhoto({
+                    quality: 85,
+                    allowEditing: true,
+                    resultType: CameraResultType.Base64,
+                    source: CameraSource.Photos,
+                  });
+                  if (!photo.base64String) return;
+                  setIsUploadingAvatar(true);
+                  const url = await uploadAvatar(photo.base64String, profile.id);
+                  updateProfile({ avatar_url: url });
+                } catch {
+                  // cancelled
+                } finally {
+                  setIsUploadingAvatar(false);
+                }
+              }}
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow disabled:opacity-60"
+            >
               <Camera size={12} className="text-primary-foreground" />
             </button>
           </div>
@@ -793,11 +829,11 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             {/* The card */}
             <div
               className="rounded-2xl overflow-hidden shadow-card mb-5"
-              style={{ background: "hsl(252 35% 22%)" }}
+              style={{ background: "#5f5095" }}
             >
               {/* Logo header */}
               <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
-                <Logo className="h-7 w-auto object-contain opacity-90" />
+                <Logo className="h-14 w-auto object-contain opacity-95" />
               </div>
 
               {/* Card body */}
