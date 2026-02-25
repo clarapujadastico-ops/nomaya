@@ -47,10 +47,12 @@ function categoryColor(cat: string, fallback: string): string {
 
 const CIRCLE_EVENT_COLOR = "hsl(38, 82%, 62%)";
 
+type MapView = 'all' | 'reservations' | 'circles';
+
 export function MapScreen() {
   const { t } = useLang();
   const [popupId, setPopupId] = useState<string | null>(null);
-  const [showMyOnly, setShowMyOnly] = useState(false);
+  const [view, setView] = useState<MapView>('all');
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: circleEvents = [], isLoading: circleEventsLoading } = useMyCircleEvents();
@@ -58,11 +60,14 @@ export function MapScreen() {
   const isLoading = eventsLoading || bookingsLoading || circleEventsLoading;
   const bookedIds = new Set(bookings.map((b) => b.event_id));
 
-  // Official events: all or only booked
-  const officialEvents = showMyOnly ? allEvents.filter((e) => bookedIds.has(e.id)) : allEvents;
+  // Official events shown on map/list
+  const officialEvents =
+    view === 'all' ? allEvents :
+    view === 'reservations' ? allEvents.filter((e) => bookedIds.has(e.id)) :
+    []; // 'circles' view hides official events
 
-  // Circle events: always show when "My Events" is on; hide from "All" view to keep map clean
-  const visibleCircleEvents = showMyOnly ? circleEvents : [];
+  // Circle events shown on map/list
+  const visibleCircleEvents = view === 'circles' ? circleEvents : [];
 
   const handleMarkerClick = useCallback((id: string) => {
     setPopupId((prev) => (prev === id ? null : id));
@@ -81,22 +86,30 @@ export function MapScreen() {
       </div>
 
       {/* Toggle */}
-      <div className="flex gap-2 mx-5 mb-3">
+      <div className="flex gap-2 mx-5 mb-3 overflow-x-auto">
         <button
-          onClick={() => setShowMyOnly(false)}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-            !showMyOnly ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
+          onClick={() => { setView('all'); setPopupId(null); }}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+            view === 'all' ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
           }`}
         >
           <Globe size={12} /> {t("map.all_events")}
         </button>
         <button
-          onClick={() => setShowMyOnly(true)}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-            showMyOnly ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
+          onClick={() => { setView('reservations'); setPopupId(null); }}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+            view === 'reservations' ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
           }`}
         >
           <Ticket size={12} /> {t("map.my_events_tab")}
+        </button>
+        <button
+          onClick={() => { setView('circles'); setPopupId(null); }}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+            view === 'circles' ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border"
+          }`}
+        >
+          <Users size={12} /> My Circles
         </button>
       </div>
 
@@ -244,15 +257,18 @@ export function MapScreen() {
       {/* My reservations list */}
       <div className="px-5 mt-5 pb-24">
         <h2 className="font-serif text-lg font-medium text-foreground mb-3">
-          {showMyOnly ? t("map.my_reservations") : t("map.all_events")}
+          {view === 'all' ? t("map.all_events") : view === 'reservations' ? t("map.my_reservations") : "My Circles"}
         </h2>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
         ) : officialEvents.length === 0 && visibleCircleEvents.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
-            <Ticket size={28} className="text-muted-foreground/50" />
+            {view === 'circles'
+              ? <Users size={28} className="text-muted-foreground/50" />
+              : <Ticket size={28} className="text-muted-foreground/50" />
+            }
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {t("map.empty")}
+              {view === 'circles' ? "No circle events yet. Admins can add gatherings from the Circles screen." : t("map.empty")}
             </p>
           </div>
         ) : (
