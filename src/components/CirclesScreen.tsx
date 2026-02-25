@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield } from "lucide-react";
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
+import { useProfile } from "@/hooks/useProfile";
+import { VerificationFlow } from "./VerificationFlow";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -431,12 +433,26 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const [showInviteSheet, setShowInviteSheet] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showEditCover, setShowEditCover] = useState(false);
+  const [showVerifyGate, setShowVerifyGate] = useState(false);
+  const [showVerifyFlow, setShowVerifyFlow] = useState(false);
 
+  const { data: profile } = useProfile();
+  const isUnverified = profile?.verification_status !== 'verified';
   const isMember = circle.isMember || circle.isAdmin;
+
+  if (showVerifyFlow) {
+    return (
+      <VerificationFlow
+        onComplete={() => setShowVerifyFlow(false)}
+        onSkip={() => setShowVerifyFlow(false)}
+      />
+    );
+  }
   const hasPendingRequest = myRequests.some((r) => r.circle_id === circle.id && r.status === "pending");
   const coverImage = circle.coverUrl || circlePlaceholder(circle.category);
 
   function handleJoinPress() {
+    if (isUnverified) { setShowVerifyGate(true); return; }
     if (circle.isPrivate) { setShowJoinRequest(true); }
     else { join(circle.id); }
   }
@@ -570,7 +586,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
                   You admin this circle
                 </div>
                 <button
-                  onClick={() => setShowInviteSheet(true)}
+                  onClick={() => { if (isUnverified) { setShowVerifyGate(true); return; } setShowInviteSheet(true); }}
                   className="flex items-center gap-1.5 px-4 py-3 rounded-2xl gradient-cta text-white text-sm font-medium"
                 >
                   <UserPlus size={15} /> Invite
@@ -599,7 +615,10 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
             )}
           </>
         ) : activeTab === "events" ? (
-          <EventsTab circle={circle} onCreateEvent={() => setShowCreateEvent(true)} />
+          <EventsTab circle={circle} onCreateEvent={() => {
+          if (isUnverified) { setShowVerifyGate(true); return; }
+          setShowCreateEvent(true);
+        }} />
         ) : activeTab === "requests" ? (
           <div className="space-y-3">
             {pendingRequests.length === 0 ? (
@@ -685,6 +704,40 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
               className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
             >
               Share invite link
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Verification gate */}
+      {showVerifyGate && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyGate(false)} />
+          <div
+            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div className="flex flex-col items-center text-center gap-3 py-2">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                <Shield size={28} className="text-primary-foreground" />
+              </div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Verification required</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Nomaya circles are a verified community for women. Verify your identity to join, chat, and propose events.
+              </p>
+            </div>
+            <button
+              onClick={() => { setShowVerifyGate(false); setShowVerifyFlow(true); }}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft"
+            >
+              Verify my identity
+            </button>
+            <button
+              onClick={() => setShowVerifyGate(false)}
+              className="w-full py-2 text-sm text-muted-foreground text-center"
+            >
+              Not now
             </button>
           </div>
         </div>

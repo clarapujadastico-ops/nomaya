@@ -71,6 +71,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     : t("profile.recently");
 
+  const memberId = profile?.id
+    ? `NM-MAD-${String(parseInt(profile.id.replace(/-/g, '').substring(0, 6), 16) % 9000 + 1000).padStart(4, '0')}`
+    : 'NM-MAD-????';
+
   function saveBio() {
     updateProfile({ bio: bioValue || null });
     setEditingBio(false);
@@ -680,56 +684,100 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       )}
 
       {/* Badge rewards modal */}
-      {showBadgeModal && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
-            <h2 className="font-serif text-xl font-medium text-foreground mb-1">{t("badge.your_rewards")}</h2>
-            <p className="text-xs text-muted-foreground mb-5">Based on your events attended</p>
+      {showBadgeModal && (() => {
+        const TIERS = [
+          { icon: "🌸", label: "Founding Circle",  perk: "Access to all Nomaya events",          events: 1 },
+          { icon: "✨", label: "Inner Circle",      perk: "Priority booking + 1 guest pass",      events: 3 },
+          { icon: "🔮", label: "Keeper",            perk: "Exclusive circles + Nomaya credits",   events: 5 },
+          { icon: "👁️", label: "Circle Host",       perk: "Host your own Nomaya event",           events: 8 },
+        ];
+        const nextTier = TIERS.find((t) => bookings.length < t.events);
+        const progressPct = nextTier
+          ? Math.round((bookings.length / nextTier.events) * 100)
+          : 100;
+        return (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
+            <div
+              className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto"
+              style={{ maxHeight: "90vh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
+            >
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mt-4" />
 
-            {/* Badge levels */}
-            {[
-              { icon: "🌸", label: "Founding Circle",     desc: "You showed up. That's everything.",      events: 1 },
-              { icon: "✨", label: "Inner Circle",         desc: "3+ events — you're a true regular.",     events: 3 },
-              { icon: "🔮", label: "Keeper of the Circle", desc: "5+ events — a pillar of the community.", events: 5 },
-            ].map((b) => {
-              const earned = bookings.length >= b.events;
-              return (
-                <div key={b.label} className={`flex items-center gap-3 py-3 border-b border-border ${!earned ? "opacity-40" : ""}`}>
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-                    {b.icon}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{b.label}</p>
-                    <p className="text-xs text-muted-foreground">{b.desc}</p>
-                  </div>
-                  {earned && <Check size={14} className="text-primary flex-shrink-0" />}
-                  {!earned && <span className="text-[10px] text-muted-foreground">{b.events} events</span>}
-                </div>
-              );
-            })}
-
-            {isFoundingMember && (
-              <div className="flex items-center gap-3 py-3 mt-1">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">🏛️</div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Founding Member</p>
-                  <p className="text-xs text-muted-foreground">You joined Nomaya in the very first cohort.</p>
-                </div>
-                <Check size={14} className="text-primary flex-shrink-0" />
+              {/* Header */}
+              <div className="px-6 pt-4 pb-5 text-center border-b border-border">
+                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Your Circle</p>
+                <p className="font-serif text-xl text-foreground leading-snug">
+                  The more you show up,<br />the more doors open
+                </p>
               </div>
-            )}
 
-            <p className="text-center text-xs text-muted-foreground mt-4">
-              {t("badge.progress")}: {bookings.length} events
-            </p>
+              {/* Progress bar */}
+              <div className="px-6 py-4 border-b border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground">Events attended</span>
+                  <span className="text-xs font-medium text-foreground">
+                    {bookings.length}{nextTier ? ` / ${nextTier.events}` : ""}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${progressPct}%`, background: "hsl(252 75% 80%)" }}
+                  />
+                </div>
+                {nextTier && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    {nextTier.events - bookings.length} more to unlock {nextTier.label}
+                  </p>
+                )}
+              </div>
+
+              {/* Tiers */}
+              {TIERS.map((tier, i) => {
+                const earned = bookings.length >= tier.events;
+                return (
+                  <div
+                    key={tier.label}
+                    className={`px-6 py-4 flex items-center gap-4 ${i < TIERS.length - 1 ? "border-b border-border" : ""} ${!earned ? "opacity-45" : ""}`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+                      style={{ background: earned ? "hsl(252 75% 93%)" : "hsl(252 20% 50% / 0.15)" }}
+                    >
+                      {tier.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">{tier.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{tier.perk}</p>
+                    </div>
+                    {earned ? (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <Check size={11} className="text-primary-foreground" />
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">{tier.events} events</p>
+                    )}
+                  </div>
+                );
+              })}
+
+              {isFoundingMember && (
+                <div className="px-6 py-4 border-t border-border flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">🏛️</div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">Founding Member</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">You joined Nomaya in the very first cohort.</p>
+                  </div>
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Check size={11} className="text-primary-foreground" />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Member card modal */}
       {showMemberCard && (
@@ -744,24 +792,29 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
             {/* The card */}
             <div
-              className="rounded-2xl p-5 shadow-card mb-4 relative overflow-hidden"
-              style={{ background: "linear-gradient(135deg, hsl(252 30% 40%), hsl(252 30% 30%))" }}
+              className="rounded-2xl overflow-hidden shadow-card mb-5"
+              style={{ background: "hsl(252 35% 22%)" }}
             >
-              <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
-                style={{ background: "radial-gradient(circle, hsl(38 82% 62%), transparent)", transform: "translate(30%, -30%)" }} />
-              <p className="text-[10px] tracking-[0.25em] uppercase text-white/50 mb-3">Est. 2026</p>
-              <p className="font-serif text-2xl font-normal text-white">{profile?.name || "Member"}</p>
-              <p className="text-xs text-white/60 mt-0.5">{profile?.city || "Madrid"}</p>
-              <div className="flex items-end justify-between mt-6">
+              {/* Logo header */}
+              <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
+                <Logo className="h-7 w-auto object-contain opacity-90" />
+              </div>
+
+              {/* Card body */}
+              <div className="px-6 py-5 space-y-4">
                 <div>
-                  {ritualBadge && (
-                    <span className="text-xs font-medium text-nomaya-gold flex items-center gap-1">
-                      <span>{ritualBadge.icon}</span> {ritualBadge.label}
-                    </span>
-                  )}
-                  <p className="text-[10px] text-white/40 mt-1">{t("member_card.member_no")} since {memberSince}</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
+                  <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
                 </div>
-                <p className="font-serif text-lg text-white/90 tracking-widest">NOMAYA</p>
+                <div>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Member Name</p>
+                  <p className="font-serif text-lg text-white">{profile?.name || "Member"}</p>
+                </div>
+                <div className="pt-1 border-t border-white/10">
+                  <p className="text-xs text-white/40">
+                    {profile?.city || "Madrid"} · Member since {memberSince}
+                  </p>
+                </div>
               </div>
             </div>
 

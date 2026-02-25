@@ -85,10 +85,8 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
 
     return (
       <button
-        onClick={locked ? undefined : onClick}
-        className={`relative rounded-2xl overflow-hidden shadow-soft text-left transition-transform duration-200 active:scale-[0.97] flex flex-col bg-card ${
-          locked ? "cursor-default" : ""
-        }`}
+        onClick={onClick}
+        className="relative rounded-2xl overflow-hidden shadow-soft text-left transition-transform duration-200 active:scale-[0.97] flex flex-col bg-card"
       >
         {/* Square image */}
         <div className="relative w-full" style={{ aspectRatio: "1 / 1" }}>
@@ -96,31 +94,24 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
             <img
               src={event.image}
               alt={event.title}
-              className={`w-full h-full object-cover absolute inset-0 ${locked ? "blur-sm scale-105" : ""}`}
+              className="w-full h-full object-cover absolute inset-0"
             />
           ) : (
             <div
-              className={`w-full h-full absolute inset-0 ${locked ? "opacity-40" : ""}`}
+              className="w-full h-full absolute inset-0"
               style={{ background: event.categoryColor }}
             />
           )}
 
-          {/* Lock overlay */}
-          {locked && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-foreground/30 backdrop-blur-sm">
-              <span className="text-2xl">🔒</span>
-            </div>
-          )}
-
           {/* Status badge */}
-          {!locked && statusBadge && (
+          {statusBadge && (
             <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
               <span className="text-[10px] font-semibold text-gray-800">{statusBadge}</span>
             </div>
           )}
 
           {/* "New" badge for recently added events */}
-          {!locked && event.featured && !statusBadge && (
+          {event.featured && !statusBadge && (
             <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
               <span className="text-[10px] font-semibold text-gray-800">New</span>
             </div>
@@ -133,8 +124,8 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mt-0.5">
             {event.title}
           </h3>
-          <p className={`text-xs mt-0.5 ${isAlmostFull && !locked ? "text-primary font-medium" : "text-muted-foreground"}`}>
-            {locked ? "Verify to access" : subtext}
+          <p className={`text-xs mt-0.5 ${isAlmostFull ? "text-primary font-medium" : "text-muted-foreground"}`}>
+            {subtext}
           </p>
         </div>
       </button>
