@@ -1,13 +1,30 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin } from "lucide-react";
-import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest } from "@/hooks/useCircles";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info } from "lucide-react";
+import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
-import { useCircleEvents, useCreateCircleEvent } from "@/hooks/useCircleEvents";
+import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
 import type { AppCircle } from "@/types/database";
 
 const EMOJIS = ["🌸", "🌿", "✨", "🎨", "🌊", "🍀", "🦋", "🌺", "💫", "🍃", "🌙", "🎋"];
+
+const CIRCLE_EVENT_COLOR = "hsl(38, 82%, 62%)";
+
+// Curated Unsplash placeholder images per category
+const CATEGORY_IMAGES: Record<string, string> = {
+  "Arts & Crafts":    "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=300&fit=crop&auto=format",
+  "Food & Dining":    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop&auto=format",
+  "Fitness":          "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400&h=300&fit=crop&auto=format",
+  "Wellness":         "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop&auto=format",
+  "Culture":          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&auto=format",
+  "Entrepreneurship": "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=400&h=300&fit=crop&auto=format",
+  "General":          "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop&auto=format",
+};
+
+function circlePlaceholder(category: string): string {
+  return CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES["General"];
+}
 
 // ─── Chat panel ───────────────────────────────────────────────────────────────
 
@@ -39,7 +56,6 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
 
   return (
     <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 320 }}>
         {isLoading && <p className="text-xs text-muted-foreground text-center">Loading…</p>}
         {!isLoading && messages.length === 0 && (
@@ -50,7 +66,6 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
           const time = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
           return (
             <div key={msg.id} className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
-              {/* Avatar */}
               {msg.sender?.avatar_url ? (
                 <img src={msg.sender.avatar_url} className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5" />
               ) : (
@@ -62,11 +77,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
                 {!isOwn && (
                   <p className="text-[10px] text-muted-foreground mb-0.5 px-1">{msg.sender?.name ?? "Member"}</p>
                 )}
-                <div
-                  className={`px-3 py-2 rounded-2xl text-sm leading-snug ${
-                    isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"
-                  }`}
-                >
+                <div className={`px-3 py-2 rounded-2xl text-sm leading-snug ${isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"}`}>
                   {msg.content}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5 px-1">{time}</p>
@@ -76,8 +87,6 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
         })}
         <div ref={bottomRef} />
       </div>
-
-      {/* Input */}
       <div className="border-t border-border p-3 flex items-center gap-2">
         <input
           value={text}
@@ -101,55 +110,146 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
 // ─── Events tab ───────────────────────────────────────────────────────────────
 
 function EventsTab({ circle, onCreateEvent }: { circle: AppCircle; onCreateEvent: () => void }) {
+  const { user } = useAuth();
   const { data: events = [], isLoading } = useCircleEvents(circle.id);
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateCircleEventStatus();
+  const isMember = circle.isMember || circle.isAdmin;
+
+  const pendingEvents = events.filter((e) => e.status === 'pending');
+  const approvedEvents = events.filter((e) => e.status === 'approved');
 
   function formatEventDate(iso: string) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
   return (
-    <div className="space-y-3 relative">
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-4">Loading events…</p>
-      ) : events.length === 0 ? (
-        <div className="bg-card rounded-2xl p-6 shadow-soft text-center space-y-1">
-          <CalendarDays size={28} className="text-muted-foreground/50 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            No events yet.{circle.isAdmin ? " Tap + to add a gathering." : " Admins can add gatherings here."}
+    <div className="space-y-3 relative pb-16">
+      {/* Info banner for members in review-mode circles */}
+      {!circle.isAdmin && circle.eventPolicy === 'review' && (
+        <div className="flex items-start gap-2 bg-card rounded-2xl p-3 shadow-soft">
+          <Info size={14} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Event proposals are reviewed by the admin before they appear to all members.
           </p>
         </div>
-      ) : (
-        events.map((ev) => (
-          <div key={ev.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-foreground leading-snug">{ev.title}</p>
-              <span className="text-[10px] font-medium bg-primary/20 text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
-                {formatEventDate(ev.date)}
-              </span>
-            </div>
-            {ev.location && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <MapPin size={11} /> {ev.location}
-              </div>
-            )}
-            {ev.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{ev.description}</p>
-            )}
-            {ev.max_spots && (
-              <p className="text-[10px] text-muted-foreground">{ev.max_spots} spots</p>
-            )}
-          </div>
-        ))
       )}
 
-      {circle.isAdmin && (
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Loading events…</p>
+      ) : (
+        <>
+          {/* Pending events — admin review queue */}
+          {circle.isAdmin && pendingEvents.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground px-1 uppercase tracking-wide">
+                Pending review ({pendingEvents.length})
+              </p>
+              {pendingEvents.map((ev) => (
+                <div key={ev.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-2 border border-dashed border-border">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground leading-snug">{ev.title}</p>
+                    <span className="text-[10px] font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                      Pending
+                    </span>
+                  </div>
+                  {ev.location && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin size={11} /> {ev.location}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock size={11} /> {formatEventDate(ev.date)}
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => updateStatus({ eventId: ev.id, circleId: circle.id, status: 'rejected' })}
+                      disabled={isUpdating}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-border text-muted-foreground text-xs font-medium"
+                    >
+                      <X size={12} /> Decline
+                    </button>
+                    <button
+                      onClick={() => updateStatus({ eventId: ev.id, circleId: circle.id, status: 'approved' })}
+                      disabled={isUpdating}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-xs font-medium"
+                      style={{ background: CIRCLE_EVENT_COLOR }}
+                    >
+                      <Check size={12} /> Approve
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Member's own pending events (non-admin) */}
+          {!circle.isAdmin && pendingEvents.filter((e) => e.created_by === user?.id).map((ev) => (
+            <div key={ev.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5 border border-dashed border-border opacity-80">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-foreground leading-snug">{ev.title}</p>
+                <span className="text-[10px] font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                  Pending review
+                </span>
+              </div>
+              {ev.location && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin size={11} /> {ev.location}
+                </div>
+              )}
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock size={11} /> {formatEventDate(ev.date)}
+              </div>
+            </div>
+          ))}
+
+          {/* Approved events */}
+          {approvedEvents.length === 0 && pendingEvents.length === 0 ? (
+            <div className="bg-card rounded-2xl p-6 shadow-soft text-center space-y-1">
+              <CalendarDays size={28} className="text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {isMember
+                  ? "No events yet. Be the first to propose a gathering!"
+                  : "No events yet."}
+              </p>
+            </div>
+          ) : (
+            approvedEvents.map((ev) => (
+              <div key={ev.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-foreground leading-snug">{ev.title}</p>
+                  <span
+                    className="text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
+                    style={{ background: CIRCLE_EVENT_COLOR + "33", color: "#8a5f1a" }}
+                  >
+                    {formatEventDate(ev.date)}
+                  </span>
+                </div>
+                {ev.location && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin size={11} /> {ev.location}
+                  </div>
+                )}
+                {ev.description && (
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{ev.description}</p>
+                )}
+                {ev.max_spots && (
+                  <p className="text-[10px] text-muted-foreground">{ev.max_spots} spots</p>
+                )}
+              </div>
+            ))
+          )}
+        </>
+      )}
+
+      {/* FAB — all members can propose events */}
+      {isMember && (
         <button
           onClick={onCreateEvent}
-          className="fixed bottom-28 right-5 w-12 h-12 rounded-full gradient-cta shadow-floating flex items-center justify-center z-10"
-          aria-label="Add circle event"
+          className="fixed bottom-28 right-5 w-14 h-14 rounded-full shadow-floating flex items-center justify-center z-10 transition-transform active:scale-95"
+          style={{ background: CIRCLE_EVENT_COLOR }}
+          aria-label="Add event"
         >
-          <Plus size={22} className="text-white" />
+          <Plus size={26} className="text-white" />
         </button>
       )}
     </div>
@@ -158,7 +258,11 @@ function EventsTab({ circle, onCreateEvent }: { circle: AppCircle; onCreateEvent
 
 // ─── Create circle event sheet ────────────────────────────────────────────────
 
-function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClose: () => void }) {
+function CreateCircleEventSheet({
+  circleId, isAdmin, eventPolicy, onClose,
+}: {
+  circleId: string; isAdmin: boolean; eventPolicy: 'open' | 'review'; onClose: () => void;
+}) {
   const { mutate: create, isPending } = useCreateCircleEvent();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -166,8 +270,11 @@ function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClo
   const [location, setLocation] = useState("");
   const [maxSpots, setMaxSpots] = useState("");
 
+  const willBePending = !isAdmin && eventPolicy === 'review';
+
   function handleSubmit() {
     if (!title.trim() || !date) return;
+    const status = isAdmin || eventPolicy === 'open' ? 'approved' : 'pending';
     create(
       {
         circle_id: circleId,
@@ -176,6 +283,7 @@ function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClo
         date,
         location: location.trim() || undefined,
         max_spots: maxSpots ? parseInt(maxSpots, 10) : null,
+        status,
       },
       { onSuccess: onClose }
     );
@@ -189,7 +297,14 @@ function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClo
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
       >
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-        <h2 className="font-serif text-xl font-medium text-foreground">New gathering</h2>
+        <div>
+          <h2 className="font-serif text-xl font-medium text-foreground">Propose a gathering</h2>
+          {willBePending && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              <Clock size={11} /> Will be sent to the admin for approval
+            </p>
+          )}
+        </div>
 
         <div className="space-y-3">
           <input
@@ -232,9 +347,10 @@ function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClo
         <button
           onClick={handleSubmit}
           disabled={!title.trim() || !date || isPending}
-          className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+          className="w-full py-4 rounded-2xl font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50 text-white"
+          style={{ background: CIRCLE_EVENT_COLOR }}
         >
-          {isPending ? "Creating…" : "Add gathering"}
+          {isPending ? "Submitting…" : willBePending ? "Submit for review" : "Add gathering"}
         </button>
       </div>
     </div>
@@ -243,17 +359,12 @@ function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClo
 
 // ─── Detail view ──────────────────────────────────────────────────────────────
 
-function CircleDetail({
-  circle,
-  onBack,
-}: {
-  circle: AppCircle;
-  onBack: () => void;
-}) {
+function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => void }) {
   const { mutate: join, isPending: isJoining } = useJoinCircle();
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
   const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
   const { mutate: respond } = useRespondToJoinRequest();
+  const { mutate: updatePolicy } = useUpdateCircleEventPolicy();
   const { data: myRequests = [] } = useMyJoinRequests();
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "events" | "requests">("about");
@@ -263,16 +374,12 @@ function CircleDetail({
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const isMember = circle.isMember || circle.isAdmin;
-  const hasPendingRequest = myRequests.some(
-    (r) => r.circle_id === circle.id && r.status === "pending"
-  );
+  const hasPendingRequest = myRequests.some((r) => r.circle_id === circle.id && r.status === "pending");
+  const coverImage = circle.coverUrl || circlePlaceholder(circle.category);
 
   function handleJoinPress() {
-    if (circle.isPrivate) {
-      setShowJoinRequest(true);
-    } else {
-      join(circle.id);
-    }
+    if (circle.isPrivate) { setShowJoinRequest(true); }
+    else { join(circle.id); }
   }
 
   function submitJoinRequest() {
@@ -286,11 +393,7 @@ function CircleDetail({
     <div className="mobile-container flex flex-col bg-background pb-24">
       {/* Hero */}
       <div className="relative h-56">
-        {circle.coverUrl ? (
-          <img src={circle.coverUrl} alt={circle.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full" style={{ background: circle.categoryColor }} />
-        )}
+        <img src={coverImage} alt={circle.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
         <button
           onClick={onBack}
@@ -321,9 +424,7 @@ function CircleDetail({
             key={tab}
             onClick={() => setActiveTab(tab as "about" | "chat" | "events" | "requests")}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 whitespace-nowrap ${
-              activeTab === tab
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground"
+              activeTab === tab ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
             }`}
           >
             {tab === "chat" && <MessageCircle size={14} />}
@@ -342,21 +443,16 @@ function CircleDetail({
       <div className="px-5 py-4 space-y-4">
         {activeTab === "about" ? (
           <>
-            {/* About */}
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-base font-medium text-foreground mb-2">About</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{circle.description}</p>
             </div>
 
-            {/* Members */}
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-base font-medium text-foreground mb-3">Members</h3>
               <div className="flex -space-x-2">
                 {Array.from({ length: Math.min(circle.memberCount, 8) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-9 h-9 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm"
-                  >
+                  <div key={i} className="w-9 h-9 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm">
                     {EMOJIS[i % EMOJIS.length]}
                   </div>
                 ))}
@@ -371,17 +467,36 @@ function CircleDetail({
               </div>
             </div>
 
-            {/* Private note */}
-            {circle.isPrivate && (
-              <div className="bg-card rounded-2xl p-4 shadow-soft flex items-start gap-3">
-                <Lock size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  This is a private circle. Only members can see its contents.
-                </p>
+            {/* Admin: event submission policy toggle */}
+            {circle.isAdmin && (
+              <div className="bg-card rounded-2xl p-4 shadow-soft">
+                <h3 className="font-serif text-base font-medium text-foreground mb-3">Event settings</h3>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground">Members can propose events</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {circle.eventPolicy === 'open'
+                        ? "Events post directly without approval"
+                        : "Events require your approval first"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => updatePolicy({ circleId: circle.id, policy: circle.eventPolicy === 'open' ? 'review' : 'open' })}
+                    className={`w-11 h-6 rounded-full transition-colors flex-shrink-0 relative ${circle.eventPolicy === 'open' ? "bg-primary" : "bg-border"}`}
+                  >
+                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${circle.eventPolicy === 'open' ? "left-6" : "left-1"}`} />
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Action */}
+            {circle.isPrivate && (
+              <div className="bg-card rounded-2xl p-4 shadow-soft flex items-start gap-3">
+                <Lock size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">This is a private circle. Only members can see its contents.</p>
+              </div>
+            )}
+
             {circle.isAdmin ? (
               <div className="flex gap-2">
                 <div className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground font-medium text-sm border border-border text-center flex items-center justify-center">
@@ -439,9 +554,7 @@ function CircleDetail({
                   </div>
                 </div>
                 {req.message && (
-                  <p className="text-sm text-foreground leading-relaxed bg-muted rounded-xl px-3 py-2 italic">
-                    "{req.message}"
-                  </p>
+                  <p className="text-sm text-foreground leading-relaxed bg-muted rounded-xl px-3 py-2 italic">"{req.message}"</p>
                 )}
                 <div className="flex gap-2">
                   <button
@@ -465,23 +578,27 @@ function CircleDetail({
         )}
       </div>
 
-      {/* Invite sheet (admin only) */}
+      {/* Create event sheet */}
+      {showCreateEvent && (
+        <CreateCircleEventSheet
+          circleId={circle.id}
+          isAdmin={circle.isAdmin}
+          eventPolicy={circle.eventPolicy}
+          onClose={() => setShowCreateEvent(false)}
+        />
+      )}
+
+      {/* Invite sheet */}
       {showInviteSheet && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInviteSheet(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
-          >
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <h2 className="font-serif text-xl font-medium text-foreground">Invite to circle</h2>
             <p className="text-sm text-muted-foreground">Share this link to invite members directly.</p>
             <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
               <p className="text-sm text-foreground flex-1 truncate">nomaya.app/circles/{circle.id}</p>
-              <button
-                onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)}
-                className="text-xs font-medium text-primary flex-shrink-0"
-              >
+              <button onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)} className="text-xs font-medium text-primary flex-shrink-0">
                 Copy
               </button>
             </div>
@@ -501,28 +618,15 @@ function CircleDetail({
         </div>
       )}
 
-      {/* Create circle event sheet (admin only) */}
-      {showCreateEvent && (
-        <CreateCircleEventSheet
-          circleId={circle.id}
-          onClose={() => setShowCreateEvent(false)}
-        />
-      )}
-
       {/* Join request sheet */}
       {showJoinRequest && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowJoinRequest(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
-          >
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <div>
               <h2 className="font-serif text-xl font-medium text-foreground">Request to join</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                This is a private circle. Tell the admin a bit about yourself.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">This is a private circle. Tell the admin a bit about yourself.</p>
             </div>
             <textarea
               value={requestMessage}
@@ -533,10 +637,7 @@ function CircleDetail({
               className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
             />
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowJoinRequest(false)}
-                className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
-              >
+              <button onClick={() => setShowJoinRequest(false)} className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border">
                 Cancel
               </button>
               <button
@@ -554,19 +655,20 @@ function CircleDetail({
   );
 }
 
-// ─── Create form ──────────────────────────────────────────────────────────────
+// ─── Create circle sheet ──────────────────────────────────────────────────────
 
 function CreateCircleSheet({ onClose }: { onClose: () => void }) {
   const { mutate: create, isPending } = useCreateCircle();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [city, setCity] = useState("Madrid");
+  const [coverUrl, setCoverUrl] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
 
   function handleSubmit() {
     if (!name.trim()) return;
     create(
-      { name: name.trim(), description: description.trim(), city: city.trim(), is_private: isPrivate },
+      { name: name.trim(), description: description.trim(), city: city.trim(), cover_url: coverUrl.trim() || null, is_private: isPrivate },
       { onSuccess: onClose }
     );
   }
@@ -578,7 +680,27 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
         <h2 className="font-serif text-xl font-medium text-foreground">New circle</h2>
 
+        {/* Cover image preview */}
+        {coverUrl ? (
+          <div className="relative w-full h-32 rounded-2xl overflow-hidden">
+            <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+            <button onClick={() => setCoverUrl("")} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
+              <X size={12} className="text-white" />
+            </button>
+          </div>
+        ) : (
+          <div className="w-full h-20 rounded-2xl bg-muted flex flex-col items-center justify-center gap-1 border border-dashed border-border">
+            <p className="text-xs text-muted-foreground">Paste an image URL below to set a cover photo</p>
+          </div>
+        )}
+
         <div className="space-y-3">
+          <input
+            value={coverUrl}
+            onChange={(e) => setCoverUrl(e.target.value)}
+            placeholder="Cover image URL (optional)"
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -602,16 +724,9 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
           />
         </div>
 
-        <button
-          onClick={() => setIsPrivate((p) => !p)}
-          className="flex items-center gap-3 w-full"
-        >
-          <div
-            className={`w-10 h-6 rounded-full transition-colors ${isPrivate ? "bg-primary" : "bg-border"} relative`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${isPrivate ? "left-5" : "left-1"}`}
-            />
+        <button onClick={() => setIsPrivate((p) => !p)} className="flex items-center gap-3 w-full">
+          <div className={`w-10 h-6 rounded-full transition-colors ${isPrivate ? "bg-primary" : "bg-border"} relative`}>
+            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${isPrivate ? "left-5" : "left-1"}`} />
           </div>
           <span className="text-sm text-foreground">Private circle</span>
         </button>
@@ -630,34 +745,20 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
 
 // ─── Circle card ──────────────────────────────────────────────────────────────
 
-function CircleCard({
-  circle,
-  onClick,
-  dimmed = false,
-}: {
-  circle: AppCircle;
-  onClick: () => void;
-  dimmed?: boolean;
-}) {
+function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; onClick: () => void; dimmed?: boolean }) {
+  const image = circle.coverUrl || circlePlaceholder(circle.category);
   return (
     <button
       onClick={onClick}
       className={`w-full bg-card rounded-2xl overflow-hidden shadow-soft flex text-left transition-all active:scale-[0.98] ${dimmed ? "opacity-70" : ""}`}
     >
       <div className="w-20 flex-shrink-0 relative">
-        {circle.coverUrl ? (
-          <img
-            src={circle.coverUrl}
-            alt={circle.name}
-            className={`w-full h-full object-cover ${dimmed ? "grayscale" : ""}`}
-            style={{ minHeight: 80 }}
-          />
-        ) : (
-          <div
-            className="w-full h-full"
-            style={{ minHeight: 80, background: circle.categoryColor, opacity: dimmed ? 0.5 : 1 }}
-          />
-        )}
+        <img
+          src={image}
+          alt={circle.name}
+          className={`w-full h-full object-cover ${dimmed ? "grayscale" : ""}`}
+          style={{ minHeight: 80 }}
+        />
         {dimmed && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
             <Lock size={14} className="text-card" />
@@ -683,9 +784,7 @@ function CircleCard({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-interface CirclesScreenProps {
-  initialCircleId?: string;
-}
+interface CirclesScreenProps { initialCircleId?: string; }
 
 export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
   const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
@@ -703,13 +802,9 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
 
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
-      {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <div className="flex justify-end mb-1">
-          <button
-            onClick={() => setShowCreate(true)}
-            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft"
-          >
+          <button onClick={() => setShowCreate(true)} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
             <Plus size={18} className="text-primary-foreground" />
           </button>
         </div>
@@ -720,7 +815,6 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
         </div>
       </div>
 
-      {/* Intro note */}
       <div className="mx-5 mb-5 bg-secondary rounded-2xl p-4 border border-border">
         <p className="text-sm text-muted-foreground leading-relaxed">
           ✦ Circles are intimate groups built around shared interests. Join one or start your own.
@@ -733,46 +827,31 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
         </div>
       ) : (
         <>
-          {/* My circles */}
           {myCircles.length > 0 && (
             <div className="px-5 mb-6">
               <h2 className="font-serif text-lg font-medium text-foreground mb-3">My circles</h2>
               <div className="space-y-3">
                 {myCircles.map((circle) => (
-                  <CircleCard
-                    key={circle.id}
-                    circle={circle}
-                    onClick={() => setSelectedId(circle.id)}
-                  />
+                  <CircleCard key={circle.id} circle={circle} onClick={() => setSelectedId(circle.id)} />
                 ))}
               </div>
             </div>
           )}
-
-          {/* Discover */}
           {discover.length > 0 && (
             <div className="px-5">
               <h2 className="font-serif text-lg font-medium text-foreground mb-1">Discover circles</h2>
               <p className="text-xs text-muted-foreground mb-3">Open circles you can join now.</p>
               <div className="space-y-3">
                 {discover.map((circle) => (
-                  <CircleCard
-                    key={circle.id}
-                    circle={circle}
-                    onClick={() => setSelectedId(circle.id)}
-                    dimmed={circle.isPrivate}
-                  />
+                  <CircleCard key={circle.id} circle={circle} onClick={() => setSelectedId(circle.id)} dimmed={circle.isPrivate} />
                 ))}
               </div>
             </div>
           )}
-
           {circles.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center px-10 gap-3">
               <Users size={36} className="text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                No circles yet. Be the first to create one.
-              </p>
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">No circles yet. Be the first to create one.</p>
             </div>
           )}
         </>

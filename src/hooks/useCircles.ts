@@ -199,6 +199,24 @@ export function useRespondToJoinRequest() {
   })
 }
 
+// ─── Mutation: update circle event policy (admin only) ────────────────────────
+
+export function useUpdateCircleEventPolicy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ circleId, policy }: { circleId: string; policy: 'open' | 'review' }) => {
+      const { error } = await supabase
+        .from('circles')
+        .update({ event_policy: policy })
+        .eq('id', circleId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
 // ─── Mutation: create a circle ────────────────────────────────────────────────
 
 export function useCreateCircle() {
