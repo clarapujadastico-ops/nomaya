@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info } from "lucide-react";
-import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy } from "@/hooks/useCircles";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera } from "lucide-react";
+import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -357,6 +357,64 @@ function CreateCircleEventSheet({
   );
 }
 
+// ─── Edit cover sheet ─────────────────────────────────────────────────────────
+
+function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () => void }) {
+  const { mutate: updateCover, isPending } = useUpdateCircleCover();
+  const [url, setUrl] = useState(circle.coverUrl);
+
+  function handleSave() {
+    updateCover(
+      { circleId: circle.id, coverUrl: url.trim() || null },
+      { onSuccess: onClose }
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+      >
+        <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+        <h2 className="font-serif text-xl font-medium text-foreground">Change cover photo</h2>
+
+        {/* Preview */}
+        <div className="w-full h-36 rounded-2xl overflow-hidden bg-muted">
+          {url.trim() ? (
+            <img src={url.trim()} alt="Preview" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-xs text-muted-foreground">No image</p>
+            </div>
+          )}
+        </div>
+
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Paste an image URL…"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+        />
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isPending}
+            className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium shadow-soft disabled:opacity-50"
+          >
+            {isPending ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Detail view ──────────────────────────────────────────────────────────────
 
 function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => void }) {
@@ -372,6 +430,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showEditCover, setShowEditCover] = useState(false);
 
   const isMember = circle.isMember || circle.isAdmin;
   const hasPendingRequest = myRequests.some((r) => r.circle_id === circle.id && r.status === "pending");
@@ -401,6 +460,14 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
         >
           ←
         </button>
+        {circle.isAdmin && (
+          <button
+            onClick={() => setShowEditCover(true)}
+            className="absolute top-12 right-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+          >
+            <Camera size={16} />
+          </button>
+        )}
         <div className="absolute bottom-4 left-4 right-4">
           {circle.category !== "General" && (
             <span
@@ -577,6 +644,11 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
           <ChatPanel circleId={circle.id} isMember={isMember} />
         )}
       </div>
+
+      {/* Edit cover sheet */}
+      {showEditCover && (
+        <EditCoverSheet circle={circle} onClose={() => setShowEditCover(false)} />
+      )}
 
       {/* Create event sheet */}
       {showCreateEvent && (

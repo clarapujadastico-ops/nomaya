@@ -199,6 +199,24 @@ export function useRespondToJoinRequest() {
   })
 }
 
+// ─── Mutation: update circle cover image (admin only) ─────────────────────────
+
+export function useUpdateCircleCover() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ circleId, coverUrl }: { circleId: string; coverUrl: string | null }) => {
+      const { error } = await supabase
+        .from('circles')
+        .update({ cover_url: coverUrl })
+        .eq('id', circleId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
 // ─── Mutation: update circle event policy (admin only) ────────────────────────
 
 export function useUpdateCircleEventPolicy() {
