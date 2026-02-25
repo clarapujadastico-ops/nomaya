@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket, Globe, Users, CheckCircle2, MapPin, Lock, Maximize2, Minimize2 } from "lucide-react";
-import Map, { Marker, Popup } from "react-map-gl/mapbox";
+import { Calendar, Ticket, Globe, Users, CheckCircle2, MapPin, Lock } from "lucide-react";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings, useBookEvent } from "@/hooks/useBookings";
@@ -63,7 +63,6 @@ export function MapScreen() {
   const { t } = useLang();
   const [popupId, setPopupId] = useState<string | null>(null);
   const [view, setView] = useState<MapView>("all");
-  const [mapExpanded, setMapExpanded] = useState(false);
 
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
@@ -126,17 +125,7 @@ export function MapScreen() {
       </div>
 
       {/* Map */}
-      <div
-        className="mx-5 rounded-2xl overflow-hidden shadow-card relative transition-all duration-300"
-        style={{ height: mapExpanded ? 560 : 340 }}
-      >
-        <button
-          onClick={() => setMapExpanded((v) => !v)}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center"
-          aria-label={mapExpanded ? "Collapse map" : "Expand map"}
-        >
-          {mapExpanded ? <Minimize2 size={14} className="text-gray-600" /> : <Maximize2 size={14} className="text-gray-600" />}
-        </button>
+      <div className="mx-5 rounded-2xl overflow-hidden shadow-card" style={{ height: 340 }}>
         {isLoading ? (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <p className="text-sm text-muted-foreground">Loading map…</p>
@@ -149,6 +138,8 @@ export function MapScreen() {
             mapStyle="mapbox://styles/mapbox/streets-v12"
             onClick={() => setPopupId(null)}
           >
+            <NavigationControl position="bottom-right" showCompass={false} />
+
             {/* Official event markers */}
             {officialEvents.map((event) => {
               // Exact coords if booked (any view); approximate if not yet booked
