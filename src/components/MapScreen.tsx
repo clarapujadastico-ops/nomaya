@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket, Globe } from "lucide-react";
+import { Calendar, Ticket, Globe, Users } from "lucide-react";
 import Map, { Marker, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
+import { useMyCircleEvents } from "@/hooks/useCircleEvents";
 import { Logo } from "./Logo";
 import { useLang } from "@/contexts/LanguageContext";
 
@@ -44,21 +45,31 @@ function categoryColor(cat: string, fallback: string): string {
   return CATEGORY_COLORS[cat] ?? fallback;
 }
 
+const CIRCLE_EVENT_COLOR = "hsl(38, 82%, 62%)";
+
 export function MapScreen() {
   const { t } = useLang();
-  const [popupEventId, setPopupEventId] = useState<string | null>(null);
+  const [popupId, setPopupId] = useState<string | null>(null);
   const [showMyOnly, setShowMyOnly] = useState(false);
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
+  const { data: circleEvents = [], isLoading: circleEventsLoading } = useMyCircleEvents();
 
-  const isLoading = eventsLoading || bookingsLoading;
+  const isLoading = eventsLoading || bookingsLoading || circleEventsLoading;
   const bookedIds = new Set(bookings.map((b) => b.event_id));
-  const events = showMyOnly ? allEvents.filter((e) => bookedIds.has(e.id)) : allEvents;
-  const selectedEvent = popupEventId ? events.find((e) => e.id === popupEventId) : null;
+
+  // Official events: all or only booked
+  const officialEvents = showMyOnly ? allEvents.filter((e) => bookedIds.has(e.id)) : allEvents;
+
+  // Circle events: always show when "My Events" is on; hide from "All" view to keep map clean
+  const visibleCircleEvents = showMyOnly ? circleEvents : [];
 
   const handleMarkerClick = useCallback((id: string) => {
-    setPopupEventId((prev) => (prev === id ? null : id));
+    setPopupId((prev) => (prev === id ? null : id));
   }, []);
+
+  const selectedEvent = popupId ? officialEvents.find((e) => e.id === popupId) : null;
+  const selectedCircleEvent = popupId ? circleEvents.find((e) => e.id === popupId) : null;
 
   return (
     <div className="mobile-container flex flex-col bg-background">
@@ -101,12 +112,13 @@ export function MapScreen() {
             initialViewState={{ longitude: -3.7038, latitude: 40.4168, zoom: 12.5 }}
             style={{ width: "100%", height: "100%" }}
             mapStyle="mapbox://styles/mapbox/streets-v12"
-            onClick={() => setPopupEventId(null)}
+            onClick={() => setPopupId(null)}
           >
-            {events.map((event) => {
+            {/* Official event markers */}
+            {officialEvents.map((event) => {
               const [lng, lat] = getEventCoords(event.id, event.latitude, event.longitude);
               const color = categoryColor(event.category, event.categoryColor);
-              const isSelected = popupEventId === event.id;
+              const isSelected = popupId === event.id;
               return (
                 <Marker key={event.id} longitude={lng} latitude={lat} anchor="bottom">
                   <button
@@ -132,6 +144,34 @@ export function MapScreen() {
               );
             })}
 
+            {/* Circle event markers (gold) */}
+            {visibleCircleEvents.map((ev) => {
+              const [lng, lat] = getEventCoords(ev.id, null, null);
+              const isSelected = popupId === ev.id;
+              return (
+                <Marker key={`ce-${ev.id}`} longitude={lng} latitude={lat} anchor="bottom">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleMarkerClick(ev.id); }}
+                    className="transition-transform duration-200"
+                    style={{ transform: isSelected ? "scale(1.25)" : "scale(1)" }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center"
+                      style={{ background: CIRCLE_EVENT_COLOR }}
+                    >
+                      <Users size={14} className="text-white" />
+                    </div>
+                    <div className="w-0 h-0 mx-auto" style={{
+                      borderLeft: "5px solid transparent",
+                      borderRight: "5px solid transparent",
+                      borderTop: `7px solid ${CIRCLE_EVENT_COLOR}`,
+                    }} />
+                  </button>
+                </Marker>
+              );
+            })}
+
+            {/* Official event popup */}
             {selectedEvent && (() => {
               const [lng, lat] = getEventCoords(selectedEvent.id, selectedEvent.latitude, selectedEvent.longitude);
               return (
@@ -161,6 +201,42 @@ export function MapScreen() {
                 </Popup>
               );
             })()}
+
+            {/* Circle event popup */}
+            {selectedCircleEvent && (() => {
+              const [lng, lat] = getEventCoords(selectedCircleEvent.id, null, null);
+              const eventDate = new Date(selectedCircleEvent.date).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short',
+              });
+              return (
+                <Popup
+                  longitude={lng}
+                  latitude={lat}
+                  anchor="bottom"
+                  offset={48}
+                  closeButton={false}
+                  closeOnClick={false}
+                  style={{ padding: 0 }}
+                >
+                  <div className="bg-white rounded-xl overflow-hidden shadow-floating" style={{ width: 200 }}>
+                    <div className="p-2.5">
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mb-1"
+                        style={{ background: CIRCLE_EVENT_COLOR + "33", color: "#8a5f1a" }}
+                      >
+                        <Users size={9} /> {selectedCircleEvent.circle_name}
+                      </span>
+                      <p className="text-sm font-serif font-medium text-gray-800 leading-snug mt-0.5">
+                        {selectedCircleEvent.title}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                        <Calendar size={10} /> {eventDate}
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              );
+            })()}
           </Map>
         )}
       </div>
@@ -172,7 +248,7 @@ export function MapScreen() {
         </h2>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
-        ) : events.length === 0 ? (
+        ) : officialEvents.length === 0 && visibleCircleEvents.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
             <Ticket size={28} className="text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -181,12 +257,12 @@ export function MapScreen() {
           </div>
         ) : (
           <div className="space-y-2.5">
-            {events.map((event) => (
+            {officialEvents.map((event) => (
               <button
                 key={event.id}
-                onClick={() => setPopupEventId(event.id === popupEventId ? null : event.id)}
+                onClick={() => setPopupId(event.id === popupId ? null : event.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left shadow-soft ${
-                  popupEventId === event.id ? "border-primary" : "border-border"
+                  popupId === event.id ? "border-primary" : "border-border"
                 }`}
               >
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -198,6 +274,28 @@ export function MapScreen() {
                 <span className="text-xs font-medium text-primary flex-shrink-0">{event.price}</span>
               </button>
             ))}
+            {visibleCircleEvents.map((ev) => {
+              const eventDate = new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+              return (
+                <button
+                  key={`ce-${ev.id}`}
+                  onClick={() => setPopupId(ev.id === popupId ? null : ev.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left shadow-soft ${
+                    popupId === ev.id ? "border-primary" : "border-border"
+                  }`}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ background: CIRCLE_EVENT_COLOR }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground">{ev.circle_name} · {eventDate}</p>
+                  </div>
+                  <span className="text-xs font-medium flex-shrink-0" style={{ color: "#8a5f1a" }}>
+                    <Users size={11} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

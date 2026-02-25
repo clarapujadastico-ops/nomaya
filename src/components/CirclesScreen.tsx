@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin } from "lucide-react";
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
+import { useCircleEvents, useCreateCircleEvent } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
 import type { AppCircle } from "@/types/database";
@@ -97,6 +98,149 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
   );
 }
 
+// ─── Events tab ───────────────────────────────────────────────────────────────
+
+function EventsTab({ circle, onCreateEvent }: { circle: AppCircle; onCreateEvent: () => void }) {
+  const { data: events = [], isLoading } = useCircleEvents(circle.id);
+
+  function formatEventDate(iso: string) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  return (
+    <div className="space-y-3 relative">
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Loading events…</p>
+      ) : events.length === 0 ? (
+        <div className="bg-card rounded-2xl p-6 shadow-soft text-center space-y-1">
+          <CalendarDays size={28} className="text-muted-foreground/50 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            No events yet.{circle.isAdmin ? " Tap + to add a gathering." : " Admins can add gatherings here."}
+          </p>
+        </div>
+      ) : (
+        events.map((ev) => (
+          <div key={ev.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium text-foreground leading-snug">{ev.title}</p>
+              <span className="text-[10px] font-medium bg-primary/20 text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                {formatEventDate(ev.date)}
+              </span>
+            </div>
+            {ev.location && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin size={11} /> {ev.location}
+              </div>
+            )}
+            {ev.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{ev.description}</p>
+            )}
+            {ev.max_spots && (
+              <p className="text-[10px] text-muted-foreground">{ev.max_spots} spots</p>
+            )}
+          </div>
+        ))
+      )}
+
+      {circle.isAdmin && (
+        <button
+          onClick={onCreateEvent}
+          className="fixed bottom-28 right-5 w-12 h-12 rounded-full gradient-cta shadow-floating flex items-center justify-center z-10"
+          aria-label="Add circle event"
+        >
+          <Plus size={22} className="text-white" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Create circle event sheet ────────────────────────────────────────────────
+
+function CreateCircleEventSheet({ circleId, onClose }: { circleId: string; onClose: () => void }) {
+  const { mutate: create, isPending } = useCreateCircleEvent();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [maxSpots, setMaxSpots] = useState("");
+
+  function handleSubmit() {
+    if (!title.trim() || !date) return;
+    create(
+      {
+        circle_id: circleId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        date,
+        location: location.trim() || undefined,
+        max_spots: maxSpots ? parseInt(maxSpots, 10) : null,
+      },
+      { onSuccess: onClose }
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+      >
+        <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+        <h2 className="font-serif text-xl font-medium text-foreground">New gathering</h2>
+
+        <div className="space-y-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Event title"
+            maxLength={80}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <input
+            type="datetime-local"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none"
+          />
+          <input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Location (optional)"
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description (optional)"
+            rows={3}
+            maxLength={300}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+          />
+          <input
+            type="number"
+            value={maxSpots}
+            onChange={(e) => setMaxSpots(e.target.value)}
+            placeholder="Max spots (optional)"
+            min={1}
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!title.trim() || !date || isPending}
+          className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          {isPending ? "Creating…" : "Add gathering"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Detail view ──────────────────────────────────────────────────────────────
 
 function CircleDetail({
@@ -112,10 +256,11 @@ function CircleDetail({
   const { mutate: respond } = useRespondToJoinRequest();
   const { data: myRequests = [] } = useMyJoinRequests();
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
-  const [activeTab, setActiveTab] = useState<"about" | "chat" | "requests">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "events" | "requests">("about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const isMember = circle.isMember || circle.isAdmin;
   const hasPendingRequest = myRequests.some(
@@ -170,18 +315,19 @@ function CircleDetail({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border mx-5 mt-4 gap-1">
-        {(["about", "chat", ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
+      <div className="flex border-b border-border mx-5 mt-4 gap-1 overflow-x-auto">
+        {(["about", "chat", ...(isMember ? ["events"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab as "about" | "chat" | "requests")}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 ${
+            onClick={() => setActiveTab(tab as "about" | "chat" | "events" | "requests")}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 whitespace-nowrap ${
               activeTab === tab
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground"
             }`}
           >
             {tab === "chat" && <MessageCircle size={14} />}
+            {tab === "events" && <CalendarDays size={14} />}
             {tab === "requests" && <UserPlus size={14} />}
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
             {tab === "requests" && pendingRequests.length > 0 && (
@@ -270,6 +416,8 @@ function CircleDetail({
               </button>
             )}
           </>
+        ) : activeTab === "events" ? (
+          <EventsTab circle={circle} onCreateEvent={() => setShowCreateEvent(true)} />
         ) : activeTab === "requests" ? (
           <div className="space-y-3">
             {pendingRequests.length === 0 ? (
@@ -351,6 +499,14 @@ function CircleDetail({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Create circle event sheet (admin only) */}
+      {showCreateEvent && (
+        <CreateCircleEventSheet
+          circleId={circle.id}
+          onClose={() => setShowCreateEvent(false)}
+        />
       )}
 
       {/* Join request sheet */}

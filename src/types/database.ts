@@ -261,6 +261,44 @@ export interface Database {
           created_at?: string
         }
       }
+      circle_events: {
+        Row: {
+          id: string
+          circle_id: string
+          created_by: string
+          title: string
+          description: string | null
+          date: string
+          location: string | null
+          max_spots: number | null
+          image_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          circle_id: string
+          created_by: string
+          title: string
+          description?: string | null
+          date: string
+          location?: string | null
+          max_spots?: number | null
+          image_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          circle_id?: string
+          created_by?: string
+          title?: string
+          description?: string | null
+          date?: string
+          location?: string | null
+          max_spots?: number | null
+          image_url?: string | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       circles_with_members: {
@@ -311,6 +349,7 @@ export interface Database {
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type EventRow = Database['public']['Views']['events_with_spots']['Row']
 export type CircleRow = Database['public']['Views']['circles_with_members']['Row']
+export type CircleEvent = Database['public']['Tables']['circle_events']['Row']
 
 /** The shape UI components use for circles */
 export interface AppCircle {
