@@ -33,7 +33,7 @@ function AppShell() {
   const [inOnboarding, setInOnboarding] = useState<boolean | null>(null);
   useEffect(() => {
     if (!authLoading && !profileLoading && session && inOnboarding === null) {
-      setInOnboarding(!profile);
+      setInOnboarding(!profile?.name);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, profileLoading, session]);
