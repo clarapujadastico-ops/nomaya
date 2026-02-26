@@ -56,6 +56,8 @@ export function EventsScreen() {
   const { data: profile } = useProfile();
   const isUnverified = profile?.verification_status === "unverified";
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
@@ -78,6 +80,15 @@ export function EventsScreen() {
       ? events
       : events.filter((e) => e.category === activeFilter);
 
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter((e) =>
+        e.title.toLowerCase().includes(q) ||
+        (e.description ?? "").toLowerCase().includes(q) ||
+        (e.category ?? "").toLowerCase().includes(q)
+      );
+    }
+
     if (appliedFilters.type) {
       list = list.filter((e) => e.category === appliedFilters.type);
     }
@@ -96,7 +107,7 @@ export function EventsScreen() {
       });
     }
     return list;
-  }, [events, activeFilter, appliedFilters]);
+  }, [events, activeFilter, appliedFilters, searchQuery]);
 
   const hasFilters = appliedFilters.groupSize !== null || appliedFilters.dateRange !== null || appliedFilters.type !== "";
 
@@ -344,9 +355,16 @@ export function EventsScreen() {
           <div className="flex-1 flex items-center gap-2.5 bg-card rounded-xl px-4 py-3 border border-border shadow-soft">
             <Search size={16} className="text-muted-foreground flex-shrink-0" />
             <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("events.search")}
               className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground flex-1 focus:outline-none"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")}>
+                <X size={14} className="text-muted-foreground" />
+              </button>
+            )}
           </div>
           <button
             onClick={() => { setPendingFilters(appliedFilters); setShowFilterSheet(true); }}
@@ -383,7 +401,7 @@ export function EventsScreen() {
       ) : (
         <>
           {/* Featured carousel */}
-          {activeFilter === "All" && !hasFilters && featured.length > 0 && (
+          {activeFilter === "All" && !hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">{t("events.featured")}</h2>
