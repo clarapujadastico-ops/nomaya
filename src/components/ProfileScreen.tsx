@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
-  ChevronRight, Globe, Bell, Heart, Star, LogOut, Camera, Instagram,
+  ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
-  HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings,
+  HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings, LogOut,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
@@ -64,9 +64,17 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showMemberCard, setShowMemberCard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotificationsSheet, setShowNotificationsSheet] = useState(false);
+  const [showSubscriptionSheet, setShowSubscriptionSheet] = useState(false);
+  const [selectedAttendedBookingId, setSelectedAttendedBookingId] = useState<string | null>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
-  const [notificationsOn, setNotificationsOn] = useState(true);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [notifSettings, setNotifSettings] = useState({
+    newEvents: true,
+    bookingReminders: true,
+    circleMessages: true,
+    joinUpdates: true,
+  });
 
   useFoundingMemberBadge();
 
@@ -88,6 +96,26 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const memberId = profile?.id
     ? `NM-MAD-${String(parseInt(profile.id.replace(/-/g, '').substring(0, 6), 16) % 9000 + 1000).padStart(4, '0')}`
     : 'NM-MAD-????';
+
+  async function handleAvatarUpload() {
+    if (!profile?.id) return;
+    try {
+      const photo = await CapCamera.getPhoto({
+        quality: 85,
+        allowEditing: true,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Photos,
+      });
+      if (!photo.base64String) return;
+      setIsUploadingAvatar(true);
+      const url = await uploadAvatar(photo.base64String, profile.id);
+      updateProfile({ avatar_url: url });
+    } catch {
+      // cancelled
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
 
   function saveBio() {
     updateProfile({ bio: bioValue || null });
@@ -127,41 +155,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   function handleReferral() {
     const text = "Join me on Nomaya — curated experiences for women. Download the app: https://nomaya.app";
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    if (typeof window !== "undefined") {
-      window.open(waUrl, "_blank");
-    }
+    if (typeof window !== "undefined") window.open(waUrl, "_blank");
   }
-
-  function handleNotifications() {
-    setNotificationsOn((n) => !n);
-  }
-
-  const settingsItems = [
-    {
-      icon: Heart,
-      label: t("profile.interests"),
-      value: profile?.interests?.length ? `${profile.interests.length} selected` : "None",
-      onPress: () => { setSelectedInterests(profile?.interests ?? []); setShowInterestsSheet(true); },
-    },
-    {
-      icon: Globe,
-      label: t("profile.language"),
-      value: lang === "es" ? "Español" : "English",
-      onPress: () => setShowLanguageSheet(true),
-    },
-    {
-      icon: Bell,
-      label: t("profile.notifications"),
-      value: notificationsOn ? t("profile.on") : t("profile.off"),
-      onPress: handleNotifications,
-    },
-    {
-      icon: Star,
-      label: t("profile.referrals"),
-      value: t("profile.invite_friends"),
-      onPress: handleReferral,
-    },
-  ];
 
   if (showVerification) {
     return (
@@ -172,43 +167,43 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     );
   }
 
+  // ── Settings screen ──────────────────────────────────────────────────────────
   if (showSettings) {
     const settingsSections = [
       {
         title: null,
         items: [
-          { icon: Pencil,        label: "Edit Profile",       value: null,    onPress: () => setShowSettings(false) },
-          { icon: Bell,          label: t("profile.notifications"), value: notificationsOn ? t("profile.on") : t("profile.off"), onPress: handleNotifications },
-          { icon: Lock,          label: "Privacy settings",   value: null,    onPress: () => {} },
+          { icon: Pencil, label: "Edit Profile", value: null, onPress: () => setShowSettings(false) },
+          { icon: Bell, label: t("profile.notifications"), value: null, onPress: () => setShowNotificationsSheet(true) },
+          { icon: Lock, label: "Privacy settings", value: null, onPress: () => window.open("https://nomaya.app/privacy", "_blank") },
         ],
       },
       {
         title: "Plan and credits",
         items: [
-          { icon: Sparkles,  label: "Subscription",  value: ritualBadge?.label ?? "Member", onPress: () => {} },
-          { icon: CreditCard, label: "Credits",       value: `${bookings.length * 4}`,       onPress: () => {} },
+          { icon: Sparkles, label: "Subscription", value: ritualBadge?.label ?? "Member", onPress: () => setShowSubscriptionSheet(true) },
+          { icon: CreditCard, label: "Credits", value: `${bookings.length * 4} credits`, onPress: () => setShowSubscriptionSheet(true) },
         ],
       },
       {
         title: "Help and support",
         items: [
-          { icon: MessageCircle, label: "Chat with support", value: null, onPress: () => window.open("mailto:hola@nomaya.app") },
-          { icon: HelpCircle,    label: "Help Center",        value: null, onPress: () => {} },
-          { icon: Sparkles,      label: "Give us feedback",   value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Feedback") },
+          { icon: MessageCircle, label: "Chat with support", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Support") },
+          { icon: HelpCircle, label: "Help Center", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Help") },
+          { icon: Sparkles, label: "Give us feedback", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Feedback") },
         ],
       },
       {
         title: "Legal",
         items: [
-          { icon: FileText, label: "Terms of Service", value: null, onPress: () => {} },
-          { icon: FileText, label: "Privacy Policy",   value: null, onPress: () => {} },
+          { icon: FileText, label: "Terms of Service", value: null, onPress: () => window.open("https://nomaya.app/terms", "_blank") },
+          { icon: FileText, label: "Privacy Policy", value: null, onPress: () => window.open("https://nomaya.app/privacy", "_blank") },
         ],
       },
     ];
 
     return (
       <div className="mobile-container flex flex-col bg-background pb-24">
-        {/* Header */}
         <div className="px-5 pt-14 pb-4 flex items-center gap-3">
           <button onClick={() => setShowSettings(false)} className="w-9 h-9 rounded-full bg-card flex items-center justify-center">
             <ArrowLeft size={18} className="text-foreground" />
@@ -216,7 +211,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <h1 className="font-serif text-2xl font-normal text-foreground">{t("profile.settings")}</h1>
         </div>
 
-        <div className="px-5 space-y-6">
+        <div className="px-5 space-y-6 overflow-y-auto">
           {settingsSections.map((section) => (
             <div key={section.title ?? "top"}>
               {section.title && (
@@ -287,21 +282,130 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           {/* Log out */}
           <button
             onClick={onLogout}
-            className="text-primary text-sm font-medium px-1"
+            className="flex items-center gap-2 text-primary text-sm font-medium px-1"
           >
+            <LogOut size={15} />
             {t("profile.sign_out")}
           </button>
         </div>
+
+        {/* Notifications sheet */}
+        {showNotificationsSheet && (
+          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowNotificationsSheet(false)} />
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+              <h2 className="font-serif text-xl font-medium text-foreground">Notifications</h2>
+              <div className="space-y-0 bg-muted rounded-2xl overflow-hidden">
+                {[
+                  { key: "newEvents" as const, label: "New events", desc: "When a new event is published" },
+                  { key: "bookingReminders" as const, label: "Booking reminders", desc: "24h before an event you've joined" },
+                  { key: "circleMessages" as const, label: "Circle messages", desc: "New messages in your circles" },
+                  { key: "joinUpdates" as const, label: "Join request updates", desc: "When your circle request is reviewed" },
+                ].map(({ key, label, desc }, i, arr) => (
+                  <div key={key} className={`flex items-center justify-between px-4 py-3.5 ${i < arr.length - 1 ? "border-b border-border" : ""}`}>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                    </div>
+                    <button
+                      onClick={() => setNotifSettings((s) => ({ ...s, [key]: !s[key] }))}
+                      className={`w-11 h-6 rounded-full transition-colors flex-shrink-0 relative ml-4 ${notifSettings[key] ? "bg-primary" : "bg-border"}`}
+                    >
+                      <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${notifSettings[key] ? "left-6" : "left-1"}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowNotificationsSheet(false)}
+                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+              >
+                Save preferences
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Subscription sheet */}
+        {showSubscriptionSheet && (
+          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSubscriptionSheet(false)} />
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+              <h2 className="font-serif text-xl font-medium text-foreground">Your membership</h2>
+              <div className="bg-muted rounded-2xl p-5 text-center space-y-1">
+                <p className="text-3xl">{ritualBadge?.icon ?? "🌸"}</p>
+                <p className="font-serif text-lg font-medium text-foreground mt-2">{ritualBadge?.label ?? "Founding Circle"}</p>
+                <p className="text-xs text-muted-foreground">Member since {memberSince}</p>
+              </div>
+              <div className="bg-muted rounded-2xl p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Events attended</span>
+                  <span className="font-medium text-foreground">{bookings.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Credits earned</span>
+                  <span className="font-medium text-foreground">{bookings.length * 4}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Circles joined</span>
+                  <span className="font-medium text-foreground">{myCircles.length}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                To update or cancel your membership, contact us at{" "}
+                <button onClick={() => window.open("mailto:hola@nomaya.app")} className="text-primary underline">hola@nomaya.app</button>
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
+  // ── Attended event detail sheet ──────────────────────────────────────────────
+  const selectedBooking = bookings.find((b) => b.id === selectedAttendedBookingId);
+
+  // ── Main profile view ────────────────────────────────────────────────────────
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
-      {/* Header */}
-      <div className="px-5 pt-14 pb-2 text-center">
-        <Logo />
-        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("profile.heading")}</h1>
+
+      {/* ── Hero photo ── */}
+      <div className="relative w-full" style={{ height: 300 }}>
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-secondary flex items-center justify-center">
+            <span className="text-8xl opacity-40">🌸</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+
+        {/* Settings button */}
+        <button
+          onClick={() => setShowSettings(true)}
+          className="absolute top-12 right-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center"
+        >
+          <Settings size={16} className="text-foreground" />
+        </button>
+
+        {/* Camera button */}
+        <button
+          disabled={isUploadingAvatar}
+          onClick={handleAvatarUpload}
+          className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center disabled:opacity-50"
+        >
+          <Camera size={16} className="text-foreground" />
+        </button>
+
+        {/* Name overlay */}
+        <div className="absolute bottom-4 left-5 right-5">
+          <h1 className="font-serif text-3xl font-medium text-foreground leading-tight">{profile?.name || "Member"}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {profile?.city ? `${profile.city} · ` : ""}{t("profile.member_since")} {memberSince}
+          </p>
+        </div>
       </div>
 
       {/* Verification banner */}
@@ -314,92 +418,45 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             <Shield size={18} className="text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground leading-snug">
-              {t("profile.verification_banner")}
-            </p>
+            <p className="text-sm font-medium text-foreground leading-snug">{t("profile.verification_banner")}</p>
           </div>
           <span className="text-xs font-medium text-primary flex-shrink-0">{t("profile.verify_now")}</span>
         </button>
       )}
 
-      {/* Profile card */}
+      {/* ── Profile card ── */}
       <div className="mx-5 mt-4 bg-card rounded-2xl p-5 shadow-card">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-shrink-0">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.name} className="w-16 h-16 rounded-full object-cover border-2 border-border" />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-secondary border-2 border-border flex items-center justify-center text-2xl">🌸</div>
-            )}
-            <button
-              disabled={isUploadingAvatar}
-              onClick={async () => {
-                if (!profile?.id) return;
-                try {
-                  const photo = await CapCamera.getPhoto({
-                    quality: 85,
-                    allowEditing: true,
-                    resultType: CameraResultType.Base64,
-                    source: CameraSource.Photos,
-                  });
-                  if (!photo.base64String) return;
-                  setIsUploadingAvatar(true);
-                  const url = await uploadAvatar(photo.base64String, profile.id);
-                  updateProfile({ avatar_url: url });
-                } catch {
-                  // cancelled
-                } finally {
-                  setIsUploadingAvatar(false);
-                }
-              }}
-              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow disabled:opacity-60"
-            >
-              <Camera size={12} className="text-primary-foreground" />
-            </button>
-          </div>
-
-          <div className="flex-1">
-            <h2 className="font-serif text-xl font-medium text-foreground">{profile?.name || "Member"}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {profile?.city ? `${profile.city} · ` : ""}{t("profile.member_since")} {memberSince}
-            </p>
-            {profile?.horoscope && (
-              <p className="text-xs text-muted-foreground mt-0.5">{profile.horoscope}</p>
-            )}
-          </div>
-        </div>
 
         {/* Bio */}
-        <div className="mt-4 pt-4 border-t border-border">
-          {editingBio ? (
-            <div className="space-y-2">
-              <textarea
-                value={bioValue}
-                onChange={(e) => setBioValue(e.target.value)}
-                placeholder="Designer. Ceramics enthusiast. Dog mum."
-                rows={2}
-                maxLength={160}
-                className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
-              />
-              <div className="flex gap-2">
-                <button onClick={saveBio} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
-                  <Check size={12} /> {t("profile.save")}
-                </button>
-                <button onClick={() => setEditingBio(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
-                  <X size={12} /> {t("profile.cancel")}
-                </button>
-              </div>
+        {editingBio ? (
+          <div className="space-y-2">
+            <textarea
+              value={bioValue}
+              onChange={(e) => setBioValue(e.target.value)}
+              placeholder="Designer. Ceramics enthusiast. Dog mum."
+              rows={2}
+              maxLength={160}
+              className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+            />
+            <div className="flex gap-2">
+              <button onClick={saveBio} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+                <Check size={12} /> {t("profile.save")}
+              </button>
+              <button onClick={() => setEditingBio(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
+                <X size={12} /> {t("profile.cancel")}
+              </button>
             </div>
-          ) : (
-            <button className="w-full text-left flex items-start justify-between gap-2" onClick={() => { setBioValue(profile?.bio ?? ""); setEditingBio(true); }}>
-              <p className="text-sm text-muted-foreground leading-snug flex-1">
-                {profile?.bio || <span className="italic">{t("profile.add_bio")}</span>}
-              </p>
-              <Edit2 size={13} className="text-muted-foreground flex-shrink-0 mt-0.5" />
-            </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <button className="w-full text-left flex items-start justify-between gap-2" onClick={() => { setBioValue(profile?.bio ?? ""); setEditingBio(true); }}>
+            <p className="text-sm text-muted-foreground leading-snug flex-1">
+              {profile?.bio || <span className="italic">{t("profile.add_bio")}</span>}
+            </p>
+            <Edit2 size={13} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+          </button>
+        )}
 
+        {/* Stats */}
         <div className="flex gap-4 mt-4 pt-4 border-t border-border">
           <div className="flex-1 text-center">
             <p className="font-serif text-2xl font-medium text-foreground">{bookings.length}</p>
@@ -417,6 +474,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </div>
         </div>
 
+        {/* Badges */}
         {(ritualBadge || isFoundingMember) && (
           <button
             onClick={() => setShowBadgeModal(true)}
@@ -543,7 +601,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       </div>
 
-      {/* Past events */}
+      {/* ── Events attended ── */}
       {bookings.length > 0 && (
         <div className="px-5 mt-5">
           <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("profile.events_attended")}</h2>
@@ -552,22 +610,27 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
               const ev = booking.event;
               if (!ev) return null;
               return (
-                <div key={booking.id} className="flex-shrink-0 w-32 rounded-xl overflow-hidden shadow-soft">
-                  <div className="h-20 relative">
+                <button
+                  key={booking.id}
+                  onClick={() => setSelectedAttendedBookingId(booking.id)}
+                  className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform"
+                >
+                  <div className="h-24 relative">
                     {ev.image_url ? (
                       <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full" style={{ background: ev.category?.color ?? "hsl(252 30% 45%)" }} />
                     )}
-                    <div className="absolute inset-0 bg-foreground/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-white font-medium">
                       {formatDate(ev.date)}
                     </span>
                   </div>
                   <div className="bg-card px-2.5 py-2">
                     <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{ev.category?.name ?? ""}</p>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -598,30 +661,107 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
-      {/* Settings button */}
+      {/* Interests */}
       <div className="px-5 mt-5">
-        <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30"
-          >
-            <div className="flex items-center gap-3">
-              <Settings size={16} className="text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{t("profile.settings")}</span>
-            </div>
-            <ChevronRight size={14} className="text-muted-foreground" />
-          </button>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-serif text-lg font-medium text-foreground">{t("profile.interests")}</h2>
+          <button onClick={() => { setSelectedInterests(profile?.interests ?? []); setShowInterestsSheet(true); }} className="text-xs text-primary font-medium">Edit</button>
         </div>
+        {profile?.interests && profile.interests.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {profile.interests.map((id) => {
+              const interest = INTERESTS.find((i) => i.id === id);
+              if (!interest) return null;
+              return (
+                <span key={id} className="px-3 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-foreground">
+                  {interest.emoji} {interest.label}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <button onClick={() => { setSelectedInterests([]); setShowInterestsSheet(true); }} className="text-sm text-muted-foreground italic">
+            Add your interests →
+          </button>
+        )}
       </div>
+
+      {/* ── Sign out ── */}
+      <div className="px-5 mt-6 mb-2">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-card border border-border text-muted-foreground text-sm font-medium shadow-soft active:bg-muted/30 transition-all"
+        >
+          <LogOut size={15} />
+          {t("profile.sign_out")}
+        </button>
+      </div>
+
+      {/* ── Sheets ── */}
+
+      {/* Attended event detail sheet */}
+      {selectedBooking && selectedBooking.event && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedAttendedBookingId(null)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
+            {/* Event hero */}
+            <div className="h-48 relative">
+              {selectedBooking.event.image_url ? (
+                <img src={selectedBooking.event.image_url} alt={selectedBooking.event.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full" style={{ background: selectedBooking.event.category?.color ?? "hsl(252 30% 45%)" }} />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <button
+                onClick={() => setSelectedAttendedBookingId(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center"
+              >
+                <X size={14} className="text-white" />
+              </button>
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-[10px] uppercase tracking-widest text-white/70 mb-1">{selectedBooking.event.category?.name}</p>
+                <h3 className="font-serif text-xl font-medium text-white">{selectedBooking.event.title}</h3>
+                <p className="text-xs text-white/80 mt-0.5">{formatDate(selectedBooking.event.date)}</p>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Attendees */}
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Who was there</p>
+                <div className="flex -space-x-2">
+                  {Array.from({ length: Math.min(8, selectedBooking.event.total_spots ?? 8) }).map((_, i) => (
+                    <div key={i} className="w-10 h-10 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-base">
+                      {["🌸", "🌿", "✨", "🎨", "🌊", "🍀", "🦋", "🌺"][i % 8]}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Go to circles CTA */}
+              <div className="bg-muted rounded-2xl p-4">
+                <p className="text-sm font-medium text-foreground mb-1">Keep the connection going</p>
+                <p className="text-xs text-muted-foreground mb-3">Join a circle with people from this event to stay in touch and share moments.</p>
+                <button
+                  onClick={() => {
+                    setSelectedAttendedBookingId(null);
+                    // Navigate to circles tab via parent
+                  }}
+                  className="w-full py-3 rounded-xl gradient-cta text-white text-sm font-medium"
+                >
+                  Explore circles →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Horoscope sheet */}
       {showHoroscopeSheet && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowHoroscopeSheet(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
-          >
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
             <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("profile.your_star_sign")}</h2>
             <div className="grid grid-cols-3 gap-2">
@@ -670,14 +810,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 );
               })}
             </div>
-            <div
-              className="px-6 pt-4 border-t border-border flex-shrink-0"
-              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}
-            >
-              <button
-                onClick={saveInterests}
-                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
-              >
+            <div className="px-6 pt-4 border-t border-border flex-shrink-0" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}>
+              <button onClick={saveInterests} className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base">
                 {t("profile.save")} · {selectedInterests.length} selected
               </button>
             </div>
@@ -689,10 +823,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showLanguageSheet && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLanguageSheet(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
-          >
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <h2 className="font-serif text-xl font-medium text-foreground">{t("settings.choose_language")}</h2>
             {[
@@ -719,7 +850,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       )}
 
-      {/* Badge rewards modal */}
+      {/* Badge modal */}
       {showBadgeModal && (() => {
         const TIERS = [
           { icon: "🌸", label: "Founding Circle",  perk: "Access to all Nomaya events",          events: 1 },
@@ -728,59 +859,31 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           { icon: "👁️", label: "Circle Host",       perk: "Host your own Nomaya event",           events: 8 },
         ];
         const nextTier = TIERS.find((t) => bookings.length < t.events);
-        const progressPct = nextTier
-          ? Math.round((bookings.length / nextTier.events) * 100)
-          : 100;
+        const progressPct = nextTier ? Math.round((bookings.length / nextTier.events) * 100) : 100;
         return (
           <div className="fixed inset-0 z-[100] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
-            <div
-              className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto"
-              style={{ maxHeight: "90vh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
-            >
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto" style={{ maxHeight: "90vh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mt-4" />
-
-              {/* Header */}
               <div className="px-6 pt-4 pb-5 text-center border-b border-border">
                 <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Your Circle</p>
-                <p className="font-serif text-xl text-foreground leading-snug">
-                  The more you show up,<br />the more doors open
-                </p>
+                <p className="font-serif text-xl text-foreground leading-snug">The more you show up,<br />the more doors open</p>
               </div>
-
-              {/* Progress bar */}
               <div className="px-6 py-4 border-b border-border">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-muted-foreground">Events attended</span>
-                  <span className="text-xs font-medium text-foreground">
-                    {bookings.length}{nextTier ? ` / ${nextTier.events}` : ""}
-                  </span>
+                  <span className="text-xs font-medium text-foreground">{bookings.length}{nextTier ? ` / ${nextTier.events}` : ""}</span>
                 </div>
                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: `${progressPct}%`, background: "hsl(252 75% 80%)" }}
-                  />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: "hsl(252 75% 80%)" }} />
                 </div>
-                {nextTier && (
-                  <p className="text-[10px] text-muted-foreground mt-1.5">
-                    {nextTier.events - bookings.length} more to unlock {nextTier.label}
-                  </p>
-                )}
+                {nextTier && <p className="text-[10px] text-muted-foreground mt-1.5">{nextTier.events - bookings.length} more to unlock {nextTier.label}</p>}
               </div>
-
-              {/* Tiers */}
               {TIERS.map((tier, i) => {
                 const earned = bookings.length >= tier.events;
                 return (
-                  <div
-                    key={tier.label}
-                    className={`px-6 py-4 flex items-center gap-4 ${i < TIERS.length - 1 ? "border-b border-border" : ""} ${!earned ? "opacity-45" : ""}`}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ background: earned ? "hsl(252 75% 93%)" : "hsl(252 20% 50% / 0.15)" }}
-                    >
+                  <div key={tier.label} className={`px-6 py-4 flex items-center gap-4 ${i < TIERS.length - 1 ? "border-b border-border" : ""} ${!earned ? "opacity-45" : ""}`}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0" style={{ background: earned ? "hsl(252 75% 93%)" : "hsl(252 20% 50% / 0.15)" }}>
                       {tier.icon}
                     </div>
                     <div className="flex-1">
@@ -797,7 +900,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                   </div>
                 );
               })}
-
               {isFoundingMember && (
                 <div className="px-6 py-4 border-t border-border flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">🏛️</div>
@@ -819,24 +921,13 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showMemberCard && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
-          <div
-            className="relative w-full max-w-sm bg-card rounded-t-3xl p-6"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
-          >
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
             <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("member_card.your_card")}</h2>
-
-            {/* The card */}
-            <div
-              className="rounded-2xl overflow-hidden shadow-card mb-5"
-              style={{ background: "#5f5095" }}
-            >
-              {/* Logo header */}
+            <div className="rounded-2xl overflow-hidden shadow-card mb-5" style={{ background: "#5f5095" }}>
               <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
-                <Logo className="h-14 w-auto object-contain opacity-95" />
+                <Logo className="h-20 w-auto mx-auto object-contain opacity-95" />
               </div>
-
-              {/* Card body */}
               <div className="px-6 py-5 space-y-4">
                 <div>
                   <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
@@ -847,13 +938,10 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                   <p className="font-serif text-lg text-white">{profile?.name || "Member"}</p>
                 </div>
                 <div className="pt-1 border-t border-white/10">
-                  <p className="text-xs text-white/40">
-                    {profile?.city || "Madrid"} · Member since {memberSince}
-                  </p>
+                  <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
                 </div>
               </div>
             </div>
-
             <p className="text-center text-xs text-muted-foreground mb-4">{t("member_card.wallet_soon")}</p>
             <button
               onClick={() => {

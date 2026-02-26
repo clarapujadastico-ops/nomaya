@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
@@ -59,11 +59,35 @@ function circlePlaceholder(category: string): string {
 
 // ─── Chat panel ───────────────────────────────────────────────────────────────
 
+const IMG_PREFIX = "__img__:";
+
+async function uploadChatImage(circleId: string): Promise<string | null> {
+  try {
+    const photo = await CapCamera.getPhoto({
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Photos,
+      quality: 80,
+    });
+    if (!photo.base64String) return null;
+    const chars = atob(photo.base64String);
+    const bytes = new Uint8Array(chars.length);
+    for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
+    const blob = new Blob([bytes], { type: "image/jpeg" });
+    const path = `circle-photos/${circleId}/${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from("Events").upload(path, blob, { upsert: false, contentType: "image/jpeg" });
+    if (error) throw error;
+    return supabase.storage.from("Events").getPublicUrl(path).data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
 function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean }) {
   const { user } = useAuth();
   const { data: messages = [], isLoading } = useCircleMessages(isMember ? circleId : null);
   const { mutate: send, isPending: isSending } = useSendMessage();
   const [text, setText] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,6 +109,13 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
     setText("");
   }
 
+  async function handleImageSend() {
+    setIsUploadingImage(true);
+    const url = await uploadChatImage(circleId);
+    if (url) send({ circleId, content: `${IMG_PREFIX}${url}` });
+    setIsUploadingImage(false);
+  }
+
   return (
     <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
       <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 320 }}>
@@ -94,6 +125,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
         )}
         {messages.map((msg) => {
           const isOwn = msg.user_id === user?.id;
+          const isImage = msg.content.startsWith(IMG_PREFIX);
           const time = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
           return (
             <div key={msg.id} className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
@@ -108,9 +140,18 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
                 {!isOwn && (
                   <p className="text-[10px] text-muted-foreground mb-0.5 px-1">{msg.sender?.name ?? "Member"}</p>
                 )}
-                <div className={`px-3 py-2 rounded-2xl text-sm leading-snug ${isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"}`}>
-                  {msg.content}
-                </div>
+                {isImage ? (
+                  <img
+                    src={msg.content.replace(IMG_PREFIX, "")}
+                    alt="shared photo"
+                    className="rounded-2xl max-w-full object-cover"
+                    style={{ maxHeight: 200 }}
+                  />
+                ) : (
+                  <div className={`px-3 py-2 rounded-2xl text-sm leading-snug ${isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"}`}>
+                    {msg.content}
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground mt-0.5 px-1">{time}</p>
               </div>
             </div>
@@ -119,6 +160,17 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
         <div ref={bottomRef} />
       </div>
       <div className="border-t border-border p-3 flex items-center gap-2">
+        <button
+          onClick={handleImageSend}
+          disabled={isUploadingImage || isSending}
+          className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center disabled:opacity-40 transition-all active:scale-95 flex-shrink-0"
+        >
+          {isUploadingImage ? (
+            <div className="w-4 h-4 rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
+          ) : (
+            <ImageIcon size={15} className="text-muted-foreground" />
+          )}
+        </button>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
