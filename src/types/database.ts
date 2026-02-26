@@ -167,6 +167,7 @@ export interface Database {
           city: string
           is_private: boolean
           event_policy: 'open' | 'review'
+          event_id: string | null
           created_by: string
           created_at: string
         }
@@ -179,6 +180,7 @@ export interface Database {
           city?: string
           is_private?: boolean
           event_policy?: 'open' | 'review'
+          event_id?: string | null
           created_by: string
           created_at?: string
         }
@@ -191,6 +193,7 @@ export interface Database {
           city?: string
           is_private?: boolean
           event_policy?: 'open' | 'review'
+          event_id?: string | null
           created_by?: string
           created_at?: string
         }

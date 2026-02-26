@@ -235,6 +235,57 @@ export function useUpdateCircleEventPolicy() {
   })
 }
 
+// ─── Mutation: find or create an event circle, ensure user is a member ───────
+
+export function useEnsureEventCircle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ eventId, eventTitle }: { eventId: string; eventTitle: string }) => {
+      // 1. Look for an existing circle tied to this event
+      const { data: existing } = await supabase
+        .from('circles')
+        .select('id')
+        .eq('event_id', eventId)
+        .maybeSingle()
+
+      let circleId: string
+
+      if (existing) {
+        circleId = existing.id
+      } else {
+        // 2. Create a new circle for this event
+        const { data: newCircle, error } = await supabase
+          .from('circles')
+          .insert({
+            name: eventTitle,
+            description: `Chat for attendees of ${eventTitle}`,
+            event_id: eventId,
+            created_by: user!.id,
+            is_private: false,
+          })
+          .select('id')
+          .single()
+        if (error) throw error
+        circleId = newCircle.id
+      }
+
+      // 3. Ensure user is a member (upsert, ignore conflict)
+      await supabase
+        .from('circle_memberships')
+        .upsert(
+          { circle_id: circleId, user_id: user!.id, role: 'member' },
+          { onConflict: 'circle_id,user_id' }
+        )
+
+      return circleId
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['circles'] })
+    },
+  })
+}
+
 // ─── Mutation: create a circle ────────────────────────────────────────────────
 
 export function useCreateCircle() {

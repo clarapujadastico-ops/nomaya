@@ -5,7 +5,7 @@ import {
   HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings, LogOut,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useCircles } from "@/hooks/useCircles";
+import { useCircles, useEnsureEventCircle } from "@/hooks/useCircles";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
 import { useLang } from "@/contexts/LanguageContext";
@@ -48,6 +48,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const { data: bookings = [] } = useBookings();
   const { data: allCircles = [] } = useCircles();
   const { mutate: updateProfile } = useUpdateProfile();
+  const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
 
   const myCircles = allCircles.filter((c) => c.isMember || c.isAdmin);
 
@@ -738,18 +739,24 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 </div>
               </div>
 
-              {/* Go to circles CTA */}
+              {/* Go to event chat CTA */}
               <div className="bg-muted rounded-2xl p-4">
                 <p className="text-sm font-medium text-foreground mb-1">Keep the connection going</p>
-                <p className="text-xs text-muted-foreground mb-3">Join a circle with people from this event to stay in touch and share moments.</p>
+                <p className="text-xs text-muted-foreground mb-3">Chat with the people who attended this event — share moments, plan the next one.</p>
                 <button
-                  onClick={() => {
+                  disabled={isOpeningChat}
+                  onClick={async () => {
+                    if (!selectedBooking?.event) return;
+                    const circleId = await ensureEventCircle({
+                      eventId: selectedBooking.event_id,
+                      eventTitle: selectedBooking.event.title,
+                    });
                     setSelectedAttendedBookingId(null);
-                    // Navigate to circles tab via parent
+                    onOpenCircle?.(circleId);
                   }}
-                  className="w-full py-3 rounded-xl gradient-cta text-white text-sm font-medium"
+                  className="w-full py-3 rounded-xl gradient-cta text-white text-sm font-medium disabled:opacity-60"
                 >
-                  Explore circles →
+                  {isOpeningChat ? "Opening chat…" : "Open event chat →"}
                 </button>
               </div>
             </div>
