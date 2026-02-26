@@ -466,6 +466,8 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const { mutate: updatePolicy } = useUpdateCircleEventPolicy();
   const { data: myRequests = [] } = useMyJoinRequests();
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
+  const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
+  const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "events" | "requests">("about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
@@ -553,6 +555,11 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
             {tab === "events" && <CalendarDays size={14} />}
             {tab === "requests" && <UserPlus size={14} />}
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === "events" && pendingEventsCount > 0 && (
+              <span className="ml-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                {pendingEventsCount}
+              </span>
+            )}
             {tab === "requests" && pendingRequests.length > 0 && (
               <span className="ml-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
                 {pendingRequests.length}
