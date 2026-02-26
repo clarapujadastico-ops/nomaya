@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Shield, Camera, SkipForward } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUpdateProfile } from "@/hooks/useProfile";
 
 type VerifyStep = "verify_intro" | "verify_id" | "verify_selfie";
@@ -10,10 +12,30 @@ interface VerificationFlowProps {
   onSkip: () => void;
 }
 
+async function uploadVerificationPhoto(
+  base64: string,
+  path: string
+): Promise<void> {
+  const chars = atob(base64);
+  const bytes = new Uint8Array(chars.length);
+  for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "image/jpeg" });
+  const { error } = await supabase.storage
+    .from("Events")
+    .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+  if (error) throw error;
+}
+
 export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) {
   const [step, setStep] = useState<VerifyStep>("verify_intro");
+  const [idPhotoBase64, setIdPhotoBase64] = useState<string | null>(null);
   const [idPhotoPreview, setIdPhotoPreview] = useState<string | null>(null);
+  const [selfieBase64, setSelfieBase64] = useState<string | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const { user } = useAuth();
   const { mutate: updateProfile } = useUpdateProfile();
 
   /* ── VERIFY INTRO ── */
@@ -94,11 +116,13 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
     async function captureId() {
       try {
         const photo = await CapCamera.getPhoto({
-          resultType: CameraResultType.DataUrl,
+          resultType: CameraResultType.Base64,
           source: CameraSource.Camera,
           quality: 80,
         });
-        setIdPhotoPreview(photo.dataUrl ?? null);
+        if (!photo.base64String) return;
+        setIdPhotoBase64(photo.base64String);
+        setIdPhotoPreview(`data:image/jpeg;base64,${photo.base64String}`);
       } catch {
         // user cancelled
       }
@@ -145,7 +169,10 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               >
                 Looks good → Continue
               </button>
-              <button onClick={() => setIdPhotoPreview(null)} className="w-full py-2 text-muted-foreground text-sm">
+              <button
+                onClick={() => { setIdPhotoBase64(null); setIdPhotoPreview(null); }}
+                className="w-full py-2 text-muted-foreground text-sm"
+              >
                 Retake photo
               </button>
             </>
@@ -171,21 +198,39 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
     async function captureSelfie() {
       try {
         const photo = await CapCamera.getPhoto({
-          resultType: CameraResultType.DataUrl,
+          resultType: CameraResultType.Base64,
           source: CameraSource.Camera,
           quality: 80,
         });
-        setSelfiePreview(photo.dataUrl ?? null);
+        if (!photo.base64String) return;
+        setSelfieBase64(photo.base64String);
+        setSelfiePreview(`data:image/jpeg;base64,${photo.base64String}`);
       } catch {
         // user cancelled
       }
     }
 
-    function finishVerification() {
-      updateProfile(
-        { verification_status: "pending" },
-        { onSuccess: onComplete, onError: onComplete }
-      );
+    async function finishVerification() {
+      if (!user || !idPhotoBase64 || !selfieBase64) return;
+      setIsSubmitting(true);
+      setUploadError(null);
+      try {
+        await uploadVerificationPhoto(
+          idPhotoBase64,
+          `verification/${user.id}_id.jpg`
+        );
+        await uploadVerificationPhoto(
+          selfieBase64,
+          `verification/${user.id}_selfie.jpg`
+        );
+        updateProfile(
+          { verification_status: "pending" },
+          { onSuccess: onComplete, onError: onComplete }
+        );
+      } catch (err) {
+        setUploadError("Upload failed. Please try again.");
+        setIsSubmitting(false);
+      }
     }
 
     return (
@@ -214,16 +259,25 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
           )}
         </div>
 
+        {uploadError && (
+          <p className="mx-6 mt-4 text-xs text-red-400 text-center">{uploadError}</p>
+        )}
+
         <div className="px-6 mt-8 space-y-3">
           {selfiePreview ? (
             <>
               <button
                 onClick={finishVerification}
-                className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
+                disabled={isSubmitting}
+                className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white disabled:opacity-60"
               >
-                Submit for review ✦
+                {isSubmitting ? "Uploading…" : "Submit for review ✦"}
               </button>
-              <button onClick={() => setSelfiePreview(null)} className="w-full py-2 text-muted-foreground text-sm">
+              <button
+                onClick={() => { setSelfieBase64(null); setSelfiePreview(null); }}
+                disabled={isSubmitting}
+                className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40"
+              >
                 Retake photo
               </button>
             </>
@@ -236,7 +290,11 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               Take selfie
             </button>
           )}
-          <button onClick={() => setStep("verify_id")} className="w-full py-2 text-muted-foreground text-sm">
+          <button
+            onClick={() => setStep("verify_id")}
+            disabled={isSubmitting}
+            className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40"
+          >
             ← Back
           </button>
         </div>
