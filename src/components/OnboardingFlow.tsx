@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronRight, Check, Instagram, Linkedin, Music2 } from "lucide-react";
 import { INTERESTS } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/contexts/AuthContext";
 import { VerificationFlow } from "./VerificationFlow";
 import { useLang } from "@/contexts/LanguageContext";
+import { supabase } from "@/lib/supabase";
 
 type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile" | "verify";
 
@@ -11,7 +13,7 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-/* ─── Video background ─── */
+/* ─── Full-screen video background ─── */
 function VideoBackground() {
   return (
     <video
@@ -19,15 +21,25 @@ function VideoBackground() {
       muted
       loop
       playsInline
-      className="absolute inset-0 w-full h-full object-cover"
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
     >
       <source src="/videos/nomaya-hero.mov" type="video/mp4" />
     </video>
   );
 }
 
+/* ─── Full-screen wrapper for video slides (bypasses mobile-container max-w) ─── */
+function FullScreen({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {children}
+    </div>
+  );
+}
+
 export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const { t, setLang: setCtxLang } = useLang();
+  const { user } = useAuth();
   const [step, setStep] = useState<Step>("language");
   const [language, setLanguage] = useState<"en" | "es">("en");
 
@@ -43,29 +55,80 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     instagram_url: "", linkedin_url: "", tiktok_url: "",
     favourite_song: "", favourite_food: "",
   });
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
 
-  const toggleInterest = (id: string) => {
-    setSelectedInterests((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatarDataUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadAvatarAndSave() {
+    setSaveError(null);
+    setIsUploadingAvatar(true);
+
+    let avatar_url: string | null = null;
+
+    if (avatarDataUrl && user) {
+      try {
+        const base64 = avatarDataUrl.split(",")[1];
+        const chars = atob(base64);
+        const bytes = new Uint8Array(chars.length);
+        for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
+        const blob = new Blob([bytes], { type: "image/jpeg" });
+        const path = `avatars/${user.id}.jpg`;
+        const { error } = await supabase.storage.from("Events").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+        if (!error) {
+          avatar_url = supabase.storage.from("Events").getPublicUrl(path).data.publicUrl;
+        }
+      } catch {
+        // avatar upload failure is non-blocking
+      }
+    }
+
+    setIsUploadingAvatar(false);
+
+    updateProfile(
+      {
+        name: profile.name || "Member",
+        city: profile.city || "",
+        bio: profile.bio || null,
+        language,
+        interests: selectedInterests,
+        instagram_url: profile.instagram_url || null,
+        linkedin_url: profile.linkedin_url || null,
+        tiktok_url: profile.tiktok_url || null,
+        favourite_song: profile.favourite_song || null,
+        favourite_food: profile.favourite_food || null,
+        ...(avatar_url ? { avatar_url } : {}),
+      },
+      {
+        onSuccess: () => setStep("verify"),
+        onError: (err) => setSaveError((err as Error).message),
+      }
     );
-  };
+  }
 
   /* ── LANGUAGE / LANDING ── */
   if (step === "language") {
     return (
-      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
+      <FullScreen>
         <VideoBackground />
         {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: "rgba(28, 18, 55, 0.52)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(28, 18, 55, 0.52)" }} />
 
-        <div className="relative z-10 flex flex-col flex-1 px-6" style={{ paddingTop: "max(env(safe-area-inset-top), 3.5rem)" }}>
+        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", flex: 1, padding: "0 1.5rem", paddingTop: "max(env(safe-area-inset-top), 3.5rem)" }}>
           {/* Nomaya — top left */}
           <span className="font-serif text-white text-xl font-normal tracking-wide">Nomaya</span>
 
           {/* Centered tagline */}
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
             <p className="text-white font-light mb-3" style={{ fontSize: "1.35rem", letterSpacing: "0.28em" }}>
               MOVE · CONNECT · BELONG
             </p>
@@ -74,17 +137,17 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </p>
           </div>
 
-          {/* Bottom card */}
+          {/* Bottom card — opaque purple/lavender */}
           <div
             className="rounded-3xl p-6 mb-8 mt-4"
             style={{
-              background: "rgba(255,255,255,0.12)",
+              background: "hsl(252 75% 96% / 0.94)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid rgba(255,255,255,0.18)",
+              border: "1px solid hsl(252 30% 45% / 0.15)",
             }}
           >
-            <p className="text-xs tracking-widest uppercase text-center mb-5 text-white/70">
+            <p className="text-xs tracking-widest uppercase text-center mb-5" style={{ color: "hsl(252 30% 55%)" }}>
               {t("onboarding.choose_lang")}
             </p>
 
@@ -98,15 +161,15 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   onClick={() => { setLanguage(lang.code); setCtxLang(lang.code); }}
                   className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200"
                   style={{
-                    borderColor: language === lang.code ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
-                    background: language === lang.code ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.07)",
+                    borderColor: language === lang.code ? "hsl(252 30% 45%)" : "hsl(252 30% 45% / 0.20)",
+                    background: language === lang.code ? "hsl(252 30% 45% / 0.10)" : "hsl(0 0% 100% / 0.60)",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{lang.flag}</span>
-                    <span className="font-medium text-sm text-white">{lang.label}</span>
+                    <span className="font-medium text-sm" style={{ color: "hsl(252 30% 30%)" }}>{lang.label}</span>
                   </div>
-                  {language === lang.code && <Check size={15} className="text-white" />}
+                  {language === lang.code && <Check size={15} style={{ color: "hsl(252 30% 45%)" }} />}
                 </button>
               ))}
             </div>
@@ -119,24 +182,27 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </button>
           </div>
         </div>
-      </div>
+      </FullScreen>
     );
   }
 
-  /* ── WELCOME SLIDES — video background ── */
+  /* ── WELCOME SLIDES — full-screen video ── */
   if (step === "welcome1" || step === "welcome2" || step === "welcome3") {
     const screen = welcomeScreens[welcomeIndex];
     const stepMap: Step[] = ["welcome1", "welcome2", "welcome3"];
     const isLast = welcomeIndex === 2;
 
     return (
-      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
+      <FullScreen>
         <VideoBackground />
-        <div className="absolute inset-0" style={{ background: "rgba(28, 18, 55, 0.65)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(28, 18, 55, 0.65)" }} />
 
         <div
-          className="relative z-10 flex flex-col flex-1 px-6 pt-14"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+          style={{
+            position: "relative", zIndex: 10, display: "flex", flexDirection: "column", flex: 1,
+            padding: "0 1.5rem", paddingTop: "3.5rem",
+            paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)",
+          }}
         >
           {/* Progress dots */}
           <div className="flex gap-1.5 mb-auto">
@@ -152,14 +218,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             ))}
           </div>
 
-          <div className="flex-1 flex flex-col justify-end pb-6">
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: "1.5rem" }}>
             <div
               className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5 self-start"
-              style={{
-                background: "rgba(255,255,255,0.12)",
-                color: "rgba(255,255,255,0.75)",
-                border: "1px solid rgba(255,255,255,0.2)",
-              }}
+              style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.2)" }}
             >
               {welcomeIndex + 1} of 3
             </div>
@@ -206,7 +268,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
           </div>
         </div>
-      </div>
+      </FullScreen>
     );
   }
 
@@ -216,30 +278,29 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
         <div className="px-6 pt-14 pb-4 flex-shrink-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step1")}</p>
-          <h2
-            className="font-serif font-normal text-foreground leading-tight"
-            style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
-          >
+          <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}>
             {t("onboarding.what_love")}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("onboarding.select_all")}</p>
         </div>
 
-        {/* Editorial list */}
         <div className="flex-1 overflow-y-auto px-6">
           {INTERESTS.map((interest) => {
             const isSelected = selectedInterests.includes(interest.id);
             return (
               <button
                 key={interest.id}
-                onClick={() => toggleInterest(interest.id)}
+                onClick={() => {
+                  setSelectedInterests((prev) =>
+                    prev.includes(interest.id) ? prev.filter((i) => i !== interest.id) : [...prev, interest.id]
+                  );
+                }}
                 className="w-full flex items-center justify-between py-4 border-b border-border/50 text-left transition-all active:opacity-60"
               >
                 <span
                   className="font-serif transition-all duration-200"
                   style={{
-                    fontSize: "1.15rem",
-                    letterSpacing: "-0.01em",
+                    fontSize: "1.15rem", letterSpacing: "-0.01em",
                     color: isSelected ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                     fontWeight: isSelected ? 500 : 400,
                   }}
@@ -261,10 +322,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           <div className="h-4" />
         </div>
 
-        <div
-          className="px-6 space-y-3 flex-shrink-0 border-t border-border/40"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}
-        >
+        <div className="px-6 space-y-3 flex-shrink-0 border-t border-border/40" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}>
           <button
             onClick={() => setStep("profile")}
             disabled={selectedInterests.length < 2}
@@ -284,24 +342,34 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
   /* ── PROFILE ── */
   if (step === "profile") {
+    const isBusy = isSaving || isUploadingAvatar;
     return (
-      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
-        <div className="px-6 pt-14 pb-4 flex-shrink-0">
+      <div className="mobile-container bg-background" style={{ minHeight: "100dvh", overflowY: "auto" }}>
+        {/* Hidden file input for photo */}
+        <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+
+        {/* Header */}
+        <div className="px-6 pt-14 pb-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step2")}</p>
-          <h2
-            className="font-serif font-normal text-foreground leading-tight"
-            style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
-          >
+          <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}>
             {t("onboarding.tell_us")}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t("onboarding.simple_profile")}</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
-          {/* Photo placeholder */}
+        {/* All form fields — scrolls naturally */}
+        <div className="px-6 space-y-4">
+          {/* Photo */}
           <div className="flex justify-center py-2">
-            <button className="w-24 h-24 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center text-3xl transition-all duration-200 active:scale-95">
-              📸
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="relative w-24 h-24 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-all duration-200 active:scale-95"
+            >
+              {avatarDataUrl ? (
+                <img src={avatarDataUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl">📸</span>
+              )}
             </button>
           </div>
 
@@ -322,7 +390,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
           ))}
 
-          {/* Bio — required */}
+          {/* Bio */}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
               {t("onboarding.short_bio")}
@@ -382,34 +450,15 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           </div>
         </div>
 
+        {/* Continue button — part of normal scroll flow, always reachable */}
         <div
-          className="px-6 space-y-3 flex-shrink-0 border-t border-border/40"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}
+          className="px-6 space-y-3 border-t border-border/40 mt-6"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 3rem)", paddingTop: "1rem" }}
         >
           {saveError && <p className="text-xs text-destructive px-1">{saveError}</p>}
           <button
-            onClick={() => {
-              setSaveError(null);
-              updateProfile(
-                {
-                  name: profile.name || "Member",
-                  city: profile.city || "",
-                  bio: profile.bio || null,
-                  language,
-                  interests: selectedInterests,
-                  instagram_url: profile.instagram_url || null,
-                  linkedin_url: profile.linkedin_url || null,
-                  tiktok_url: profile.tiktok_url || null,
-                  favourite_song: profile.favourite_song || null,
-                  favourite_food: profile.favourite_food || null,
-                },
-                {
-                  onSuccess: () => setStep("verify"),
-                  onError: (err) => setSaveError((err as Error).message),
-                }
-              );
-            }}
-            disabled={isSaving || !profile.name}
+            onClick={uploadAvatarAndSave}
+            disabled={isBusy || !profile.name}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",
@@ -417,7 +466,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               boxShadow: "0 4px 32px hsl(252 30% 45% / 0.4)",
             }}
           >
-            {isSaving ? t("onboarding.saving") : t("onboarding.continue")}
+            {isBusy ? t("onboarding.saving") : t("onboarding.continue")}
           </button>
         </div>
       </div>
