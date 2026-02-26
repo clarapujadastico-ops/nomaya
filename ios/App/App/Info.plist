@@ -47,5 +47,14 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nomaya needs access to your photos to set your profile picture and circle cover images.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Nomaya needs camera access to take photos for your profile and circles.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
