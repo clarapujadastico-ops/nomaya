@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
@@ -472,6 +472,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showEditCover, setShowEditCover] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
@@ -728,29 +729,75 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
       {/* Invite sheet */}
       {showInviteSheet && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInviteSheet(false)} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowInviteSheet(false); setInviteEmail(""); }} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <h2 className="font-serif text-xl font-medium text-foreground">Invite to circle</h2>
-            <p className="text-sm text-muted-foreground">Share this link to invite members directly.</p>
-            <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
-              <p className="text-sm text-foreground flex-1 truncate">nomaya.app/circles/{circle.id}</p>
-              <button onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)} className="text-xs font-medium text-primary flex-shrink-0">
-                Copy
+
+            {/* Email invite */}
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Invite by email</p>
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
+                  <Mail size={14} className="text-muted-foreground flex-shrink-0" />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="friend@email.com"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground flex-1 focus:outline-none"
+                  />
+                </div>
+                <button
+                  disabled={!inviteEmail.trim() || !inviteEmail.includes("@")}
+                  onClick={() => {
+                    const url = `https://nomaya.app/circles/${circle.id}`;
+                    const subject = encodeURIComponent(`Join me in the ${circle.name} circle on Nomaya`);
+                    const body = encodeURIComponent(
+                      `Hi!\n\nI'd love for you to join the ${circle.name} circle on Nomaya — a curated community for women.\n\nJoin here: ${url}\n\nSee you there!`
+                    );
+                    window.location.href = `mailto:${inviteEmail.trim()}?subject=${subject}&body=${body}`;
+                    setInviteEmail("");
+                    setShowInviteSheet(false);
+                  }}
+                  className="w-12 h-12 rounded-xl gradient-cta flex items-center justify-center flex-shrink-0 disabled:opacity-40"
+                >
+                  <Send size={16} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Link share */}
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Share link</p>
+              <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
+                <p className="text-sm text-foreground flex-1 truncate">nomaya.app/circles/{circle.id}</p>
+                <button onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)} className="text-xs font-medium text-primary flex-shrink-0">
+                  Copy
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  const url = `https://nomaya.app/circles/${circle.id}`;
+                  const text = `Join me in the ${circle.name} circle on Nomaya!`;
+                  if (navigator.share) { navigator.share({ title: circle.name, text, url }); }
+                  else { navigator.clipboard?.writeText(`${text}\n${url}`); }
+                  setShowInviteSheet(false);
+                }}
+                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+              >
+                Share invite link
               </button>
             </div>
-            <button
-              onClick={() => {
-                const url = `https://nomaya.app/circles/${circle.id}`;
-                const text = `Join me in the ${circle.name} circle on Nomaya!`;
-                if (navigator.share) { navigator.share({ title: circle.name, text, url }); }
-                else { navigator.clipboard?.writeText(`${text}\n${url}`); }
-                setShowInviteSheet(false);
-              }}
-              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
-            >
-              Share invite link
-            </button>
           </div>
         </div>
       )}
