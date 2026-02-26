@@ -39,7 +39,7 @@ function FullScreen({ children }: { children: React.ReactNode }) {
 
 export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const { t, setLang: setCtxLang } = useLang();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [step, setStep] = useState<Step>("language");
   const [language, setLanguage] = useState<"en" | "es">("en");
 
@@ -110,7 +110,14 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       },
       {
         onSuccess: () => setStep("verify"),
-        onError: (err) => setSaveError((err as Error).message),
+        onError: (err) => {
+          const msg = (err as Error).message ?? "";
+          if (msg.includes("foreign key") || msg.includes("fkey")) {
+            signOut(); // stale session after account deletion — force fresh login
+          } else {
+            setSaveError(msg);
+          }
+        },
       }
     );
   }
