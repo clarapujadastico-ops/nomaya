@@ -9,7 +9,7 @@ import { EventsScreen } from "@/components/EventsScreen";
 import { MapScreen } from "@/components/MapScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 
 type Tab = "events" | "map" | "groups" | "profile";
 
@@ -26,7 +26,17 @@ function AppShell() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
-  usePushNotifications();
+
+  function handlePushNavigate(dest: NotificationDestination) {
+    if (dest.tab === 'groups' && 'circleId' in dest && dest.circleId) {
+      setOpenCircleId(dest.circleId);
+    } else if (dest.tab !== 'groups') {
+      setOpenCircleId(undefined);
+    }
+    setActiveTab(dest.tab);
+  }
+
+  usePushNotifications(handlePushNavigate);
 
   if (authLoading) return <LoadingScreen />;
   if (!session) return <AuthScreen />;

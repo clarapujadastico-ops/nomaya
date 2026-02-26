@@ -4,7 +4,32 @@ import { PushNotifications } from '@capacitor/push-notifications'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
-export function usePushNotifications() {
+export type NotificationDestination =
+  | { tab: 'events' }
+  | { tab: 'map' }
+  | { tab: 'groups'; circleId?: string }
+  | { tab: 'profile' }
+
+function resolveDestination(data: Record<string, string>): NotificationDestination | null {
+  const { type, circle_id } = data
+
+  switch (type) {
+    case 'booking_confirmed':
+      return { tab: 'map' }
+
+    case 'circle_join_approved':
+    case 'circle_join_rejected':
+    case 'circle_message':
+    case 'circle_event_approved':
+    case 'circle_event_rejected':
+      return circle_id ? { tab: 'groups', circleId: circle_id } : { tab: 'groups' }
+
+    default:
+      return null
+  }
+}
+
+export function usePushNotifications(onNavigate?: (dest: NotificationDestination) => void) {
   const { user } = useAuth()
 
   useEffect(() => {
@@ -31,17 +56,17 @@ export function usePushNotifications() {
 
     const notificationReceived = PushNotifications.addListener(
       'pushNotificationReceived',
-      (notification) => {
-        // Notification arrived while app is in foreground
-        console.log('Notification received in foreground:', notification)
+      (_notification) => {
+        // Notification arrived while app is in foreground — no action needed
       }
     )
 
     const notificationAction = PushNotifications.addListener(
       'pushNotificationActionPerformed',
       (action) => {
-        // User tapped a notification
-        console.log('Notification tapped:', action.notification)
+        const data = (action.notification.data ?? {}) as Record<string, string>
+        const dest = resolveDestination(data)
+        if (dest && onNavigate) onNavigate(dest)
       }
     )
 
@@ -53,5 +78,5 @@ export function usePushNotifications() {
       notificationReceived.then((l) => l.remove())
       notificationAction.then((l) => l.remove())
     }
-  }, [user])
+  }, [user, onNavigate])
 }
