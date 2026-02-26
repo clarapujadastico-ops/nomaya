@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -27,6 +27,17 @@ function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
 
+  // Determine ONCE whether onboarding is needed.
+  // We intentionally do NOT re-evaluate when profile updates mid-onboarding
+  // so that saving the profile step doesn't unmount the verify step.
+  const [inOnboarding, setInOnboarding] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!authLoading && !profileLoading && session && inOnboarding === null) {
+      setInOnboarding(!profile);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, profileLoading, session]);
+
   function handlePushNavigate(dest: NotificationDestination) {
     if (dest.tab === 'groups' && 'circleId' in dest && dest.circleId) {
       setOpenCircleId(dest.circleId);
@@ -38,18 +49,6 @@ function AppShell() {
 
   usePushNotifications(handlePushNavigate);
 
-  if (authLoading) return <LoadingScreen />;
-  if (!session) return <AuthScreen />;
-  if (profileLoading) return <LoadingScreen />;
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <OnboardingFlow onComplete={() => {}} />
-      </div>
-    );
-  }
-
   function handleOpenCircle(id: string) {
     setOpenCircleId(id);
     setActiveTab("groups");
@@ -59,6 +58,11 @@ function AppShell() {
     if (tab !== "groups") setOpenCircleId(undefined);
     setActiveTab(tab);
   }
+
+  if (authLoading) return <LoadingScreen />;
+  if (!session) return <AuthScreen />;
+  if (profileLoading || inOnboarding === null) return <LoadingScreen />;
+  if (inOnboarding) return <OnboardingFlow onComplete={() => setInOnboarding(false)} />;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

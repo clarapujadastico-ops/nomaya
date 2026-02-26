@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Check } from "lucide-react";
+import { ChevronRight, Check, Instagram, Linkedin, Music2 } from "lucide-react";
 import { INTERESTS } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
@@ -11,8 +11,8 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-/* ─── Video background (reused across landing + welcome screens) ─── */
-function VideoBackground({ opacity = 1 }: { opacity?: number }) {
+/* ─── Video background ─── */
+function VideoBackground() {
   return (
     <video
       autoPlay
@@ -20,7 +20,6 @@ function VideoBackground({ opacity = 1 }: { opacity?: number }) {
       loop
       playsInline
       className="absolute inset-0 w-full h-full object-cover"
-      style={{ opacity }}
     >
       <source src="/videos/nomaya-hero.mov" type="video/mp4" />
     </video>
@@ -39,7 +38,11 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   ];
   const [welcomeIndex, setWelcomeIndex] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [profile, setProfile] = useState({ name: "", city: "", bio: "" });
+  const [profile, setProfile] = useState({
+    name: "", city: "", bio: "",
+    instagram_url: "", linkedin_url: "", tiktok_url: "",
+    favourite_song: "", favourite_food: "",
+  });
   const [saveError, setSaveError] = useState<string | null>(null);
   const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
 
@@ -53,48 +56,35 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   if (step === "language") {
     return (
       <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
-        {/* Full-bleed video */}
         <VideoBackground />
+        {/* Dark overlay */}
+        <div className="absolute inset-0" style={{ background: "rgba(28, 18, 55, 0.52)" }} />
 
-        {/* Soft overlay — light enough to read purple title against video */}
-        <div className="absolute inset-0" style={{ background: "hsl(0 0% 100% / 0.30)" }} />
-        <div className="absolute inset-0" style={{
-          background: "linear-gradient(to bottom, hsl(0 0% 100% / 0.10) 0%, hsl(252 30% 45% / 0.85) 100%)"
-        }} />
+        <div className="relative z-10 flex flex-col flex-1 px-6" style={{ paddingTop: "max(env(safe-area-inset-top), 3.5rem)" }}>
+          {/* Nomaya — top left */}
+          <span className="font-serif text-white text-xl font-normal tracking-wide">Nomaya</span>
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col flex-1 px-6 pt-safe">
-          {/* Top spacer + wordmark */}
+          {/* Centered tagline */}
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            {/* Decorative line */}
-            <div className="flex items-center gap-3 mb-8">
-              <div className="h-px w-10" style={{ background: "hsl(252 30% 45% / 0.5)" }} />
-              <span className="text-[10px] tracking-[0.35em] uppercase" style={{ color: "hsl(252 30% 45%)" }}>{t("onboarding.est")}</span>
-              <div className="h-px w-10" style={{ background: "hsl(252 30% 45% / 0.5)" }} />
-            </div>
-
-            <h1
-              className="font-serif font-normal leading-none mb-3"
-              style={{ fontSize: "clamp(3.5rem, 16vw, 5rem)", letterSpacing: "-0.04em", color: "#5f5095" }}
-            >
-              Nomaya
-            </h1>
-            <p className="text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(252 30% 45%)" }}>
-              {t("onboarding.tagline")}
+            <p className="text-white font-light mb-3" style={{ fontSize: "1.35rem", letterSpacing: "0.28em" }}>
+              MOVE · CONNECT · BELONG
+            </p>
+            <p className="text-white/75 text-xs" style={{ letterSpacing: "0.22em" }}>
+              WOMEN-ONLY COMMUNITY
             </p>
           </div>
 
-          {/* Bottom card — brand lavender */}
+          {/* Bottom card */}
           <div
             className="rounded-3xl p-6 mb-8 mt-4"
             style={{
-              background: "hsl(252 75% 96% / 0.92)",
+              background: "rgba(255,255,255,0.12)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid hsl(252 30% 45% / 0.15)",
+              border: "1px solid rgba(255,255,255,0.18)",
             }}
           >
-            <p className="text-xs tracking-widest uppercase text-center mb-5" style={{ color: "hsl(252 30% 55%)" }}>
+            <p className="text-xs tracking-widest uppercase text-center mb-5 text-white/70">
               {t("onboarding.choose_lang")}
             </p>
 
@@ -108,21 +98,15 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   onClick={() => { setLanguage(lang.code); setCtxLang(lang.code); }}
                   className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200"
                   style={{
-                    borderColor: language === lang.code
-                      ? "hsl(252 30% 45%)"
-                      : "hsl(252 30% 45% / 0.20)",
-                    background: language === lang.code
-                      ? "hsl(252 30% 45% / 0.10)"
-                      : "hsl(0 0% 100% / 0.60)",
+                    borderColor: language === lang.code ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
+                    background: language === lang.code ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.07)",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{lang.flag}</span>
-                    <span className="font-medium text-sm" style={{ color: "hsl(252 30% 30%)" }}>{lang.label}</span>
+                    <span className="font-medium text-sm text-white">{lang.label}</span>
                   </div>
-                  {language === lang.code && (
-                    <Check size={15} style={{ color: "hsl(252 30% 45%)" }} />
-                  )}
+                  {language === lang.code && <Check size={15} className="text-white" />}
                 </button>
               ))}
             </div>
@@ -139,15 +123,21 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     );
   }
 
-  /* ── WELCOME SLIDES — brand purple background, no dark video ── */
+  /* ── WELCOME SLIDES — video background ── */
   if (step === "welcome1" || step === "welcome2" || step === "welcome3") {
     const screen = welcomeScreens[welcomeIndex];
     const stepMap: Step[] = ["welcome1", "welcome2", "welcome3"];
     const isLast = welcomeIndex === 2;
 
     return (
-      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
-        <div className="flex flex-col flex-1 px-6 pt-14" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+      <div className="mobile-container flex flex-col relative overflow-hidden" style={{ minHeight: "100dvh" }}>
+        <VideoBackground />
+        <div className="absolute inset-0" style={{ background: "rgba(28, 18, 55, 0.65)" }} />
+
+        <div
+          className="relative z-10 flex flex-col flex-1 px-6 pt-14"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+        >
           {/* Progress dots */}
           <div className="flex gap-1.5 mb-auto">
             {[0, 1, 2].map((i) => (
@@ -156,9 +146,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                 className="h-0.5 rounded-full transition-all duration-500"
                 style={{
                   width: i === welcomeIndex ? "2rem" : "0.5rem",
-                  background: i === welcomeIndex
-                    ? "hsl(252 75% 80%)"
-                    : "hsl(0 0% 100% / 0.25)",
+                  background: i === welcomeIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.25)",
                 }}
               />
             ))}
@@ -168,21 +156,21 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             <div
               className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5 self-start"
               style={{
-                background: "hsl(252 75% 93% / 0.15)",
-                color: "hsl(252 75% 85%)",
-                border: "1px solid hsl(252 75% 80% / 0.3)",
+                background: "rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.75)",
+                border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
               {welcomeIndex + 1} of 3
             </div>
 
             <h2
-              className="font-serif font-normal text-foreground leading-tight mb-4 whitespace-pre-line"
-              style={{ fontSize: "clamp(2rem, 9vw, 2.75rem)", letterSpacing: "-0.042em" }}
+              className="font-serif font-normal text-white leading-tight mb-4 whitespace-pre-line"
+              style={{ fontSize: "clamp(2rem, 9vw, 2.75rem)", letterSpacing: "-0.03em" }}
             >
               {screen.title}
             </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+            <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.65)" }}>
               {screen.subtitle}
             </p>
 
@@ -210,7 +198,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     setStep("language");
                   }
                 }}
-                className="w-full py-3 text-muted-foreground text-sm"
+                className="w-full py-3 text-sm"
+                style={{ color: "rgba(255,255,255,0.5)" }}
               >
                 {t("onboarding.back")}
               </button>
@@ -225,7 +214,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   if (step === "interests") {
     return (
       <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
-        <div className="px-6 pt-14 pb-5">
+        <div className="px-6 pt-14 pb-4 flex-shrink-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step1")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
@@ -233,31 +222,47 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           >
             {t("onboarding.what_love")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2">{t("onboarding.select_all")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("onboarding.select_all")}</p>
         </div>
 
-        {/* Bubble pills */}
-        <div className="flex flex-wrap gap-2.5 px-6 overflow-y-auto flex-1 content-start pb-4">
+        {/* Editorial list */}
+        <div className="flex-1 overflow-y-auto px-6">
           {INTERESTS.map((interest) => {
             const isSelected = selectedInterests.includes(interest.id);
             return (
               <button
                 key={interest.id}
                 onClick={() => toggleInterest(interest.id)}
-                className={`px-5 py-3 rounded-full text-sm font-medium border-2 transition-all duration-200 active:scale-[0.97] ${
-                  isSelected
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground"
-                }`}
+                className="w-full flex items-center justify-between py-4 border-b border-border/50 text-left transition-all active:opacity-60"
               >
-                {interest.label}
+                <span
+                  className="font-serif transition-all duration-200"
+                  style={{
+                    fontSize: "1.15rem",
+                    letterSpacing: "-0.01em",
+                    color: isSelected ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    fontWeight: isSelected ? 500 : 400,
+                  }}
+                >
+                  {interest.label}
+                </span>
+                <div
+                  className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-4 transition-all duration-200"
+                  style={{
+                    borderColor: isSelected ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
+                    background: isSelected ? "hsl(var(--primary-foreground))" : "transparent",
+                  }}
+                >
+                  {isSelected && <Check size={10} className="text-primary" />}
+                </div>
               </button>
             );
           })}
+          <div className="h-4" />
         </div>
 
         <div
-          className="px-6 space-y-3"
+          className="px-6 space-y-3 flex-shrink-0 border-t border-border/40"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}
         >
           <button
@@ -280,8 +285,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   /* ── PROFILE ── */
   if (step === "profile") {
     return (
-      <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
-        <div className="mb-8">
+      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-4 flex-shrink-0">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step2")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
@@ -289,65 +294,122 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           >
             {t("onboarding.tell_us")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            {t("onboarding.simple_profile")}
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("onboarding.simple_profile")}</p>
         </div>
 
-        <div className="flex justify-center mb-6">
-          <button className="w-24 h-24 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center text-3xl transition-all duration-200 active:scale-95">
-            📸
-          </button>
-        </div>
+        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
+          {/* Photo placeholder */}
+          <div className="flex justify-center py-2">
+            <button className="w-24 h-24 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center text-3xl transition-all duration-200 active:scale-95">
+              📸
+            </button>
+          </div>
 
-        <div className="space-y-4 flex-1">
+          {/* Name & City */}
           {[
             { key: "name", label: t("onboarding.your_name"), placeholder: "Sofia" },
             { key: "city", label: t("onboarding.city"), placeholder: "Madrid" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
-              <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-                {label}
-              </label>
+              <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{label}</label>
               <input
                 type="text"
                 placeholder={placeholder}
                 value={profile[key as keyof typeof profile]}
                 onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
-                className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition"
+                className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
               />
             </div>
           ))}
+
+          {/* Bio — required */}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              {t("onboarding.short_bio")} <span className="normal-case">({t("onboarding.optional")})</span>
+              {t("onboarding.short_bio")}
             </label>
             <textarea
               placeholder="Designer. Ceramics enthusiast. Dog mum."
               value={profile.bio}
               onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
               rows={3}
-              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring transition resize-none"
+              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition resize-none"
             />
+          </div>
+
+          {/* Social media */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">Social media</label>
+            <div className="space-y-2">
+              {[
+                { key: "instagram_url", icon: Instagram, placeholder: "instagram.com/yourhandle" },
+                { key: "linkedin_url", icon: Linkedin, placeholder: "linkedin.com/in/yourname" },
+                { key: "tiktok_url", icon: Music2, placeholder: "tiktok.com/@yourhandle" },
+              ].map(({ key, icon: Icon, placeholder }) => (
+                <div key={key} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
+                  <Icon size={15} className="text-muted-foreground flex-shrink-0" />
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={profile[key as keyof typeof profile]}
+                    onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Favourites */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">A little more about you</label>
+            <div className="space-y-2">
+              {[
+                { key: "favourite_song", placeholder: "Favourite song right now…", prefix: "🎵" },
+                { key: "favourite_food", placeholder: "Favourite food or restaurant…", prefix: "🍽️" },
+              ].map(({ key, placeholder, prefix }) => (
+                <div key={key} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
+                  <span className="text-base flex-shrink-0">{prefix}</span>
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={profile[key as keyof typeof profile]}
+                    onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 space-y-3">
-          {saveError && (
-            <p className="text-xs text-destructive px-1">{saveError}</p>
-          )}
+        <div
+          className="px-6 space-y-3 flex-shrink-0 border-t border-border/40"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}
+        >
+          {saveError && <p className="text-xs text-destructive px-1">{saveError}</p>}
           <button
             onClick={() => {
               setSaveError(null);
               updateProfile(
-                { name: profile.name, city: profile.city, bio: profile.bio || null, language, interests: selectedInterests },
+                {
+                  name: profile.name || "Member",
+                  city: profile.city || "",
+                  bio: profile.bio || null,
+                  language,
+                  interests: selectedInterests,
+                  instagram_url: profile.instagram_url || null,
+                  linkedin_url: profile.linkedin_url || null,
+                  tiktok_url: profile.tiktok_url || null,
+                  favourite_song: profile.favourite_song || null,
+                  favourite_food: profile.favourite_food || null,
+                },
                 {
                   onSuccess: () => setStep("verify"),
                   onError: (err) => setSaveError((err as Error).message),
                 }
               );
             }}
-            disabled={isSaving}
+            disabled={isSaving || !profile.name}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",
@@ -356,19 +418,6 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             }}
           >
             {isSaving ? t("onboarding.saving") : t("onboarding.continue")}
-          </button>
-          <button
-            onClick={() => {
-              setSaveError(null);
-              updateProfile(
-                { name: profile.name || "Member", city: profile.city || "", bio: profile.bio || null, language, interests: selectedInterests },
-                { onSuccess: () => setStep("verify"), onError: () => setStep("verify_intro") }
-              );
-            }}
-            disabled={isSaving}
-            className="w-full py-2 text-muted-foreground text-sm"
-          >
-            {t("onboarding.skip")}
           </button>
         </div>
       </div>

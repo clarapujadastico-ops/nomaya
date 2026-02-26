@@ -21,6 +21,8 @@ export interface Database {
           tiktok_url: string | null
           verification_status: 'unverified' | 'pending' | 'verified'
           badges: string[]
+          favourite_song: string | null
+          favourite_food: string | null
           created_at: string
         }
         Insert: {
@@ -38,6 +40,8 @@ export interface Database {
           tiktok_url?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
           badges?: string[]
+          favourite_song?: string | null
+          favourite_food?: string | null
           created_at?: string
         }
         Update: {
@@ -55,6 +59,8 @@ export interface Database {
           tiktok_url?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
           badges?: string[]
+          favourite_song?: string | null
+          favourite_food?: string | null
           created_at?: string
         }
       }
