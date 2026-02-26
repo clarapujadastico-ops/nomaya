@@ -6,7 +6,14 @@ import { useEvents } from "@/hooks/useEvents";
 import { useBookings, useBookEvent, useCancelBooking } from "@/hooks/useBookings";
 import { useProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
+import { useEnsureEventCircle } from "@/hooks/useCircles";
 import type { AppEvent } from "@/types/database";
+
+function fmtDate(dateStr: string): string {
+  const [, month, day] = dateStr.split("-");
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[parseInt(month) - 1]} ${parseInt(day)}`;
+}
 
 interface FilterState {
   groupSize: null | "intimate" | "small" | "large";
@@ -41,7 +48,11 @@ const CAT_KEYS: Record<string, string> = {
   "Entrepreneurship": "cat.entrepreneurship",
 };
 
-export function EventsScreen() {
+interface EventsScreenProps {
+  onOpenCircle?: (id: string) => void;
+}
+
+export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
   const { t } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
   const [activeFilter, setActiveFilter] = useState("All");
@@ -65,6 +76,7 @@ export function EventsScreen() {
   const [cardCvc, setCardCvc] = useState("");
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
+  const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
 
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness"];
@@ -419,6 +431,47 @@ export function EventsScreen() {
                     onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
                   />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* My Events — attended events with chat CTA */}
+          {bookings.filter(b => b.status === 'confirmed').length > 0 && !searchQuery && activeFilter === "All" && !hasFilters && (
+            <div className="mb-5">
+              <div className="flex items-center justify-between px-5 mb-3">
+                <h2 className="font-serif text-lg font-medium text-foreground">My Events</h2>
+              </div>
+              <div className="flex gap-3 px-5 overflow-x-auto pb-2 scrollbar-hide">
+                {bookings.filter(b => b.status === 'confirmed' && b.event).map((booking) => {
+                  const ev = booking.event!;
+                  return (
+                    <button
+                      key={booking.id}
+                      disabled={isOpeningChat}
+                      onClick={async () => {
+                        const circleId = await ensureEventCircle({ eventId: booking.event_id, eventTitle: ev.title });
+                        onOpenCircle?.(circleId);
+                      }}
+                      className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform disabled:opacity-60"
+                    >
+                      <div className="h-24 relative">
+                        {ev.image_url ? (
+                          <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full" style={{ background: ev.category?.color ?? "hsl(252 30% 45%)" }} />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-white font-medium">
+                          {fmtDate(ev.date)}
+                        </span>
+                      </div>
+                      <div className="bg-card px-2.5 py-2">
+                        <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
+                        <p className="text-[10px] text-primary mt-0.5">Open chat →</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -63,7 +63,7 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="mobile-container relative overflow-hidden">
-        {activeTab === "events" && <EventsScreen />}
+        {activeTab === "events" && <EventsScreen onOpenCircle={handleOpenCircle} />}
         {activeTab === "map" && <MapScreen />}
         {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} />}
         {activeTab === "profile" && (

@@ -5,7 +5,8 @@ import {
   HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings, LogOut,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useCircles, useEnsureEventCircle } from "@/hooks/useCircles";
+import { useCircles } from "@/hooks/useCircles";
+import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
 import { useLang } from "@/contexts/LanguageContext";
@@ -42,13 +43,28 @@ function formatDate(dateStr: string): string {
   return `${months[parseInt(month) - 1]} ${parseInt(day)}`;
 }
 
+function getBotResponse(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (/hello|hi|hey|hola/.test(lower)) return "Hi! I'm Nomaya's assistant. How can I help you today? 💜";
+  if (/book|reserv|spot/.test(lower)) return "To book an event, tap any event card then 'Reserve your spot'. Having trouble with a specific event?";
+  if (/cancel/.test(lower)) return "You can cancel a reservation from the event detail page. Cancellation policies vary per event.";
+  if (/circle|chat|group/.test(lower)) return "Circles are private groups where Nomaya members connect and plan together. Join or create one from the Circles tab!";
+  if (/payment|pay|card|stripe|price|precio/.test(lower)) return "We accept card payments via Stripe. If you have payment issues, email us at hola@nomaya.app.";
+  if (/verify|verification|id/.test(lower)) return "To verify your ID, go to your Profile and tap the verification banner. It takes just a minute!";
+  if (/event/.test(lower)) return "We host workshops, wellness sessions, dinners and more across Madrid. Browse them all in the Events tab!";
+  if (/refund/.test(lower)) return "For refund requests, please email us at hola@nomaya.app with your booking details and we'll sort it out.";
+  if (/badge|founding|member/.test(lower)) return "Founding Member badges are awarded to those who attended our very first events. Keep attending to unlock more badges!";
+  if (/password|login|account/.test(lower)) return "For account issues, try logging out and back in. If the problem persists, email hola@nomaya.app.";
+  return "Thanks for reaching out! Our team will get back to you soon. You can also email us at hola@nomaya.app 💜";
+}
+
 export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const { t, lang, setLang } = useLang();
   const { data: profile, refetch: refetchProfile } = useProfile();
   const { data: bookings = [] } = useBookings();
+  const { user } = useAuth();
   const { data: allCircles = [] } = useCircles();
   const { mutate: updateProfile } = useUpdateProfile();
-  const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
 
   const myCircles = allCircles.filter((c) => c.isMember || c.isAdmin);
 
@@ -67,7 +83,17 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showNotificationsSheet, setShowNotificationsSheet] = useState(false);
   const [showSubscriptionSheet, setShowSubscriptionSheet] = useState(false);
-  const [selectedAttendedBookingId, setSelectedAttendedBookingId] = useState<string | null>(null);
+  const [showSupportChat, setShowSupportChat] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [supportMessages, setSupportMessages] = useState<Array<{ role: 'user' | 'bot'; content: string }>>([
+    { role: 'bot', content: "Hi! I'm Nomaya's assistant. How can I help you today? 💜" },
+  ]);
+  const [supportInput, setSupportInput] = useState("");
+  const [isSendingSupport, setIsSendingSupport] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [notifSettings, setNotifSettings] = useState({
@@ -189,9 +215,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {
         title: "Help and support",
         items: [
-          { icon: MessageCircle, label: "Chat with support", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Support") },
+          { icon: MessageCircle, label: "Chat with support", value: null, onPress: () => setShowSupportChat(true) },
           { icon: HelpCircle, label: "Help Center", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Help") },
-          { icon: Sparkles, label: "Give us feedback", value: null, onPress: () => window.open("mailto:hola@nomaya.app?subject=Feedback") },
+          { icon: Sparkles, label: "Give us feedback", value: null, onPress: () => { setFeedbackRating(0); setFeedbackMessage(""); setFeedbackSubmitted(false); setShowFeedbackForm(true); } },
         ],
       },
       {
@@ -361,12 +387,169 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             </div>
           </div>
         )}
+
+        {/* Support chat sheet */}
+        {showSupportChat && (
+          <div className="fixed inset-0 z-[200] flex flex-col">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSupportChat(false)} />
+            <div className="relative flex flex-col bg-card rounded-t-3xl mt-auto w-full max-w-sm mx-auto" style={{ height: "80vh", paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}>
+              {/* Header */}
+              <div className="px-5 pt-4 pb-3 border-b border-border flex items-center gap-3 flex-shrink-0">
+                <div className="w-9 h-9 rounded-full gradient-cta flex items-center justify-center text-white text-sm font-bold">N</div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Nomaya Support</p>
+                  <p className="text-[10px] text-muted-foreground">Usually replies instantly</p>
+                </div>
+                <button onClick={() => setShowSupportChat(false)}>
+                  <X size={18} className="text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                {supportMessages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-snug ${
+                        m.role === 'user'
+                          ? 'gradient-cta text-white rounded-br-sm'
+                          : 'bg-muted text-foreground rounded-bl-sm'
+                      }`}
+                    >
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {isSendingSupport && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted px-4 py-2.5 rounded-2xl rounded-bl-sm text-sm text-muted-foreground">…</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input */}
+              <div className="px-4 pt-3 border-t border-border flex gap-2 flex-shrink-0">
+                <input
+                  value={supportInput}
+                  onChange={(e) => setSupportInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isSendingSupport) {
+                      const msg = supportInput.trim();
+                      if (!msg) return;
+                      setIsSendingSupport(true);
+                      setSupportInput("");
+                      setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
+                      supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
+                      setTimeout(() => {
+                        const reply = getBotResponse(msg);
+                        setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
+                        supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
+                        setIsSendingSupport(false);
+                      }, 900);
+                    }
+                  }}
+                  placeholder="Message Nomaya support…"
+                  className="flex-1 bg-muted rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                <button
+                  disabled={isSendingSupport || !supportInput.trim()}
+                  onClick={() => {
+                    const msg = supportInput.trim();
+                    if (!msg) return;
+                    setIsSendingSupport(true);
+                    setSupportInput("");
+                    setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
+                    supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
+                    setTimeout(() => {
+                      const reply = getBotResponse(msg);
+                      setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
+                      supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
+                      setIsSendingSupport(false);
+                    }, 900);
+                  }}
+                  className="w-10 h-10 rounded-xl gradient-cta flex items-center justify-center disabled:opacity-40"
+                >
+                  <MessageCircle size={16} className="text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feedback form sheet */}
+        {showFeedbackForm && (
+          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFeedbackForm(false)} />
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto" />
+              {feedbackSubmitted ? (
+                <div className="text-center py-6 space-y-3">
+                  <p className="text-3xl">💜</p>
+                  <p className="font-serif text-xl font-medium text-foreground">Thank you!</p>
+                  <p className="text-sm text-muted-foreground">Your feedback helps us make Nomaya better for everyone.</p>
+                  <button onClick={() => setShowFeedbackForm(false)} className="mt-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <h2 className="font-serif text-xl font-medium text-foreground mb-1">Give us feedback</h2>
+                    <p className="text-xs text-muted-foreground">Your thoughts help us improve Nomaya.</p>
+                  </div>
+
+                  {/* Star rating */}
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">How are we doing?</p>
+                    <div className="flex gap-3 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setFeedbackRating(star)}
+                          className={`text-3xl transition-transform active:scale-110 ${star <= feedbackRating ? 'opacity-100' : 'opacity-30'}`}
+                        >
+                          ⭐
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Tell us more</p>
+                    <textarea
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      placeholder="What could we do better? What do you love?"
+                      rows={4}
+                      className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+                    />
+                  </div>
+
+                  <button
+                    disabled={feedbackRating === 0 || isSubmittingFeedback}
+                    onClick={async () => {
+                      setIsSubmittingFeedback(true);
+                      const { error } = await supabase.from('feedback').insert({
+                        user_id: user?.id,
+                        rating: feedbackRating,
+                        message: feedbackMessage,
+                      });
+                      if (!error) setFeedbackSubmitted(true);
+                      setIsSubmittingFeedback(false);
+                    }}
+                    className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base disabled:opacity-50"
+                  >
+                    {isSubmittingFeedback ? "Sending…" : "Send feedback"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
-
-  // ── Attended event detail sheet ──────────────────────────────────────────────
-  const selectedBooking = bookings.find((b) => b.id === selectedAttendedBookingId);
 
   // ── Main profile view ────────────────────────────────────────────────────────
   return (
@@ -602,66 +785,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       </div>
 
-      {/* ── Events attended ── */}
-      {bookings.length > 0 && (
-        <div className="px-5 mt-5">
-          <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("profile.events_attended")}</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {bookings.map((booking) => {
-              const ev = booking.event;
-              if (!ev) return null;
-              return (
-                <button
-                  key={booking.id}
-                  onClick={() => setSelectedAttendedBookingId(booking.id)}
-                  className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform"
-                >
-                  <div className="h-24 relative">
-                    {ev.image_url ? (
-                      <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full" style={{ background: ev.category?.color ?? "hsl(252 30% 45%)" }} />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-white font-medium">
-                      {formatDate(ev.date)}
-                    </span>
-                  </div>
-                  <div className="bg-card px-2.5 py-2">
-                    <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{ev.category?.name ?? ""}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* My circles */}
-      <div className="px-5 mt-5">
-        <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("profile.my_circles")}</h2>
-        {myCircles.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No circles yet.</p>
-        ) : (
-          <div className="flex gap-3 flex-wrap">
-            {myCircles.map((circle) => (
-              <button
-                key={circle.id}
-                onClick={() => onOpenCircle?.(circle.id)}
-                className="flex-shrink-0 w-24 bg-card rounded-xl p-3 shadow-soft text-center active:scale-[0.97] transition-transform"
-              >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg mx-auto mb-1.5" style={{ background: circle.categoryColor }}>
-                  {circle.name.charAt(0)}
-                </div>
-                <p className="text-xs font-medium text-foreground leading-tight line-clamp-2">{circle.name}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{circle.memberCount} {t("circles.member_count_many")}</p>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Interests */}
       <div className="px-5 mt-5">
         <div className="flex items-center justify-between mb-3">
@@ -699,70 +822,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       </div>
 
       {/* ── Sheets ── */}
-
-      {/* Attended event detail sheet */}
-      {selectedBooking && selectedBooking.event && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedAttendedBookingId(null)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
-            {/* Event hero */}
-            <div className="h-48 relative">
-              {selectedBooking.event.image_url ? (
-                <img src={selectedBooking.event.image_url} alt={selectedBooking.event.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full" style={{ background: selectedBooking.event.category?.color ?? "hsl(252 30% 45%)" }} />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <button
-                onClick={() => setSelectedAttendedBookingId(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center"
-              >
-                <X size={14} className="text-white" />
-              </button>
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-[10px] uppercase tracking-widest text-white/70 mb-1">{selectedBooking.event.category?.name}</p>
-                <h3 className="font-serif text-xl font-medium text-white">{selectedBooking.event.title}</h3>
-                <p className="text-xs text-white/80 mt-0.5">{formatDate(selectedBooking.event.date)}</p>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {/* Attendees */}
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Who was there</p>
-                <div className="flex -space-x-2">
-                  {Array.from({ length: Math.min(8, selectedBooking.event.total_spots ?? 8) }).map((_, i) => (
-                    <div key={i} className="w-10 h-10 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-base">
-                      {["🌸", "🌿", "✨", "🎨", "🌊", "🍀", "🦋", "🌺"][i % 8]}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Go to event chat CTA */}
-              <div className="bg-muted rounded-2xl p-4">
-                <p className="text-sm font-medium text-foreground mb-1">Keep the connection going</p>
-                <p className="text-xs text-muted-foreground mb-3">Chat with the people who attended this event — share moments, plan the next one.</p>
-                <button
-                  disabled={isOpeningChat}
-                  onClick={async () => {
-                    if (!selectedBooking?.event) return;
-                    const circleId = await ensureEventCircle({
-                      eventId: selectedBooking.event_id,
-                      eventTitle: selectedBooking.event.title,
-                    });
-                    setSelectedAttendedBookingId(null);
-                    onOpenCircle?.(circleId);
-                  }}
-                  className="w-full py-3 rounded-xl gradient-cta text-white text-sm font-medium disabled:opacity-60"
-                >
-                  {isOpeningChat ? "Opening chat…" : "Open event chat →"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Horoscope sheet */}
       {showHoroscopeSheet && (
