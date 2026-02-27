@@ -151,3 +151,79 @@ VALUES
     '22222222-2222-2222-2222-222222222222', false, 37.3891, -5.9845
   )
 ON CONFLICT DO NOTHING;
+
+-- ── Circle spots & votes ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.circle_spots (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  circle_id     uuid REFERENCES public.circles(id) ON DELETE CASCADE,
+  added_by      uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  name          text NOT NULL,
+  note          text,
+  google_maps_url text,
+  vote_count    integer NOT NULL DEFAULT 0,
+  is_confirmed  boolean NOT NULL DEFAULT false,
+  proposed_date date,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.circle_spots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "circle members can manage spots" ON public.circle_spots FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS public.circle_spot_votes (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  spot_id    uuid REFERENCES public.circle_spots(id) ON DELETE CASCADE,
+  user_id    uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (spot_id, user_id)
+);
+ALTER TABLE public.circle_spot_votes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users manage own spot votes" ON public.circle_spot_votes FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- ── Circle proposals & interest ──────────────────────────────
+CREATE TABLE IF NOT EXISTS public.circle_proposals (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  proposed_by    uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name           text NOT NULL,
+  description    text,
+  city           text NOT NULL DEFAULT 'Madrid',
+  status         text NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed', 'active', 'official')),
+  interest_count integer NOT NULL DEFAULT 0,
+  meeting_count  integer NOT NULL DEFAULT 0,
+  created_at     timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.circle_proposals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anyone views proposals"   ON public.circle_proposals FOR SELECT USING (true);
+CREATE POLICY "users create proposals"   ON public.circle_proposals FOR INSERT WITH CHECK (auth.uid() = proposed_by);
+CREATE POLICY "system updates proposals" ON public.circle_proposals FOR UPDATE USING (true);
+
+CREATE TABLE IF NOT EXISTS public.circle_proposal_interest (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  proposal_id uuid REFERENCES public.circle_proposals(id) ON DELETE CASCADE,
+  user_id     uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (proposal_id, user_id)
+);
+ALTER TABLE public.circle_proposal_interest ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users manage own proposal interest" ON public.circle_proposal_interest FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- ── Event interest (notify-me for TBC events) ────────────────
+CREATE TABLE IF NOT EXISTS public.event_interest (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  event_id   uuid REFERENCES public.events(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, event_id)
+);
+ALTER TABLE public.event_interest ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users manage own event interest" ON public.event_interest FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "anyone reads event interest counts" ON public.event_interest FOR SELECT USING (true);
+
+-- ── Event group messages & photos ────────────────────────────
+CREATE TABLE IF NOT EXISTS public.event_messages (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id   uuid REFERENCES public.events(id) ON DELETE CASCADE,
+  user_id    uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content    text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.event_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "attendees can message" ON public.event_messages FOR ALL USING (true) WITH CHECK (true);

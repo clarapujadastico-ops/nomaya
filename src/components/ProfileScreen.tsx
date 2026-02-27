@@ -140,7 +140,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   }
 
   function shareReferral() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 20% off your first event + early access. https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
     if (navigator.share) {
       navigator.share({ title: 'Join Nomaya', text }).catch(() => {});
     } else {
@@ -149,7 +149,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   }
 
   function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 20% off your first event + early access. https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
@@ -876,6 +876,44 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
+      {/* ── Host Pathway ── */}
+      {(() => {
+        const eventsAttended = bookings.length;
+        // referrals not tracked yet, show 0; rating not tracked, show placeholder
+        const steps = [
+          { label: "8 events attended", done: eventsAttended >= 8, value: `${Math.min(eventsAttended, 8)}/8` },
+          { label: "2 referrals made", done: false, value: "0/2" },
+          { label: "4.8+ rating", done: false, value: "—" },
+          { label: "Host onboarding", done: false, value: "Pending" },
+        ];
+        const doneCount = steps.filter((s) => s.done).length;
+        return (
+          <div className="mx-5 mt-5 bg-card rounded-2xl p-5 shadow-card">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Host Pathway</p>
+              <span className="text-[10px] text-muted-foreground">{doneCount}/4 complete</span>
+            </div>
+            <h3 className="font-serif text-base font-medium text-foreground mb-3">Become a Nomaya Host</h3>
+            <div className="w-full h-1.5 bg-muted rounded-full mb-4 overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / 4) * 100}%`, background: "hsl(var(--primary-foreground))" }} />
+            </div>
+            <div className="space-y-2.5">
+              {steps.map(({ label, done, value }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${done ? "border-primary bg-primary" : "border-border"}`}>
+                      {done && <Check size={10} className="text-primary-foreground" />}
+                    </div>
+                    <span className={`text-sm ${done ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Referral banner ── */}
       <button
         onClick={() => setShowReferralSheet(true)}
@@ -886,7 +924,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <div className="flex-1">
             <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Grow the circle</p>
             <p className="font-serif text-white text-base leading-snug">Invite a woman you'd love<br />to see at your table.</p>
-            <p className="text-xs text-white/60 mt-1.5">10€ credit · 20% off for her →</p>
+            <p className="text-xs text-white/60 mt-1.5">10€ credit · 15% off for her →</p>
           </div>
           <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ml-3 flex-shrink-0">
             <span className="text-2xl">🎁</span>
@@ -1122,7 +1160,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 <div>
                   <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">She receives</p>
                   <div className="space-y-1.5">
-                    {["20% off her first event", "Early access"].map((item) => (
+                    {["15% off her first event", "Early access"].map((item) => (
                       <div key={item} className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }} />
                         <span className="text-sm text-foreground">{item}</span>

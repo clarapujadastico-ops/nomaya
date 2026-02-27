@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, ChevronDown, X, Shield } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronDown, X, Shield, Bell, BellOff } from "lucide-react";
+import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
 import { useEvents } from "@/hooks/useEvents";
@@ -77,6 +78,10 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
+
+  // Interest / notify-me (for TBC events)
+  const { isInterested, toggle: toggleInterest, isPending: isTogglingInterest } = useEventInterest(selectedEvent ?? "");
+  const { data: interestCount = 0 } = useEventInterestCount(selectedEvent ?? "");
 
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
@@ -165,12 +170,23 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
         {/* Details */}
         <div className="px-5 py-5 space-y-5">
           {event.isTbc ? (
-            <div className="bg-card rounded-2xl p-4 shadow-soft">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Location</p>
-              <p className="text-sm font-medium text-foreground">{event.city}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Register to see address</p>
-              <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-sm text-muted-foreground italic">Details coming soon</p>
+            <div className="space-y-3">
+              {/* Interest count card */}
+              <div className="rounded-2xl p-5 text-center space-y-1 shadow-soft" style={{ background: "hsl(252 30% 40%)" }}>
+                <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2">Women interested</p>
+                <p className="font-serif text-5xl font-medium text-white">{interestCount}</p>
+                <p className="text-xs text-white/60 mt-1">
+                  {interestCount === 0
+                    ? "Be the first to register interest"
+                    : interestCount === 1
+                    ? "1 woman wants to know when this opens"
+                    : `${interestCount} women want to know when this opens`}
+                </p>
+              </div>
+              <div className="bg-card rounded-2xl p-4 shadow-soft">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Location</p>
+                <p className="text-sm font-medium text-foreground">{event.city}</p>
+                <p className="text-xs text-muted-foreground mt-1 italic">Date & details to be confirmed</p>
               </div>
             </div>
           ) : (

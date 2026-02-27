@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket, Globe, Users, CheckCircle2, MapPin, Lock } from "lucide-react";
+import { Calendar, Ticket, Globe, Users, CheckCircle2, MapPin, Lock, MessageCircle } from "lucide-react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
@@ -7,6 +7,7 @@ import { useBookings, useBookEvent } from "@/hooks/useBookings";
 import { useMyCircleEvents } from "@/hooks/useCircleEvents";
 import { Logo } from "./Logo";
 import { useLang } from "@/contexts/LanguageContext";
+import { EventGroupScreen } from "./EventGroupScreen";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
 
@@ -63,6 +64,7 @@ export function MapScreen() {
   const { t } = useLang();
   const [popupId, setPopupId] = useState<string | null>(null);
   const [view, setView] = useState<MapView>("all");
+  const [selectedGroupEventId, setSelectedGroupEventId] = useState<string | null>(null);
 
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
@@ -81,6 +83,27 @@ export function MapScreen() {
     view === "reservations" ? confirmedEvents.filter((e) => bookedIds.has(e.id)) :
     [];
   const visibleCircleEvents = view === "circles" ? circleEvents : [];
+
+  // Open event group from reservations view
+  if (selectedGroupEventId) {
+    const evt = confirmedEvents.find((e) => e.id === selectedGroupEventId);
+    if (evt) {
+      return (
+        <EventGroupScreen
+          event={{
+            id: evt.id,
+            title: evt.title,
+            date: evt.date,
+            city: evt.city,
+            image: evt.image,
+            location: (evt as any).location ?? null,
+            description: (evt as any).description ?? null,
+          }}
+          onBack={() => setSelectedGroupEventId(null)}
+        />
+      );
+    }
+  }
 
   const handleMarkerClick = useCallback((id: string) => {
     setPopupId((prev) => (prev === id ? null : id));
@@ -320,26 +343,41 @@ export function MapScreen() {
           <div className="space-y-2.5">
             {officialEvents.map((event) => {
               const address = EVENT_ADDRESSES[event.title];
+              const isBooked = bookedIds.has(event.id);
               return (
-                <button
+                <div
                   key={event.id}
-                  onClick={() => setPopupId(event.id === popupId ? null : event.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left shadow-soft ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border transition-all shadow-soft ${
                     popupId === event.id ? "border-primary" : "border-border"
                   }`}
                 >
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ background: categoryColor(event.category, event.categoryColor) }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
-                    {view === "reservations" && address ? (
-                      <p className="text-xs text-muted-foreground truncate">{address}</p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
+                  <button
+                    onClick={() => setPopupId(event.id === popupId ? null : event.id)}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ background: categoryColor(event.category, event.categoryColor) }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
+                      {view === "reservations" && address ? (
+                        <p className="text-xs text-muted-foreground truncate">{address}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">{event.city} · {event.date}</p>
+                      )}
+                    </div>
+                    {view !== "reservations" && (
+                      <span className="text-xs font-medium text-primary flex-shrink-0">{event.price}</span>
                     )}
-                  </div>
-                  <span className="text-xs font-medium text-primary flex-shrink-0">{event.price}</span>
-                </button>
+                  </button>
+                  {view === "reservations" && isBooked && (
+                    <button
+                      onClick={() => setSelectedGroupEventId(event.id)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary/15 text-primary-foreground text-xs font-medium flex-shrink-0"
+                    >
+                      <MessageCircle size={12} /> Group
+                    </button>
+                  )}
+                </div>
               );
             })}
 

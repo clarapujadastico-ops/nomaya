@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon, Heart, ExternalLink, Sparkles } from "lucide-react";
+import { resolveCircleImage } from "@/assets/circleImages";
+import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot } from "@/hooks/useCircleSpots";
+import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
@@ -53,7 +56,9 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "General":          "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop&auto=format",
 };
 
-function circlePlaceholder(category: string): string {
+function circleCoverImage(name: string, coverUrl: string, category: string): string {
+  const resolved = resolveCircleImage(name, coverUrl);
+  if (resolved) return resolved;
   return CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES["General"];
 }
 
@@ -520,7 +525,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
   const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
-  const [activeTab, setActiveTab] = useState<"about" | "chat" | "events" | "requests">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "spots" | "plans" | "events" | "requests">("about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
@@ -543,7 +548,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
     );
   }
   const hasPendingRequest = myRequests.some((r) => r.circle_id === circle.id && r.status === "pending");
-  const coverImage = circle.coverUrl || circlePlaceholder(circle.category);
+  const coverImage = circleCoverImage(circle.name, circle.coverUrl, circle.category);
 
   function handleJoinPress() {
     if (isUnverified) { setShowVerifyGate(true); return; }
@@ -596,15 +601,17 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
 
       {/* Tabs */}
       <div className="flex border-b border-border mx-5 mt-4 gap-1 overflow-x-auto">
-        {(["about", "chat", ...(isMember ? ["events"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
+        {(["about", "chat", ...(isMember ? ["spots", "plans", "events"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab as "about" | "chat" | "events" | "requests")}
+            onClick={() => setActiveTab(tab as "about" | "chat" | "spots" | "plan" | "events" | "requests")}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 whitespace-nowrap ${
               activeTab === tab ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
             }`}
           >
             {tab === "chat" && <MessageCircle size={14} />}
+            {tab === "spots" && <MapPin size={14} />}
+            {tab === "plans" && <Sparkles size={14} />}
             {tab === "events" && <CalendarDays size={14} />}
             {tab === "requests" && <UserPlus size={14} />}
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -713,6 +720,10 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
               </button>
             )}
           </>
+        ) : activeTab === "spots" ? (
+          <SpotsTab circleId={circle.id} isMember={isMember} isAdmin={circle.isAdmin} />
+        ) : activeTab === "plans" ? (
+          <PlansTab circle={circle} isMember={isMember} />
         ) : activeTab === "events" ? (
           <EventsTab circle={circle} onCreateEvent={() => {
           if (isUnverified) { setShowVerifyGate(true); return; }
@@ -925,95 +936,463 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   );
 }
 
-// ─── Create circle sheet ──────────────────────────────────────────────────────
+// ─── Spots tab ────────────────────────────────────────────────────────────────
 
-function CreateCircleSheet({ onClose }: { onClose: () => void }) {
-  const { mutate: create, isPending } = useCreateCircle();
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function SpotsTab({ circleId, isMember, isAdmin }: { circleId: string; isMember: boolean; isAdmin: boolean }) {
+  const { data: spots = [], isLoading } = useCircleSpots(circleId);
+  const { mutate: addSpot, isPending: isAdding } = useAddCircleSpot();
+  const { mutate: voteSpot, isPending: isVoting } = useVoteCircleSpot();
+  const { mutate: confirmSpot } = useConfirmCircleSpot();
+  const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [city, setCity] = useState("Madrid");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [note, setNote] = useState("");
+  const [mapsUrl, setMapsUrl] = useState("");
+  const [proposedDate, setProposedDate] = useState("");
 
-  async function handlePickCover() {
-    setIsUploading(true);
-    const url = await pickAndUpload(`circles/cover-${Date.now()}.jpg`);
-    setIsUploading(false);
-    if (url) setCoverUrl(url);
+  if (!isMember) {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+        <Lock size={24} className="text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Join the circle to see and suggest spots</p>
+      </div>
+    );
+  }
+
+  function handleAddSpot() {
+    if (!name.trim()) return;
+    addSpot(
+      { circle_id: circleId, name: name.trim(), note: note.trim() || undefined, google_maps_url: mapsUrl.trim() || undefined, proposed_date: proposedDate || undefined },
+      { onSuccess: () => { setName(""); setNote(""); setMapsUrl(""); setProposedDate(""); setShowForm(false); } }
+    );
+  }
+
+  // Activity feed: recent 4 additions sorted by time
+  const recentAdds = [...spots]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 4);
+
+  return (
+    <div className="space-y-4 relative pb-16">
+      {/* Activity feed */}
+      {recentAdds.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 shadow-soft space-y-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Recent additions</p>
+          {recentAdds.map((spot) => (
+            <div key={`act-${spot.id}`} className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <MapPin size={12} className="text-primary-foreground" />
+              </div>
+              <p className="text-xs text-foreground flex-1 leading-snug">
+                <span className="font-semibold">{spot.added_by_profile?.name ?? "Someone"}</span>
+                {" "}added{" "}
+                <span className="font-medium" style={{ color: "hsl(252 75% 70%)" }}>{spot.name}</span>
+              </p>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo(spot.created_at)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Loading spots…</p>
+      ) : spots.length === 0 ? (
+        <div className="bg-card rounded-2xl p-8 shadow-soft text-center space-y-2">
+          <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-1" />
+          <p className="text-sm font-medium text-foreground">No spots yet</p>
+          <p className="text-xs text-muted-foreground">Suggest places where your circle could meet. Tap + to add the first one.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {[...spots].sort((a, b) => b.vote_count - a.vote_count).map((spot) => (
+            <div
+              key={spot.id}
+              className={`bg-card rounded-2xl shadow-soft overflow-hidden ${spot.is_confirmed ? "ring-1 ring-primary/50" : ""}`}
+            >
+              {/* Card body */}
+              <div className="flex items-start gap-3 p-4">
+                <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin size={18} className="text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-semibold text-foreground leading-snug">{spot.name}</p>
+                    {spot.is_confirmed && (
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary-foreground">✓ Confirmed</span>
+                    )}
+                  </div>
+                  {spot.note && <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{spot.note}</p>}
+                  <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    {spot.proposed_date && (
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <CalendarDays size={10} />
+                        {new Date(spot.proposed_date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      Added by {spot.added_by_profile?.name ?? "a member"}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => voteSpot({ spotId: spot.id, circleId, voted: spot.user_voted })}
+                  disabled={isVoting}
+                  className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 flex-shrink-0 ${spot.user_voted ? "bg-primary/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  <Heart size={15} fill={spot.user_voted ? "currentColor" : "none"} />
+                  <span className="text-[10px] leading-none">{spot.vote_count}</span>
+                </button>
+              </div>
+
+              {/* Footer actions */}
+              {(spot.google_maps_url || (isAdmin && !spot.is_confirmed)) && (
+                <div className="border-t border-border flex">
+                  {spot.google_maps_url && (
+                    <a
+                      href={spot.google_maps_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-primary-foreground"
+                    >
+                      <ExternalLink size={11} /> Open in Google Maps
+                    </a>
+                  )}
+                  {isAdmin && !spot.is_confirmed && (
+                    <>
+                      {spot.google_maps_url && <div className="w-px bg-border" />}
+                      <button
+                        onClick={() => confirmSpot({ spotId: spot.id, circleId })}
+                        className="flex-1 py-2.5 text-xs font-medium text-muted-foreground"
+                      >
+                        Confirm spot
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowForm(true)}
+        className="fixed bottom-28 right-5 w-14 h-14 rounded-full shadow-floating flex items-center justify-center z-10 transition-transform active:scale-95 gradient-cta"
+        aria-label="Add spot"
+      >
+        <Plus size={26} className="text-white" />
+      </button>
+
+      {showForm && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Add a spot</h2>
+              <p className="text-xs text-muted-foreground mt-1">Suggest a venue for the circle to discover and vote on.</p>
+            </div>
+            <div className="space-y-3">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Venue name"
+                maxLength={80}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Note (e.g. great terrace, 20 min from Sol…)"
+                rows={2}
+                maxLength={200}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+              />
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="Google Maps link (optional)"
+                type="url"
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <input
+                type="date"
+                value={proposedDate}
+                onChange={(e) => setProposedDate(e.target.value)}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none"
+              />
+            </div>
+            <button
+              onClick={handleAddSpot}
+              disabled={!name.trim() || isAdding}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {isAdding ? "Adding…" : "Add to list"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Plans tab ────────────────────────────────────────────────────────────────
+
+function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }) {
+  const { mutate: create, isPending } = useCreateCircleEvent();
+  const { data: events = [], isLoading } = useCircleEvents(circle.id);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [location, setLocation] = useState("");
+
+  if (!isMember) {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+        <Lock size={24} className="text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Join the circle to propose plans</p>
+      </div>
+    );
   }
 
   function handleSubmit() {
-    if (!name.trim()) return;
+    if (!title.trim()) return;
     create(
-      { name: name.trim(), description: description.trim(), city: city.trim(), cover_url: coverUrl || null, is_private: isPrivate },
-      { onSuccess: onClose }
+      { circle_id: circle.id, title: title.trim(), description: description.trim() || undefined, date: date || new Date().toISOString(), location: location.trim() || undefined, status: 'pending' },
+      { onSuccess: () => { setTitle(""); setDescription(""); setDate(""); setLocation(""); setShowForm(false); } }
+    );
+  }
+
+  return (
+    <div className="space-y-3 relative pb-16">
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground text-center py-4">Loading plans…</p>
+      ) : events.length === 0 ? (
+        <div className="bg-card rounded-2xl p-6 shadow-soft text-center space-y-1">
+          <Sparkles size={28} className="text-muted-foreground/50 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No plans yet. Propose a gathering for the circle!</p>
+        </div>
+      ) : (
+        events.map((plan) => (
+          <div key={plan.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium text-foreground leading-snug">{plan.title}</p>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${plan.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {plan.status === 'approved' ? 'Confirmed' : 'Proposed'}
+              </span>
+            </div>
+            {plan.location && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin size={11} /> {plan.location}
+              </div>
+            )}
+            {plan.date && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CalendarDays size={11} /> {new Date(plan.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </div>
+            )}
+            {plan.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{plan.description}</p>
+            )}
+          </div>
+        ))
+      )}
+
+      <button
+        onClick={() => setShowForm(true)}
+        className="fixed bottom-28 right-5 w-14 h-14 rounded-full shadow-floating flex items-center justify-center z-10 transition-transform active:scale-95 gradient-cta"
+        aria-label="Propose a plan"
+      >
+        <Plus size={26} className="text-white" />
+      </button>
+
+      {showForm && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Propose a plan</h2>
+              <p className="text-xs text-muted-foreground mt-1">Share an idea for a gathering. The admin will confirm.</p>
+            </div>
+            <div className="space-y-3">
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Plan title (e.g. Sunday brunch at La Musa)"
+                maxLength={80}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <input
+                type="datetime-local"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none"
+              />
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Location (optional)"
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tell us more… (optional)"
+                rows={2}
+                maxLength={300}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+              />
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!title.trim() || isPending}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {isPending ? "Proposing…" : "Propose plan"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Propose circle sheet ─────────────────────────────────────────────────────
+
+function ProposeCircleSheet({ onClose }: { onClose: () => void }) {
+  const { data: proposals = [] } = useCircleProposals();
+  const { mutate: propose, isPending: isProposing } = useProposeCircle();
+  const { mutate: toggleInterest, isPending: isToggling } = useToggleProposalInterest();
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [city, setCity] = useState("Madrid");
+
+  function handlePropose() {
+    if (!name.trim()) return;
+    propose(
+      { name: name.trim(), description: description.trim() || undefined, city: city.trim() || "Madrid" },
+      { onSuccess: () => { setName(""); setDescription(""); setCity("Madrid"); setShowForm(false); } }
     );
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
+      <div
+        className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto"
+        style={{ maxHeight: '85vh', paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+      >
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-        <h2 className="font-serif text-xl font-medium text-foreground">New circle</h2>
 
-        {/* Cover image picker */}
-        {coverUrl ? (
-          <div className="relative w-full h-32 rounded-2xl overflow-hidden">
-            <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
-            <button onClick={() => setCoverUrl("")} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
-              <X size={12} className="text-white" />
+        {!showForm ? (
+          <>
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Propose a circle</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                5 interests → circle activates · 2 meetings → becomes official
+              </p>
+            </div>
+
+            {proposals.length > 0 && (
+              <div className="space-y-3">
+                {proposals.map((p) => (
+                  <div key={p.id} className="bg-muted rounded-2xl p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{p.name}</p>
+                        {p.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{p.description}</p>}
+                        <p className="text-[10px] text-muted-foreground mt-1">{p.city}</p>
+                      </div>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {p.status === 'active' ? '✓ Active' : 'Proposed'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">{p.interest_count}/{ACTIVATION_THRESHOLD} interested</p>
+                      <button
+                        onClick={() => toggleInterest({ proposalId: p.id, interested: p.user_interested })}
+                        disabled={isToggling}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 ${p.user_interested ? "bg-primary/20 text-primary-foreground" : "bg-card text-muted-foreground border border-border"}`}
+                      >
+                        <Heart size={12} fill={p.user_interested ? "currentColor" : "none"} />
+                        {p.user_interested ? "Interested" : "I'm interested"}
+                      </button>
+                    </div>
+                    <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full gradient-cta transition-all"
+                        style={{ width: `${Math.min((p.interest_count / ACTIVATION_THRESHOLD) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {proposals.length === 0 && (
+              <div className="bg-muted rounded-2xl p-6 text-center">
+                <Sparkles size={24} className="text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No proposals yet. Be the first to suggest a circle!</p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowForm(true)}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98]"
+            >
+              + Propose a new circle
             </button>
-          </div>
-        ) : null}
-        <button
-          onClick={handlePickCover}
-          disabled={isUploading}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border bg-muted text-sm text-muted-foreground disabled:opacity-50"
-        >
-          <Camera size={15} />
-          {isUploading ? "Uploading…" : coverUrl ? "Change cover photo" : "Add cover photo"}
-        </button>
-
-        <div className="space-y-3">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Circle name"
-            maxLength={60}
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What's this circle about?"
-            rows={3}
-            maxLength={280}
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
-          />
-          <input
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="City"
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
-        </div>
-
-        <button onClick={() => setIsPrivate((p) => !p)} className="flex items-center gap-3 w-full">
-          <div className={`w-10 h-6 rounded-full transition-colors ${isPrivate ? "bg-primary" : "bg-border"} relative`}>
-            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${isPrivate ? "left-5" : "left-1"}`} />
-          </div>
-          <span className="text-sm text-foreground">Private circle</span>
-        </button>
-
-        <button
-          onClick={handleSubmit}
-          disabled={!name.trim() || isPending}
-          className="w-full py-4 rounded-2xl gradient-cta text-primary-foreground font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
-        >
-          {isPending ? "Creating…" : "Create circle"}
-        </button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setShowForm(false)} className="text-sm text-muted-foreground flex items-center gap-1">
+              ← Back
+            </button>
+            <h2 className="font-serif text-xl font-medium text-foreground">New proposal</h2>
+            <div className="space-y-3">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Circle name (e.g. Sunset Walks in Madrid)"
+                maxLength={60}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What would this circle be about?"
+                rows={3}
+                maxLength={280}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+              />
+              <input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="City"
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
+            <button
+              onClick={handlePropose}
+              disabled={!name.trim() || isProposing}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft disabled:opacity-50"
+            >
+              {isProposing ? "Proposing…" : "Submit proposal"}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1022,7 +1401,7 @@ function CreateCircleSheet({ onClose }: { onClose: () => void }) {
 // ─── Circle card ──────────────────────────────────────────────────────────────
 
 function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; onClick: () => void; dimmed?: boolean }) {
-  const image = circle.coverUrl || circlePlaceholder(circle.category);
+  const image = circleCoverImage(circle.name, circle.coverUrl, circle.category);
   return (
     <button
       onClick={onClick}
@@ -1096,7 +1475,7 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
 
       <div className="mx-5 mb-5 bg-secondary rounded-2xl p-4 border border-border">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          ✦ Circles are intimate groups built around shared interests. Join one or start your own.
+          ✦ Circles are intimate groups built around shared interests. Join one or propose a new circle.
         </p>
       </div>
 
@@ -1136,7 +1515,7 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
         </>
       )}
 
-      {showCreate && <CreateCircleSheet onClose={() => setShowCreate(false)} />}
+      {showCreate && <ProposeCircleSheet onClose={() => setShowCreate(false)} />}
 
       {/* Verification gate for creating circles */}
       {showVerifyGate && (

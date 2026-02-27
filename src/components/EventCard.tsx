@@ -1,5 +1,6 @@
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin, Users, Bell } from "lucide-react";
 import type { AppEvent } from "@/types/database";
+import { useEventInterestCount } from "@/hooks/useEventInterest";
 
 export type { AppEvent as Event };
 
@@ -13,6 +14,7 @@ interface EventCardProps {
 export function EventCard({ event, variant = "default", onClick, locked = false }: EventCardProps) {
   const spotsPercent = (event.spotsLeft / event.totalSpots) * 100;
   const isAlmostFull = spotsPercent <= 30;
+  const { data: interestCount = 0 } = useEventInterestCount(event.id);
 
   if (variant === "featured") {
     return (
@@ -72,11 +74,11 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
       event.spotsLeft === 0
         ? "Sold out"
         : event.isTbc
-        ? "Waitlist"
+        ? null   // handled separately below
         : null;
 
     const subtext = event.isTbc
-      ? "Waitlist"
+      ? interestCount > 0 ? `${interestCount} interested` : "Notify me"
       : event.spotsLeft === 0
       ? "Waitlist"
       : isAlmostFull
@@ -110,8 +112,16 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
             </div>
           )}
 
+          {/* TBC — bell badge */}
+          {event.isTbc && (
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full backdrop-blur-sm" style={{ background: "hsl(252 30% 45% / 0.85)" }}>
+              <Bell size={9} className="text-white" />
+              <span className="text-[10px] font-semibold text-white">Coming soon</span>
+            </div>
+          )}
+
           {/* "New" badge for recently added events */}
-          {event.featured && !statusBadge && (
+          {event.featured && !statusBadge && !event.isTbc && (
             <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
               <span className="text-[10px] font-semibold text-gray-800">New</span>
             </div>
