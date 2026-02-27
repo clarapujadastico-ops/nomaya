@@ -382,7 +382,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           {/* Name & City */}
           {[
-            { key: "name", label: t("onboarding.your_name"), placeholder: "Sofia" },
+            { key: "name", label: "Full name (first & last)", placeholder: "Sofia García" },
             { key: "city", label: t("onboarding.city"), placeholder: "Madrid" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>

@@ -3,6 +3,7 @@ import {
   ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
   HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings, LogOut,
+  Copy, Share2,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
@@ -83,6 +84,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showNotificationsSheet, setShowNotificationsSheet] = useState(false);
   const [showSubscriptionSheet, setShowSubscriptionSheet] = useState(false);
+  const [showCreditsSheet, setShowCreditsSheet] = useState(false);
+  const [showReferralSheet, setShowReferralSheet] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [supportMessages, setSupportMessages] = useState<Array<{ role: 'user' | 'bot'; content: string }>>([
@@ -123,6 +127,30 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const memberId = profile?.id
     ? `NM-MAD-${String(parseInt(profile.id.replace(/-/g, '').substring(0, 6), 16) % 9000 + 1000).padStart(4, '0')}`
     : 'NM-MAD-????';
+
+  const referralCode = profile?.id
+    ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
+    : '........';
+
+  function copyReferralCode() {
+    navigator.clipboard?.writeText(referralCode);
+    setReferralCopied(true);
+    setTimeout(() => setReferralCopied(false), 2000);
+  }
+
+  function shareReferral() {
+    const text = `Join me on Nomaya! Use my code ${referralCode} to skip the waitlist & get 15% off your first booking 💜 https://nomaya.app`;
+    if (navigator.share) {
+      navigator.share({ title: 'Join Nomaya', text }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(text);
+    }
+  }
+
+  function shareOnWhatsApp() {
+    const text = `Hey! Join me on Nomaya, a curated community for women in Madrid 💜 Use my code ${referralCode} to skip the waitlist & get 15% off your first booking. https://nomaya.app`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
 
   async function handleAvatarUpload() {
     if (!profile?.id) return;
@@ -179,12 +207,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     setShowLanguageSheet(false);
   }
 
-  function handleReferral() {
-    const text = "Join me on Nomaya — curated experiences for women. Download the app: https://nomaya.app";
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    if (typeof window !== "undefined") window.open(waUrl, "_blank");
-  }
-
   if (showVerification) {
     return (
       <VerificationFlow
@@ -209,7 +231,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         title: "Plan and credits",
         items: [
           { icon: Sparkles, label: "Subscription", value: ritualBadge?.label ?? "Member", onPress: () => setShowSubscriptionSheet(true) },
-          { icon: CreditCard, label: "Credits", value: `${bookings.length * 4} credits`, onPress: () => setShowSubscriptionSheet(true) },
+          { icon: CreditCard, label: "Credits", value: `${bookings.length * 4} credits`, onPress: () => setShowCreditsSheet(true) },
         ],
       },
       {
@@ -295,7 +317,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           {/* Referrals */}
           <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
             <button
-              onClick={handleReferral}
+              onClick={() => setShowReferralSheet(true)}
               className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-muted/30"
             >
               <div className="flex items-center gap-3">
@@ -810,6 +832,24 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
+      {/* ── Referral banner ── */}
+      <button
+        onClick={() => setShowReferralSheet(true)}
+        className="mx-5 mt-5 rounded-2xl overflow-hidden shadow-card active:scale-[0.98] transition-all duration-200 w-[calc(100%-2.5rem)]"
+        style={{ background: "hsl(252 30% 40%)" }}
+      >
+        <div className="px-5 py-4 flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Invite a friend</p>
+            <p className="font-serif text-white text-lg leading-snug">10 credits for you,<br />15% off for her</p>
+            <p className="text-xs text-white/60 mt-1">Share your referral code →</p>
+          </div>
+          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ml-3 flex-shrink-0">
+            <span className="text-2xl">🎁</span>
+          </div>
+        </div>
+      </button>
+
       {/* ── Sign out ── */}
       <div className="px-5 mt-6 mb-2">
         <button
@@ -983,6 +1023,101 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         );
       })()}
 
+      {/* Credits sheet */}
+      {showCreditsSheet && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCreditsSheet(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <h2 className="font-serif text-xl font-medium text-foreground">Your Credits</h2>
+            <div className="bg-muted rounded-2xl p-5 text-center space-y-1">
+              <p className="font-mono text-4xl font-bold text-foreground">{bookings.length * 4}</p>
+              <p className="text-sm text-muted-foreground">credits available</p>
+            </div>
+            <div className="bg-muted rounded-2xl p-4 space-y-3">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">How to earn credits</p>
+              {[
+                { icon: "🎟️", label: "Attend an event", value: "+4 credits" },
+                { icon: "🎁", label: "Refer a friend", value: "+10 credits" },
+                { icon: "⭐", label: "Leave a review", value: "+2 credits" },
+              ].map(({ icon, label, value }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{icon}</span>
+                    <span className="text-sm text-foreground">{label}</span>
+                  </div>
+                  <span className="text-sm font-medium text-primary">{value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="bg-muted rounded-2xl p-4">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">How to use credits</p>
+              <p className="text-sm text-foreground">Credits can be used as discounts on future event bookings. Coming soon!</p>
+            </div>
+            <button
+              onClick={() => { setShowCreditsSheet(false); setShowReferralSheet(true); }}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm"
+            >
+              Earn credits — Invite a friend
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Referral sheet */}
+      {showReferralSheet && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReferralSheet(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto" />
+            <div className="text-center space-y-2 pt-1">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Refer a friend</p>
+              <h2 className="font-serif text-2xl font-normal text-foreground leading-snug">
+                10 credits for you,<br />15% savings for her
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                She skips the waitlist & gets 15% off her first booking. You earn 10 credits as a merci.
+              </p>
+            </div>
+
+            {/* Referral code */}
+            <div className="bg-muted rounded-2xl p-4">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Your referral code</p>
+              <div className="flex items-center justify-between">
+                <p className="font-mono text-2xl font-bold text-foreground tracking-wider">{referralCode}</p>
+                <button
+                  onClick={copyReferralCode}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm font-medium transition-all active:scale-95"
+                  style={{ color: referralCopied ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
+                >
+                  {referralCopied ? <Check size={14} /> : <Copy size={14} />}
+                  {referralCopied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            {/* Share referral link */}
+            <button
+              onClick={shareReferral}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm flex items-center justify-center gap-2"
+            >
+              <Share2 size={16} />
+              Share referral link
+            </button>
+
+            {/* WhatsApp */}
+            <button
+              onClick={shareOnWhatsApp}
+              className="w-full py-3.5 rounded-2xl font-medium text-sm flex items-center justify-center gap-2 border border-border text-foreground"
+              style={{ background: "hsl(142 70% 48% / 0.12)" }}
+            >
+              <span className="text-base">💬</span>
+              Share on WhatsApp
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Member card modal */}
       {showMemberCard && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
@@ -1000,7 +1135,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                   <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Member Name</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
                   <p className="font-serif text-lg text-white">{profile?.name || "Member"}</p>
                 </div>
                 <div className="pt-1 border-t border-white/10">
