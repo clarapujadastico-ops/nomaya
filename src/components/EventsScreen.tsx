@@ -79,7 +79,7 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
 
   // Fixed category order — only show if events exist in that category
-  const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness"];
+  const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
   const categories = useMemo(() => {
     const existing = new Set(events.map((e) => e.category).filter(Boolean));
     return ["All", ...ALLOWED_CATEGORIES.filter((c) => existing.has(c))];
