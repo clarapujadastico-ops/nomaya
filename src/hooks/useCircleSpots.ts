@@ -10,6 +10,8 @@ export interface CircleSpot {
   name: string;
   note: string | null;
   google_maps_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   proposed_date: string | null;
   is_confirmed: boolean;
   vote_count: number;
@@ -42,7 +44,7 @@ export function useAddCircleSpot() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (spot: { circle_id: string; name: string; note?: string; google_maps_url?: string; proposed_date?: string }) => {
+    mutationFn: async (spot: { circle_id: string; name: string; note?: string; google_maps_url?: string; proposed_date?: string; latitude?: number; longitude?: number }) => {
       const { error } = await supabase.from("circle_spots").insert({ ...spot, added_by: user!.id, vote_count: 0 });
       if (error) throw error;
     },

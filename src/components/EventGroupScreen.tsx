@@ -42,7 +42,7 @@ export function EventGroupScreen({ event, onBack }: { event: EventGroupEvent; on
   const { user } = useAuth();
   const { data: messages = [], isLoading: msgsLoading } = useEventMessages(event.id);
   const { mutate: send, isPending: isSending } = useSendEventMessage();
-  const [activeTab, setActiveTab] = useState<"about" | "chat" | "photos">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "photos">("chat");
   const [text, setText] = useState("");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);

@@ -1,5 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon, Heart, ExternalLink, Sparkles } from "lucide-react";
+import Map, { Marker, Popup } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
+
+const CITY_COORDS: Record<string, [number, number]> = {
+  Madrid: [-3.7038, 40.4168],
+  Barcelona: [2.1734, 41.3851],
+  Seville: [-5.9845, 37.3891],
+  Valencia: [-0.3763, 39.4699],
+};
+function cityCenter(city: string): [number, number] {
+  return CITY_COORDS[city] ?? CITY_COORDS["Madrid"];
+}
+function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null {
+  const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  const qMatch = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+  return null;
+}
 import { resolveCircleImage } from "@/assets/circleImages";
 import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot } from "@/hooks/useCircleSpots";
 import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
@@ -721,7 +742,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
             )}
           </>
         ) : activeTab === "spots" ? (
-          <SpotsTab circleId={circle.id} isMember={isMember} isAdmin={circle.isAdmin} />
+          <SpotsTab circleId={circle.id} isMember={isMember} isAdmin={circle.isAdmin} city={circle.city} />
         ) : activeTab === "plans" ? (
           <PlansTab circle={circle} isMember={isMember} />
         ) : activeTab === "events" ? (
@@ -948,16 +969,27 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-function SpotsTab({ circleId, isMember, isAdmin }: { circleId: string; isMember: boolean; isAdmin: boolean }) {
+function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isMember: boolean; isAdmin: boolean; city: string }) {
   const { data: spots = [], isLoading } = useCircleSpots(circleId);
   const { mutate: addSpot, isPending: isAdding } = useAddCircleSpot();
   const { mutate: voteSpot, isPending: isVoting } = useVoteCircleSpot();
   const { mutate: confirmSpot } = useConfirmCircleSpot();
   const [showForm, setShowForm] = useState(false);
+  const [activePopupId, setActivePopupId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [proposedDate, setProposedDate] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+
+  // Auto-extract coordinates when Maps URL is entered
+  useEffect(() => {
+    if (mapsUrl) {
+      const coords = extractCoordsFromUrl(mapsUrl);
+      if (coords) { setLat(coords.lat.toString()); setLng(coords.lng.toString()); }
+    }
+  }, [mapsUrl]);
 
   if (!isMember) {
     return (
@@ -971,8 +1003,16 @@ function SpotsTab({ circleId, isMember, isAdmin }: { circleId: string; isMember:
   function handleAddSpot() {
     if (!name.trim()) return;
     addSpot(
-      { circle_id: circleId, name: name.trim(), note: note.trim() || undefined, google_maps_url: mapsUrl.trim() || undefined, proposed_date: proposedDate || undefined },
-      { onSuccess: () => { setName(""); setNote(""); setMapsUrl(""); setProposedDate(""); setShowForm(false); } }
+      {
+        circle_id: circleId,
+        name: name.trim(),
+        note: note.trim() || undefined,
+        google_maps_url: mapsUrl.trim() || undefined,
+        proposed_date: proposedDate || undefined,
+        latitude: lat ? parseFloat(lat) : undefined,
+        longitude: lng ? parseFloat(lng) : undefined,
+      },
+      { onSuccess: () => { setName(""); setNote(""); setMapsUrl(""); setProposedDate(""); setLat(""); setLng(""); setShowForm(false); } }
     );
   }
 
@@ -981,8 +1021,66 @@ function SpotsTab({ circleId, isMember, isAdmin }: { circleId: string; isMember:
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 4);
 
+  const mappedSpots = spots.filter((s) => s.latitude != null && s.longitude != null);
+  const [centerLng, centerLat] = cityCenter(city);
+
   return (
     <div className="space-y-4 relative pb-16">
+      {/* Mapbox map */}
+      <div className="rounded-2xl overflow-hidden shadow-soft" style={{ height: 220 }}>
+        <Map
+          mapboxAccessToken={MAPBOX_TOKEN}
+          initialViewState={{ longitude: centerLng, latitude: centerLat, zoom: 12.5 }}
+          style={{ width: "100%", height: "100%" }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          onClick={() => setActivePopupId(null)}
+        >
+          {mappedSpots.map((spot) => (
+            <Marker key={spot.id} longitude={spot.longitude!} latitude={spot.latitude!} anchor="bottom">
+              <button
+                onClick={(e) => { e.stopPropagation(); setActivePopupId(spot.id === activePopupId ? null : spot.id); }}
+                className="transition-transform active:scale-110"
+              >
+                <div className={`w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center ${spot.is_confirmed ? "bg-primary" : "bg-foreground/80"}`}>
+                  <MapPin size={14} className="text-white" />
+                </div>
+                <div className="w-0 h-0 mx-auto" style={{
+                  borderLeft: "5px solid transparent",
+                  borderRight: "5px solid transparent",
+                  borderTop: `7px solid ${spot.is_confirmed ? "hsl(252 75% 80%)" : "hsl(252 30% 35%)"}`,
+                }} />
+              </button>
+            </Marker>
+          ))}
+          {activePopupId && (() => {
+            const spot = mappedSpots.find((s) => s.id === activePopupId);
+            if (!spot) return null;
+            return (
+              <Popup longitude={spot.longitude!} latitude={spot.latitude!} anchor="bottom" offset={44} closeButton={false} closeOnClick={false} style={{ padding: 0 }}>
+                <div className="bg-white rounded-xl p-2.5 shadow-floating" style={{ minWidth: 140 }}>
+                  <p className="text-xs font-semibold text-gray-800 leading-snug">{spot.name}</p>
+                  {spot.note && <p className="text-[10px] text-gray-500 mt-0.5">{spot.note}</p>}
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[10px] text-gray-400">💜 {spot.vote_count}</span>
+                    {spot.google_maps_url && (
+                      <a href={spot.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 font-medium flex items-center gap-0.5">
+                        <ExternalLink size={9} /> Maps
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            );
+          })()}
+        </Map>
+      </div>
+      {mappedSpots.length === 0 && spots.length === 0 && (
+        <p className="text-[10px] text-center text-muted-foreground -mt-2">Add spots below — they'll appear on the map once you include a Google Maps link with coordinates.</p>
+      )}
+      {mappedSpots.length === 0 && spots.length > 0 && (
+        <p className="text-[10px] text-center text-muted-foreground -mt-2">Paste a Google Maps link with coordinates to see spots on the map.</p>
+      )}
+
       {/* Activity feed */}
       {recentAdds.length > 0 && (
         <div className="bg-card rounded-2xl p-4 shadow-soft space-y-3">
@@ -1117,13 +1215,20 @@ function SpotsTab({ circleId, isMember, isAdmin }: { circleId: string; isMember:
                 maxLength={200}
                 className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
               />
-              <input
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="Google Maps link (optional)"
-                type="url"
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
+              <div className="space-y-1">
+                <input
+                  value={mapsUrl}
+                  onChange={(e) => setMapsUrl(e.target.value)}
+                  placeholder="Google Maps link (optional)"
+                  type="url"
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                {lat && lng ? (
+                  <p className="text-[10px] text-primary-foreground px-1">📍 Coordinates detected — will appear on map</p>
+                ) : mapsUrl ? (
+                  <p className="text-[10px] text-muted-foreground px-1">Tip: use a link with coordinates (e.g. from "Share → Copy link" in Google Maps)</p>
+                ) : null}
+              </div>
               <input
                 type="date"
                 value={proposedDate}

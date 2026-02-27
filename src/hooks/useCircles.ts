@@ -13,7 +13,7 @@ export function useCircles() {
     queryFn: async (): Promise<AppCircle[]> => {
       const [{ data: circles, error: circlesError }, { data: memberships, error: membershipsError }] =
         await Promise.all([
-          supabase.from('circles_with_members').select('*').order('created_at', { ascending: false }),
+          supabase.from('circles_with_members').select('*').is('event_id', null).order('created_at', { ascending: false }),
           supabase
             .from('circle_memberships')
             .select('circle_id, role')
