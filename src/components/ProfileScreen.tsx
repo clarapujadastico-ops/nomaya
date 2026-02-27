@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
@@ -100,6 +100,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const [notifSettings, setNotifSettings] = useState({
     newEvents: true,
     bookingReminders: true,
@@ -166,10 +167,32 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       const url = await uploadAvatar(photo.base64String, profile.id);
       updateProfile({ avatar_url: url });
     } catch {
-      // cancelled
+      // Capacitor camera unavailable (simulator/web) — fall back to file input
+      avatarFileInputRef.current?.click();
     } finally {
       setIsUploadingAvatar(false);
     }
+  }
+
+  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !profile?.id) return;
+    setIsUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const base64 = dataUrl.split(",")[1];
+        const url = await uploadAvatar(base64, profile.id!);
+        updateProfile({ avatar_url: url });
+        setIsUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setIsUploadingAvatar(false);
+    }
+    // reset so same file can be re-selected
+    e.target.value = "";
   }
 
   function saveBio() {
@@ -576,6 +599,15 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   // ── Main profile view ────────────────────────────────────────────────────────
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
+
+      {/* Hidden file input — fallback for simulator/web */}
+      <input
+        ref={avatarFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarFileChange}
+      />
 
       {/* ── Hero photo ── */}
       <div className="relative w-full" style={{ height: 300 }}>
