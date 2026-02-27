@@ -139,7 +139,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   }
 
   function shareReferral() {
-    const text = `Join me on Nomaya! Use my code ${referralCode} to skip the waitlist & get 15% off your first booking 💜 https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 20% off your first event + early access. https://nomaya.app`;
     if (navigator.share) {
       navigator.share({ title: 'Join Nomaya', text }).catch(() => {});
     } else {
@@ -148,7 +148,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   }
 
   function shareOnWhatsApp() {
-    const text = `Hey! Join me on Nomaya, a curated community for women in Madrid 💜 Use my code ${referralCode} to skip the waitlist & get 15% off your first booking. https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 20% off your first event + early access. https://nomaya.app`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
@@ -840,9 +840,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       >
         <div className="px-5 py-4 flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Invite a friend</p>
-            <p className="font-serif text-white text-lg leading-snug">10 credits for you,<br />15% off for her</p>
-            <p className="text-xs text-white/60 mt-1">Share your referral code →</p>
+            <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Grow the circle</p>
+            <p className="font-serif text-white text-base leading-snug">Invite a woman you'd love<br />to see at your table.</p>
+            <p className="text-xs text-white/60 mt-1.5">€10 credit · 20% off for her →</p>
           </div>
           <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ml-3 flex-shrink-0">
             <span className="text-2xl">🎁</span>
@@ -1058,7 +1058,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
               onClick={() => { setShowCreditsSheet(false); setShowReferralSheet(true); }}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm"
             >
-              Earn credits — Invite a friend
+              Earn credits — Grow the circle
             </button>
           </div>
         </div>
@@ -1070,14 +1070,35 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReferralSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto" />
-            <div className="text-center space-y-2 pt-1">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Refer a friend</p>
+            <div className="pt-1 space-y-4">
               <h2 className="font-serif text-2xl font-normal text-foreground leading-snug">
-                10 credits for you,<br />15% savings for her
+                Invite a woman you'd love to see at your table.
               </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                She skips the waitlist & gets 15% off her first booking. You earn 10 credits as a merci.
-              </p>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">She receives</p>
+                  <div className="space-y-1.5">
+                    {["20% off her first event", "Early access"].map((item) => (
+                      <div key={item} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }} />
+                        <span className="text-sm text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">You receive</p>
+                  <div className="space-y-1.5">
+                    {["€10 Nomaya credit once she attends", "+1 Circle Point"].map((item) => (
+                      <div key={item} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }} />
+                        <span className="text-sm text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground italic">Growing the circle has its privileges.</p>
             </div>
 
             {/* Referral code */}
