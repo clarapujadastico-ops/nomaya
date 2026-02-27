@@ -579,14 +579,24 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* ── Hero photo ── */}
       <div className="relative w-full" style={{ height: 300 }}>
-        {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-secondary flex items-center justify-center">
-            <span className="text-8xl opacity-40">🌸</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+        {/* Entire photo area is tappable to change avatar */}
+        <button
+          disabled={isUploadingAvatar}
+          onClick={handleAvatarUpload}
+          className="w-full h-full block disabled:opacity-70 active:opacity-80 transition-opacity"
+        >
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-2">
+              <span className="text-8xl opacity-40">🌸</span>
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Camera size={12} /> Tap to add photo
+              </span>
+            </div>
+          )}
+        </button>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent pointer-events-none" />
 
         {/* Settings button */}
         <button
@@ -596,14 +606,16 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <Settings size={16} className="text-foreground" />
         </button>
 
-        {/* Camera button */}
-        <button
-          disabled={isUploadingAvatar}
-          onClick={handleAvatarUpload}
-          className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center disabled:opacity-50"
-        >
-          <Camera size={16} className="text-foreground" />
-        </button>
+        {/* Camera badge — visible when photo already set */}
+        {profile?.avatar_url && (
+          <button
+            disabled={isUploadingAvatar}
+            onClick={handleAvatarUpload}
+            className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center disabled:opacity-50"
+          >
+            <Camera size={16} className="text-foreground" />
+          </button>
+        )}
 
         {/* Name overlay */}
         <div className="absolute bottom-4 left-5 right-5">
