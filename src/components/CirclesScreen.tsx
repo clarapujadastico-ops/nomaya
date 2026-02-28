@@ -110,6 +110,7 @@ async function uploadChatImage(circleId: string): Promise<string | null> {
 
 function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean }) {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { data: messages = [], isLoading } = useCircleMessages(isMember ? circleId : null);
   const { mutate: send, isPending: isSending } = useSendMessage();
   const [text, setText] = useState("");
@@ -131,14 +132,14 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
 
   function handleSend() {
     if (!text.trim()) return;
-    send({ circleId, content: text.trim() });
+    send({ circleId, content: text.trim(), senderName: profile?.name ?? undefined });
     setText("");
   }
 
   async function handleImageSend() {
     setIsUploadingImage(true);
     const url = await uploadChatImage(circleId);
-    if (url) send({ circleId, content: `${IMG_PREFIX}${url}` });
+    if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
     setIsUploadingImage(false);
   }
 

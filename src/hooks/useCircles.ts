@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { toAppCircle } from '@/types/database'
 import type { AppCircle, MembershipWithCircle } from '@/types/database'
+import { sendPush } from '@/lib/notify'
 
 // ─── Read: all public circles ─────────────────────────────────────────────────
 
@@ -192,9 +193,20 @@ export function useRespondToJoinRequest() {
         .eq('id', requestId)
       if (error) throw error
     },
-    onSuccess: () => {
+    onSuccess: (_, { userId, circleId, approve }) => {
       queryClient.invalidateQueries({ queryKey: ['join_requests'] })
       queryClient.invalidateQueries({ queryKey: ['circles'] })
+      sendPush({
+        userId,
+        title: approve ? '🎉 You\'re in!' : 'Join request update',
+        body: approve
+          ? 'Your request to join the circle was approved.'
+          : 'Your join request was not approved this time.',
+        data: {
+          type: approve ? 'circle_join_approved' : 'circle_join_rejected',
+          circle_id: circleId,
+        },
+      })
     },
   })
 }

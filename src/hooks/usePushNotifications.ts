@@ -24,6 +24,9 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
     case 'circle_event_rejected':
       return circle_id ? { tab: 'groups', circleId: circle_id } : { tab: 'groups' }
 
+    case 'event_message':
+      return { tab: 'map' }
+
     default:
       return null
   }

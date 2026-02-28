@@ -3,6 +3,7 @@ import { CalendarDays, MapPin, MessageCircle, ImageIcon, Send, Camera } from "lu
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { useEventMessages, useSendEventMessage } from "@/hooks/useEventMessages";
 
 const IMG_PREFIX = "__img__:";
@@ -40,6 +41,7 @@ async function uploadEventPhoto(eventId: string): Promise<string | null> {
 
 export function EventGroupScreen({ event, onBack }: { event: EventGroupEvent; onBack: () => void }) {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { data: messages = [], isLoading: msgsLoading } = useEventMessages(event.id);
   const { mutate: send, isPending: isSending } = useSendEventMessage();
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "photos">("chat");
@@ -58,14 +60,14 @@ export function EventGroupScreen({ event, onBack }: { event: EventGroupEvent; on
 
   function handleSend() {
     if (!text.trim()) return;
-    send({ eventId: event.id, content: text.trim() });
+    send({ eventId: event.id, content: text.trim(), senderName: profile?.name ?? undefined });
     setText("");
   }
 
   async function handleUploadPhoto() {
     setIsUploadingPhoto(true);
     const url = await uploadEventPhoto(event.id);
-    if (url) send({ eventId: event.id, content: `${IMG_PREFIX}${url}` });
+    if (url) send({ eventId: event.id, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
     setIsUploadingPhoto(false);
   }
 
