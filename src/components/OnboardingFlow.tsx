@@ -7,7 +7,7 @@ import { VerificationFlow } from "./VerificationFlow";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 
-type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "profile" | "verify";
+type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "about_you" | "profile" | "verify";
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -50,6 +50,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   ];
   const [welcomeIndex, setWelcomeIndex] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [ageRange, setAgeRange] = useState<string | null>(null);
+  const [lifeStage, setLifeStage] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     name: "", city: "", bio: "",
     instagram_url: "", linkedin_url: "", tiktok_url: "",
@@ -106,6 +108,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         tiktok_url: profile.tiktok_url || null,
         favourite_song: profile.favourite_song || null,
         favourite_food: profile.favourite_food || null,
+        age_range: ageRange,
+        life_stage: lifeStage,
         ...(avatar_url ? { avatar_url } : {}),
       },
       {
@@ -331,13 +335,104 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
         <div className="px-6 space-y-3 flex-shrink-0 border-t border-border/40" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}>
           <button
-            onClick={() => setStep("profile")}
+            onClick={() => setStep("about_you")}
             disabled={selectedInterests.length < 2}
             className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white disabled:opacity-40"
           >
             {selectedInterests.length >= 2
               ? `${t("onboarding.continue")} · ${selectedInterests.length} selected`
               : t("onboarding.select_min2")}
+          </button>
+          <button onClick={() => setStep("about_you")} className="w-full py-2 text-muted-foreground text-sm">
+            {t("onboarding.skip")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── ABOUT YOU ── */
+  if (step === "about_you") {
+    const AGE_RANGES = ["18–25", "26–35", "36–45", "46+"];
+    const LIFE_STAGES = [
+      { id: "student",              label: "Student",               emoji: "🎓" },
+      { id: "working_professional", label: "Working professional",  emoji: "💼" },
+      { id: "founder",              label: "Founder / entrepreneur", emoji: "🚀" },
+      { id: "freelancer",           label: "Freelancer / creative",  emoji: "✨" },
+      { id: "new_in_city",          label: "New in the city",        emoji: "📍" },
+      { id: "parent",               label: "Parent",                 emoji: "🌸" },
+    ];
+
+    return (
+      <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
+        <div className="px-6 pt-14 pb-4 flex-shrink-0">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 3</p>
+          <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}>
+            A bit about you
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">Helps us suggest the right events. Never shown publicly.</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 space-y-6 pb-4">
+          {/* Age range */}
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Your age range</p>
+            <div className="grid grid-cols-4 gap-2">
+              {AGE_RANGES.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setAgeRange(r)}
+                  className="py-3 rounded-2xl text-sm font-medium border-2 transition-all"
+                  style={{
+                    borderColor: ageRange === r ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
+                    background: ageRange === r ? "hsl(var(--primary-foreground) / 0.12)" : "hsl(var(--card))",
+                    color: ageRange === r ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Life stage */}
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Your life stage</p>
+            <div className="space-y-2">
+              {LIFE_STAGES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setLifeStage(s.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 text-left transition-all"
+                  style={{
+                    borderColor: lifeStage === s.id ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
+                    background: lifeStage === s.id ? "hsl(var(--primary-foreground) / 0.12)" : "hsl(var(--card))",
+                  }}
+                >
+                  <span className="text-xl">{s.emoji}</span>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: lifeStage === s.id ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                  >
+                    {s.label}
+                  </span>
+                  {lifeStage === s.id && (
+                    <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary-foreground))" }}>
+                      <Check size={11} className="text-primary" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 space-y-3 flex-shrink-0 border-t border-border/40" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}>
+          <button
+            onClick={() => setStep("profile")}
+            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
+          >
+            {t("onboarding.continue")}
           </button>
           <button onClick={() => setStep("profile")} className="w-full py-2 text-muted-foreground text-sm">
             {t("onboarding.skip")}

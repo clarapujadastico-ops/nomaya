@@ -53,6 +53,42 @@ const CAT_KEYS: Record<string, string> = {
   "Entrepreneurship": "cat.entrepreneurship",
 };
 
+// Interest id → event categories it maps to
+const INTEREST_CATEGORY_MAP: Record<string, string[]> = {
+  arts:             ["Arts & Crafts"],
+  wellness:         ["Fitness", "Wellness"],
+  food:             ["Food & Dining"],
+  culture:          ["Culture"],
+  entrepreneurship: ["Entrepreneurship"],
+  outdoors:         ["Fitness"],
+  reading:          ["Culture"],
+  music:            ["Culture"],
+  travel:           ["Culture"],
+  photography:      ["Arts & Crafts"],
+  cooking:          ["Food & Dining"],
+  sustainability:   ["Wellness"],
+  ceramics:         ["Arts & Crafts"],
+  fashion:          ["Arts & Crafts"],
+  mindfulness:      ["Wellness"],
+  wine:             ["Food & Dining"],
+};
+
+function scoreEvent(event: AppEvent, userInterests: string[], bookedCategories: string[]): number {
+  let score = 0;
+  // Interest match: +3 per matching interest
+  for (const interest of userInterests) {
+    const cats = INTEREST_CATEGORY_MAP[interest] ?? [];
+    if (cats.includes(event.category)) score += 3;
+  }
+  // Past attendance in same category: +2
+  if (bookedCategories.includes(event.category)) score += 2;
+  // Popularity (spots taken): +1
+  if (event.totalSpots - event.spotsLeft > 0) score += 1;
+  // Featured: +1
+  if (event.featured) score += 1;
+  return score;
+}
+
 interface EventsScreenProps {
   onOpenCircle?: (id: string, tab?: 'chat' | 'about') => void;
   onOpenMap?: () => void;
@@ -62,6 +98,7 @@ interface EventsScreenProps {
 export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: EventsScreenProps = {}) {
   const { t } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
+  const [view, setView] = useState<"suggested" | "all" | "week">("suggested");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -104,6 +141,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const upcomingEvents = events.filter((e) => e.isTbc || new Date(e.rawDate) >= today);
   const featured = upcomingEvents.filter((e) => e.featured);
 
+  // Scoring inputs
+  const userInterests: string[] = profile?.interests ?? [];
+  const bookedCategories = useMemo(
+    () => [...new Set(bookings.filter(b => b.event).map(b => b.event!.category?.name ?? ""))],
+    [bookings]
+  );
+
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
   const categories = useMemo(() => {
@@ -112,9 +156,19 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   }, [upcomingEvents]);
 
   const filtered = useMemo(() => {
-    let list = activeFilter === "All"
-      ? upcomingEvents
-      : upcomingEvents.filter((e) => e.category === activeFilter);
+    // Base list by view
+    let list: AppEvent[];
+    if (view === "week") {
+      list = upcomingEvents.filter((e) => !e.isTbc && isThisWeek(e.rawDate));
+    } else if (view === "suggested") {
+      list = [...upcomingEvents].sort((a, b) =>
+        scoreEvent(b, userInterests, bookedCategories) - scoreEvent(a, userInterests, bookedCategories)
+      );
+    } else {
+      list = activeFilter === "All"
+        ? upcomingEvents
+        : upcomingEvents.filter((e) => e.category === activeFilter);
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -143,7 +197,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       });
     }
     return list;
-  }, [events, activeFilter, appliedFilters, searchQuery]);
+  }, [events, view, activeFilter, appliedFilters, searchQuery, userInterests, bookedCategories]);
 
   const hasFilters = appliedFilters.groupSize !== null || appliedFilters.dateRange !== null || appliedFilters.type !== "";
 
@@ -590,22 +644,45 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         </div>
       </div>
 
-      {/* Category pills */}
-      <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-2">
-        {categories.map((f) => (
+      {/* View tabs */}
+      <div className="flex gap-2 px-5 mb-3">
+        {([
+          { id: "suggested", label: "✦ Suggested" },
+          { id: "all",       label: "All events" },
+          { id: "week",      label: "This week" },
+        ] as const).map((tab) => (
           <button
-            key={f}
-            onClick={() => setActiveFilter(f)}
+            key={tab.id}
+            onClick={() => setView(tab.id)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
-              activeFilter === f
+              view === tab.id
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border"
             }`}
           >
-            {f === "All" ? t("cat.all") : tCat(f)}
+            {tab.label}
           </button>
         ))}
       </div>
+
+      {/* Category sub-filter — only shown in All view */}
+      {view === "all" && (
+        <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-2">
+          {categories.map((f) => (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+                activeFilter === f
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border"
+              }`}
+            >
+              {f === "All" ? t("cat.all") : tCat(f)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -614,7 +691,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       ) : (
         <>
           {/* Nomaya Only — single compact banner */}
-          {activeFilter === "All" && !hasFilters && !searchQuery && featured.length > 0 && (
+          {view === "suggested" && !hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">Nomaya Only</h2>
@@ -648,7 +725,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           )}
 
           {/* My Events — attended events with chat CTA */}
-          {bookings.filter(b => b.status === 'confirmed').length > 0 && !searchQuery && activeFilter === "All" && !hasFilters && (
+          {bookings.filter(b => b.status === 'confirmed').length > 0 && !searchQuery && view === "suggested" && !hasFilters && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">My Events</h2>
@@ -695,7 +772,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           <div className="px-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-serif text-lg font-medium text-foreground">
-                {activeFilter === "All" ? t("events.upcoming") : activeFilter}
+                {view === "suggested" ? "Suggested for you" : view === "week" ? "This week" : activeFilter === "All" ? t("events.upcoming") : activeFilter}
               </h2>
               {hasFilters && (
                 <button

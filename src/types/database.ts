@@ -24,6 +24,8 @@ export interface Database {
           favourite_song: string | null
           favourite_food: string | null
           credits_cents: number
+          age_range: string | null
+          life_stage: string | null
           created_at: string
         }
         Insert: {
@@ -44,6 +46,8 @@ export interface Database {
           favourite_song?: string | null
           favourite_food?: string | null
           credits_cents?: number
+          age_range?: string | null
+          life_stage?: string | null
           created_at?: string
         }
         Update: {
@@ -64,6 +68,8 @@ export interface Database {
           favourite_song?: string | null
           favourite_food?: string | null
           credits_cents?: number
+          age_range?: string | null
+          life_stage?: string | null
           created_at?: string
         }
       }
