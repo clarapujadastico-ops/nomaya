@@ -43,14 +43,10 @@ function exactCoords(eventId: string, lat: number | null, lon: number | null): [
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "Food & Dining":    "#d4835a",
-  "Arts & Crafts":    "#9b7bca",
-  "Wellness":         "#5a9e7a",
-  "Fitness":          "#5a9e7a",
-  "Entrepreneurship": "#5a8fb5",
-  "Culture":          "#c45a75",
-  "Ceramics":         "#c48a5a",
-  "Jewelry":          "#c4b55a",
+  "Wellness":    "#5a9e7a",
+  "Creative":    "#9b7bca",
+  "Social":      "#d4835a",
+  "Professional":"#5a8fb5",
 };
 
 function categoryColor(cat: string, fallback: string): string {

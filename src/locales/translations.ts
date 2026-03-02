@@ -132,12 +132,10 @@ export const translations: TranslationMap = {
 
   // Categories (for translation)
   "cat.all":            { en: "All",            es: "Todas" },
-  "cat.arts_crafts":    { en: "Arts & Crafts",  es: "Arte y manualidades" },
-  "cat.food_dining":    { en: "Food & Dining",  es: "Comida y gastronomía" },
-  "cat.fitness":        { en: "Fitness",        es: "Fitness" },
   "cat.wellness":       { en: "Wellness",       es: "Bienestar" },
-  "cat.culture":        { en: "Culture",        es: "Cultura" },
-  "cat.entrepreneurship": { en: "Entrepreneurship", es: "Emprendimiento" },
+  "cat.creative":       { en: "Creative",       es: "Creativo" },
+  "cat.social":         { en: "Social",         es: "Social" },
+  "cat.professional":   { en: "Professional",   es: "Profesional" },
 
   // Events screen additional
   "events.all":         { en: "All",            es: "Todas" },

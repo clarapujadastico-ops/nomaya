@@ -45,32 +45,30 @@ function isThisMonth(dateStr: string) {
 }
 
 const CAT_KEYS: Record<string, string> = {
-  "Arts & Crafts": "cat.arts_crafts",
-  "Food & Dining": "cat.food_dining",
-  "Fitness":       "cat.fitness",
   "Wellness":      "cat.wellness",
-  "Culture":       "cat.culture",
-  "Entrepreneurship": "cat.entrepreneurship",
+  "Creative":      "cat.creative",
+  "Social":        "cat.social",
+  "Professional":  "cat.professional",
 };
 
 // Interest id → event categories it maps to
 const INTEREST_CATEGORY_MAP: Record<string, string[]> = {
-  arts:             ["Arts & Crafts"],
-  wellness:         ["Fitness", "Wellness"],
-  food:             ["Food & Dining"],
-  culture:          ["Culture"],
-  entrepreneurship: ["Entrepreneurship"],
-  outdoors:         ["Fitness"],
-  reading:          ["Culture"],
-  music:            ["Culture"],
-  travel:           ["Culture"],
-  photography:      ["Arts & Crafts"],
-  cooking:          ["Food & Dining"],
+  arts:             ["Creative"],
+  wellness:         ["Wellness"],
+  food:             ["Social"],
+  culture:          ["Social"],
+  entrepreneurship: ["Professional"],
+  outdoors:         ["Wellness"],
+  reading:          ["Creative", "Social"],
+  music:            ["Social"],
+  travel:           ["Social"],
+  photography:      ["Creative"],
+  cooking:          ["Social"],
   sustainability:   ["Wellness"],
-  ceramics:         ["Arts & Crafts"],
-  fashion:          ["Arts & Crafts"],
+  ceramics:         ["Creative"],
+  fashion:          ["Creative"],
   mindfulness:      ["Wellness"],
-  wine:             ["Food & Dining"],
+  wine:             ["Social"],
 };
 
 function scoreEvent(event: AppEvent, userInterests: string[], bookedCategories: string[]): number {
@@ -149,7 +147,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   );
 
   // Fixed category order — only show if events exist in that category
-  const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
+  const ALLOWED_CATEGORIES = ["Wellness", "Creative", "Social", "Professional"];
   const categories = useMemo(() => {
     const existing = new Set(upcomingEvents.map((e) => e.category).filter(Boolean));
     return ["All", ...ALLOWED_CATEGORIES.filter((c) => existing.has(c))];

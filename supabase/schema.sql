@@ -42,14 +42,25 @@ CREATE TABLE IF NOT EXISTS public.events (
 );
 
 CREATE TABLE IF NOT EXISTS public.bookings (
-  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  event_id   uuid        NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  status     text        NOT NULL DEFAULT 'confirmed'
-               CHECK (status IN ('confirmed', 'cancelled', 'waitlisted')),
-  created_at timestamptz NOT NULL DEFAULT now(),
+  id                       uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                  uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  event_id                 uuid        NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  status                   text        NOT NULL DEFAULT 'confirmed'
+                             CHECK (status IN ('confirmed', 'cancelled', 'waitlisted')),
+  stripe_payment_intent_id text,
+  payment_status           text        DEFAULT 'unpaid'
+                             CHECK (payment_status IN ('unpaid', 'succeeded', 'failed', 'refunded')),
+  amount_cents_paid        int,
+  created_at               timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, event_id)
 );
+
+-- Run this in Supabase SQL editor if the table already exists:
+-- ALTER TABLE public.bookings
+--   ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text,
+--   ADD COLUMN IF NOT EXISTS payment_status text DEFAULT 'unpaid'
+--     CHECK (payment_status IN ('unpaid', 'succeeded', 'failed', 'refunded')),
+--   ADD COLUMN IF NOT EXISTS amount_cents_paid int;
 
 -- ── View: events with spots left + category info ─────────────
 
@@ -108,12 +119,11 @@ CREATE POLICY "Users can update their own bookings"
 -- ── Seed: Categories ─────────────────────────────────────────
 
 INSERT INTO public.categories (id, name, slug, color) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'Food & Dining',    'food',            'hsl(15 60% 55%)'),
-  ('22222222-2222-2222-2222-222222222222', 'Arts & Crafts',    'arts',            'hsl(280 38% 55%)'),
-  ('33333333-3333-3333-3333-333333333333', 'Wellness',         'wellness',        'hsl(140 35% 45%)'),
-  ('44444444-4444-4444-4444-444444444444', 'Entrepreneurship', 'entrepreneurship','hsl(200 50% 45%)'),
-  ('55555555-5555-5555-5555-555555555555', 'Culture',          'culture',         'hsl(340 50% 55%)')
-ON CONFLICT (id) DO NOTHING;
+  ('33333333-3333-3333-3333-333333333333', 'Wellness',    'wellness',    'hsl(140 35% 45%)'),
+  ('22222222-2222-2222-2222-222222222222', 'Creative',    'creative',    'hsl(280 38% 55%)'),
+  ('11111111-1111-1111-1111-111111111111', 'Social',      'social',      'hsl(15 60% 55%)'),
+  ('44444444-4444-4444-4444-444444444444', 'Professional','professional','hsl(200 50% 45%)')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, slug = EXCLUDED.slug, color = EXCLUDED.color;
 
 -- ── Seed: Events ─────────────────────────────────────────────
 
