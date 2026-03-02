@@ -11,6 +11,7 @@ import { useEnsureEventCircle } from "@/hooks/useCircles";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { AppEvent } from "@/types/database";
+import { useEventAttendees } from "@/hooks/useEventAttendees";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 
 function fmtDate(dateStr: string): string {
@@ -84,6 +85,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
+  const { data: attendees = [] } = useEventAttendees(selectedEvent);
 
   // Initialise Stripe once on mount (no-op if key not set)
   useEffect(() => {
@@ -210,7 +212,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Date", value: `${event.date} · ${event.time}` },
-                { label: "Spots left", value: `${event.spotsLeft} of ${event.totalSpots}` },
+                { label: "Spots left", value: `${event.spotsLeft} spots left` },
                 { label: "Price", value: event.price },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
@@ -250,19 +252,30 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             )}
           </div>
 
-          <div className="bg-card rounded-2xl p-4 shadow-soft">
-            <h3 className="font-serif text-lg font-medium text-foreground mb-3">Who's coming</h3>
-            <div className="flex -space-x-2">
-              {Array.from({ length: Math.min(6, event.totalSpots - event.spotsLeft) }).map((_, i) => (
-                <div key={i} className="w-9 h-9 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm">
-                  {["🌸", "🌿", "✨", "🎨", "🌊", "🍀"][i]}
-                </div>
-              ))}
-              <div className="w-9 h-9 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[10px] text-muted-foreground">
-                +{event.spotsLeft}
+          {attendees.length > 0 && (
+            <div className="bg-card rounded-2xl p-4 shadow-soft">
+              <h3 className="font-serif text-lg font-medium text-foreground mb-3">Who's coming</h3>
+              <div className="space-y-3">
+                {attendees.map((a) => (
+                  <div key={a.user_id} className="flex items-center gap-3">
+                    {a.profile?.avatar_url ? (
+                      <img src={a.profile.avatar_url} alt={a.profile.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-medium flex-shrink-0">
+                        {a.profile?.name?.[0] ?? "?"}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{a.profile?.name ?? "Member"}</p>
+                      {a.profile?.bio && (
+                        <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{a.profile.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
           {bookingError && (
             <div className="bg-red-500/20 border border-red-400/40 rounded-xl px-4 py-3 text-xs text-red-200">
@@ -302,27 +315,37 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 // Paid event — use Stripe Payment Sheet
                 setIsProcessingPayment(true);
                 try {
-                  const fnRes = await fetch(
-                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                      },
-                      body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
-                    }
-                  );
+                  let fnRes: Response | null = null;
+                  try {
+                    fnRes = await fetch(
+                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
+                      {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                        },
+                        body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
+                      }
+                    );
+                  } catch {
+                    fnRes = null;
+                  }
+
+                  // Edge Function unavailable or Stripe not configured — book directly
+                  if (!fnRes || !fnRes.ok) {
+                    bookEvent(
+                      { eventId: selectedEvent },
+                      { onError: (e) => setBookingError(e.message) }
+                    );
+                    return;
+                  }
 
                   const data = await fnRes.json();
-                  if (!fnRes.ok) {
-                    throw new Error(data?.error ?? data?.warning ?? `HTTP ${fnRes.status}`);
-                  }
 
                   // Graceful degradation: Stripe not yet configured
                   if (data?.warning === 'Stripe not configured') {
-                    setBookingError("Payment setup coming soon — booking confirmed for now.");
                     bookEvent(
                       { eventId: selectedEvent },
                       { onError: (e) => setBookingError(e.message) }
