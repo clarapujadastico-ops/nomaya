@@ -25,7 +25,7 @@ import { resolveCircleImage } from "@/assets/circleImages";
 import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot } from "@/hooks/useCircleSpots";
 import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useCircles, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
+import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
@@ -1555,10 +1555,24 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
   const { data: profile } = useProfile();
   const isUnverified = profile?.verification_status !== 'verified';
 
+  const circleFromList = selectedId ? circles.find((c) => c.id === selectedId) : undefined;
+  const { data: circleById, isLoading: circleByIdLoading } = useCircleById(
+    selectedId && !circleFromList ? selectedId : null
+  );
+  const resolvedCircle = circleFromList ?? circleById;
+
   if (selectedId) {
-    const circle = circles.find((c) => c.id === selectedId);
-    if (!circle) return null;
-    return <CircleDetail circle={circle} onBack={() => setSelectedId(null)} />;
+    if (!resolvedCircle) {
+      if (circleByIdLoading || isLoading) {
+        return (
+          <div className="mobile-container flex items-center justify-center bg-background">
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          </div>
+        );
+      }
+      return null;
+    }
+    return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} />;
   }
 
   const myCircles = circles.filter((c) => c.isMember || c.isAdmin);

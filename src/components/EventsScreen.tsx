@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, ChevronDown, X, Shield, Bell, BellOff } from "lucide-react";
+import { Search, SlidersHorizontal, X, Shield, Bell, BellOff } from "lucide-react";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
@@ -54,9 +54,11 @@ const CAT_KEYS: Record<string, string> = {
 
 interface EventsScreenProps {
   onOpenCircle?: (id: string) => void;
+  onOpenMap?: () => void;
+  onSeeAllBookings?: () => void;
 }
 
-export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
+export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: EventsScreenProps = {}) {
   const { t } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
   const [activeFilter, setActiveFilter] = useState("All");
@@ -98,16 +100,19 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
   const categories = useMemo(() => {
-    const existing = new Set(events.map((e) => e.category).filter(Boolean));
+    const existing = new Set(upcomingEvents.map((e) => e.category).filter(Boolean));
     return ["All", ...ALLOWED_CATEGORIES.filter((c) => existing.has(c))];
-  }, [events]);
+  }, [upcomingEvents]);
 
-  const featured = events.filter((e) => e.featured);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingEvents = events.filter((e) => e.isTbc || new Date(e.rawDate) >= today);
+  const featured = upcomingEvents.filter((e) => e.featured);
 
   const filtered = useMemo(() => {
     let list = activeFilter === "All"
-      ? events
-      : events.filter((e) => e.category === activeFilter);
+      ? upcomingEvents
+      : upcomingEvents.filter((e) => e.category === activeFilter);
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -216,7 +221,16 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
               <div className="bg-card rounded-xl p-3.5 shadow-soft">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Location</p>
                 <p className="text-sm font-medium text-foreground mt-0.5">{event.city}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Register to see address</p>
+                {isBooked ? (
+                  <button
+                    onClick={() => onOpenMap?.()}
+                    className="text-xs text-primary font-medium mt-0.5"
+                  >
+                    See map →
+                  </button>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Register to see address</p>
+                )}
               </div>
             </div>
           )}
@@ -568,26 +582,37 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
         </div>
       ) : (
         <>
-          {/* Featured carousel */}
+          {/* Nomaya Only — single compact banner */}
           {activeFilter === "All" && !hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
-                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.featured")}</h2>
-                <button className="text-xs text-primary flex items-center gap-1">
-                  {t("events.see_all")} <ChevronDown size={12} className="rotate-[-90deg]" />
-                </button>
+                <h2 className="font-serif text-lg font-medium text-foreground">Nomaya Only</h2>
               </div>
-              <div className="flex gap-4 px-5 overflow-x-auto pb-2 scrollbar-hide">
-                {featured.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    variant="featured"
-                    locked={isUnverified}
-                    onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
-                  />
-                ))}
-              </div>
+              {(() => {
+                const ev = featured[0];
+                return (
+                  <button
+                    onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(ev.id)}
+                    className="mx-5 w-[calc(100%-2.5rem)] rounded-2xl overflow-hidden shadow-soft h-28 relative text-left"
+                  >
+                    {ev.image ? (
+                      <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full" style={{ background: ev.categoryColor }} />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+                    <div className="absolute inset-0 flex flex-col justify-center px-4 gap-1">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full self-start" style={{ background: "hsl(347 86% 77%)", color: "#fff" }}>
+                        {ev.category}
+                      </span>
+                      <p className="font-serif text-base font-medium text-white leading-snug">{ev.title}</p>
+                      {!ev.isTbc && (
+                        <p className="text-[11px] text-white/70">{ev.date}</p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })()}
             </div>
           )}
 
@@ -596,6 +621,9 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">My Events</h2>
+                <button onClick={() => onSeeAllBookings?.()} className="text-xs text-primary">
+                  See all →
+                </button>
               </div>
               <div className="flex gap-3 px-5 overflow-x-auto pb-2 scrollbar-hide">
                 {bookings.filter(b => b.status === 'confirmed' && b.event).map((booking) => {

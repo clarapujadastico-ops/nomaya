@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket, Globe, Users, CheckCircle2, MapPin, Lock, MessageCircle } from "lucide-react";
+import { Calendar, Ticket, Users, CheckCircle2, MapPin, MessageCircle, Star } from "lucide-react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
-import { useBookings, useBookEvent } from "@/hooks/useBookings";
+import { useBookings } from "@/hooks/useBookings";
 import { useMyCircleEvents } from "@/hooks/useCircleEvents";
 import { Logo } from "./Logo";
 import { useLang } from "@/contexts/LanguageContext";
@@ -15,6 +15,7 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
 const EVENT_ADDRESSES: Record<string, string> = {
   "Brunch + Painting Ceramics": "Terra · Calle de Juan Bravo, 29, Salamanca",
   "Jewelry & Wine Workshop": "Gran Vía, 69, Centro",
+  "Holistic Vinyasa + Light Brunch": "Casa Kavi · Madrid",
 };
 
 // Madrid neighbourhood coordinates for approximate (pre-booking) pins
@@ -58,18 +59,17 @@ function categoryColor(cat: string, fallback: string): string {
 
 const CIRCLE_EVENT_COLOR = "hsl(38, 82%, 62%)";
 
-type MapView = "all" | "reservations" | "circles";
+type MapView = "reservations" | "circles" | "lists";
 
 export function MapScreen() {
   const { t } = useLang();
   const [popupId, setPopupId] = useState<string | null>(null);
-  const [view, setView] = useState<MapView>("all");
+  const [view, setView] = useState<MapView>("reservations");
   const [selectedGroupEventId, setSelectedGroupEventId] = useState<string | null>(null);
 
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: circleEvents = [], isLoading: circleEventsLoading } = useMyCircleEvents();
-  const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
 
   const isLoading = eventsLoading || bookingsLoading || circleEventsLoading;
   const bookedIds = new Set(bookings.map((b) => b.event_id));
@@ -79,7 +79,6 @@ export function MapScreen() {
 
   // Events shown on map / list per view
   const officialEvents =
-    view === "all" ? confirmedEvents :
     view === "reservations" ? confirmedEvents.filter((e) => bookedIds.has(e.id)) :
     [];
   const visibleCircleEvents = view === "circles" ? circleEvents : [];
@@ -129,9 +128,9 @@ export function MapScreen() {
       {/* Three-way toggle */}
       <div className="flex gap-2 mx-5 mb-3 overflow-x-auto pb-0.5">
         {([
-          { key: "all",          icon: <Globe size={12} />,  label: t("map.all_events") },
-          { key: "reservations", icon: <Ticket size={12} />, label: t("map.my_events_tab") },
+          { key: "reservations", icon: <Ticket size={12} />, label: "My Reservations" },
           { key: "circles",      icon: <Users size={12} />,  label: "My Circles" },
+          { key: "lists",        icon: <Star size={12} />,   label: "Shared Lists" },
         ] as { key: MapView; icon: React.ReactNode; label: string }[]).map(({ key, icon, label }) => (
           <button
             key={key}
@@ -256,27 +255,11 @@ export function MapScreen() {
                         </div>
                       )}
 
-                      {/* All Events: booking CTA or reserved badge */}
-                      {view === "all" && (
-                        isBooked ? (
-                          <div className="flex items-center gap-1 text-xs text-green-600 font-medium pt-0.5">
-                            <CheckCircle2 size={11} /> Reserved
-                          </div>
-                        ) : (
-                          <div className="pt-1 space-y-1.5">
-                            <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                              <Lock size={9} /> Book to unlock exact location
-                            </div>
-                            <button
-                              onClick={() => bookEvent(selectedEvent.id)}
-                              disabled={isBooking}
-                              className="w-full py-1.5 rounded-lg text-xs font-medium text-white transition-opacity disabled:opacity-60"
-                              style={{ background: "hsl(252 30% 45%)" }}
-                            >
-                              {isBooking ? "Booking…" : "Book my spot"}
-                            </button>
-                          </div>
-                        )
+                      {/* Reserved badge */}
+                      {isBooked && (
+                        <div className="flex items-center gap-1 text-xs text-green-600 font-medium pt-0.5">
+                          <CheckCircle2 size={11} /> Reserved
+                        </div>
                       )}
                     </div>
                   </div>
@@ -323,11 +306,18 @@ export function MapScreen() {
       {/* List below map */}
       <div className="px-5 mt-5 pb-24">
         <h2 className="font-serif text-lg font-medium text-foreground mb-3">
-          {view === "all" ? t("map.all_events") : view === "reservations" ? t("map.my_reservations") : "My Circles"}
+          {view === "reservations" ? t("map.my_reservations") : view === "circles" ? "My Circles" : "Shared Lists"}
         </h2>
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
+        ) : view === "lists" ? (
+          <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+            <Star size={28} className="text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Coming soon — your circles' favourite spots, all in one place.
+            </p>
+          </div>
         ) : officialEvents.length === 0 && visibleCircleEvents.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
             {view === "circles"

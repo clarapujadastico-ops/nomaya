@@ -9,6 +9,7 @@ import { EventsScreen } from "@/components/EventsScreen";
 import { MapScreen } from "@/components/MapScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
+import { BookingsScreen } from "@/components/BookingsScreen";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 
 type Tab = "events" | "map" | "groups" | "profile";
@@ -26,6 +27,7 @@ function AppShell() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
+  const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Determine ONCE whether onboarding is needed.
   // We intentionally do NOT re-evaluate when profile updates mid-onboarding
@@ -67,11 +69,22 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="mobile-container relative overflow-hidden">
-        {activeTab === "events" && <EventsScreen onOpenCircle={handleOpenCircle} />}
+        {activeTab === "events" && (
+          <EventsScreen
+            onOpenCircle={handleOpenCircle}
+            onOpenMap={() => setActiveTab("map")}
+            onSeeAllBookings={() => setShowAllBookings(true)}
+          />
+        )}
         {activeTab === "map" && <MapScreen />}
         {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} />}
         {activeTab === "profile" && (
           <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
+        )}
+        {showAllBookings && (
+          <div className="absolute inset-0 z-50 bg-background overflow-y-auto">
+            <BookingsScreen onBack={() => setShowAllBookings(false)} />
+          </div>
         )}
         <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>

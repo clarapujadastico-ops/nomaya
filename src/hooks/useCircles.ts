@@ -298,6 +298,31 @@ export function useEnsureEventCircle() {
   })
 }
 
+// ─── Read: single circle by ID (works even for event circles) ─────────────────
+
+export function useCircleById(circleId: string | null) {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['circle', circleId],
+    queryFn: async (): Promise<AppCircle | null> => {
+      const { data } = await supabase
+        .from('circles_with_members')
+        .select('*')
+        .eq('id', circleId!)
+        .maybeSingle()
+      if (!data) return null
+      const { data: mem } = await supabase
+        .from('circle_memberships')
+        .select('role')
+        .eq('circle_id', circleId!)
+        .eq('user_id', user!.id)
+        .maybeSingle()
+      return toAppCircle(data, user!.id, (mem as any)?.role ?? null)
+    },
+    enabled: !!circleId && !!user,
+  })
+}
+
 // ─── Mutation: create a circle ────────────────────────────────────────────────
 
 export function useCreateCircle() {
