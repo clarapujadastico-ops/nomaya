@@ -22,7 +22,7 @@ function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null 
   return null;
 }
 import { resolveCircleImage } from "@/assets/circleImages";
-import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot } from "@/hooks/useCircleSpots";
+import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot, useDeleteCircleSpot } from "@/hooks/useCircleSpots";
 import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleCover } from "@/hooks/useCircles";
@@ -114,6 +114,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
   const [text, setText] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -134,15 +135,39 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
     setText("");
   }
 
-  async function handleImageSend() {
+  async function handleImageButton() {
     setIsUploadingImage(true);
-    const url = await uploadChatImage(circleId);
-    if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
-    setIsUploadingImage(false);
+    try {
+      const url = await uploadChatImage(circleId);
+      if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
+    } catch {
+      // Capacitor camera unavailable (simulator/web) — fall back to file input
+      fileInputRef.current?.click();
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    try {
+      const path = `circle-photos/${circleId}/${Date.now()}.${file.name.split(".").pop() ?? "jpg"}`;
+      const { error } = await supabase.storage.from("Events").upload(path, file, { upsert: false, contentType: file.type });
+      if (!error) {
+        const url = supabase.storage.from("Events").getPublicUrl(path).data.publicUrl;
+        send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
+      }
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
   }
 
   return (
     <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
       <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 320 }}>
         {isLoading && <p className="text-xs text-muted-foreground text-center">Loading…</p>}
         {!isLoading && messages.length === 0 && (
@@ -186,7 +211,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
       </div>
       <div className="border-t border-border p-3 flex items-center gap-2">
         <button
-          onClick={handleImageSend}
+          onClick={handleImageButton}
           disabled={isUploadingImage || isSending}
           className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center disabled:opacity-40 transition-all active:scale-95 flex-shrink-0"
         >
@@ -537,6 +562,12 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
   const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "spots" | "plans" | "events" | "requests">(initialTab ?? "about");
+
+  // Navigate to the right tab when navigated from outside (e.g. push notification, event "Open chat")
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
+
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
@@ -579,17 +610,17 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
       {/* Hero */}
       <div className="relative h-56">
         <img src={coverImage} alt={circle.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
         <button
           onClick={onBack}
-          className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+          className="absolute top-12 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white"
         >
           ←
         </button>
         {circle.isAdmin && (
           <button
             onClick={() => setShowEditCover(true)}
-            className="absolute top-12 right-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+            className="absolute top-12 right-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white"
           >
             <Camera size={16} />
           </button>
@@ -603,8 +634,8 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               {circle.category}
             </span>
           )}
-          <h2 className="font-serif text-2xl font-medium text-card">{circle.name}</h2>
-          <p className="text-xs text-card/70 mt-0.5">
+          <h2 className="font-serif text-2xl font-medium text-white drop-shadow-md">{circle.name}</h2>
+          <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">
             {circle.city} · {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
           </p>
         </div>
@@ -612,7 +643,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
       {/* Tabs */}
       <div className="flex border-b border-border mx-5 mt-4 gap-1 overflow-x-auto">
-        {(["about", "chat", ...(isMember ? ["spots", "plans", "events"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
+        {(["about", "chat", ...(isMember ? ["plans"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as "about" | "chat" | "spots" | "plan" | "events" | "requests")}
@@ -709,15 +740,8 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               </button>
             )}
           </>
-        ) : activeTab === "spots" ? (
-          <SpotsTab circleId={circle.id} isMember={isMember} isAdmin={circle.isAdmin} city={circle.city} />
         ) : activeTab === "plans" ? (
           <PlansTab circle={circle} isMember={isMember} />
-        ) : activeTab === "events" ? (
-          <EventsTab circle={circle} onCreateEvent={() => {
-          if (isUnverified) { setShowVerifyGate(true); return; }
-          setShowCreateEvent(true);
-        }} />
         ) : activeTab === "requests" ? (
           <div className="space-y-3">
             {pendingRequests.length === 0 ? (
@@ -937,10 +961,12 @@ function timeAgo(iso: string): string {
 }
 
 function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isMember: boolean; isAdmin: boolean; city: string }) {
+  const { user } = useAuth();
   const { data: spots = [], isLoading } = useCircleSpots(circleId);
   const { mutate: addSpot, isPending: isAdding } = useAddCircleSpot();
   const { mutate: voteSpot, isPending: isVoting } = useVoteCircleSpot();
   const { mutate: confirmSpot } = useConfirmCircleSpot();
+  const { mutate: deleteSpot } = useDeleteCircleSpot();
   const [showForm, setShowForm] = useState(false);
   const [activePopupId, setActivePopupId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -949,14 +975,50 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
   const [proposedDate, setProposedDate] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ mapbox_id: string; name: string; address: string }[]>([]);
+  const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [sessionToken] = useState(() => crypto.randomUUID());
 
-  // Auto-extract coordinates when Maps URL is entered
-  useEffect(() => {
-    if (mapsUrl) {
-      const coords = extractCoordsFromUrl(mapsUrl);
-      if (coords) { setLat(coords.lat.toString()); setLng(coords.lng.toString()); }
-    }
-  }, [mapsUrl]);
+  async function searchMapbox(query: string) {
+    if (!query.trim() || query.length < 2) { setSearchResults([]); return; }
+    try {
+      const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}&language=es,en&limit=6&proximity=-3.7038,40.4168`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setSearchResults((data.suggestions ?? []).map((s: any) => ({
+        mapbox_id: s.mapbox_id,
+        name: s.name,
+        address: s.full_address ?? s.place_formatted ?? "",
+      })));
+    } catch { setSearchResults([]); }
+  }
+
+  function handleSearchChange(val: string) {
+    setSearchQuery(val);
+    setName(val);
+    if (searchTimer) clearTimeout(searchTimer);
+    const timer = setTimeout(() => searchMapbox(val), 350);
+    setSearchTimer(timer);
+  }
+
+  async function selectSearchResult(r: { mapbox_id: string; name: string; address: string }) {
+    setSearchQuery(r.name);
+    setName(r.name);
+    setSearchResults([]);
+    try {
+      const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${r.mapbox_id}?access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const feature = data.features?.[0];
+      if (feature) {
+        const [rLng, rLat] = feature.geometry.coordinates;
+        setLat(rLat.toString());
+        setLng(rLng.toString());
+        setMapsUrl(`https://www.google.com/maps/search/?api=1&query=${rLat},${rLng}`);
+      }
+    } catch { /* silently fail — user can still add without coords */ }
+  }
 
   if (!isMember) {
     return (
@@ -979,7 +1041,7 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
         latitude: lat ? parseFloat(lat) : undefined,
         longitude: lng ? parseFloat(lng) : undefined,
       },
-      { onSuccess: () => { setName(""); setNote(""); setMapsUrl(""); setProposedDate(""); setLat(""); setLng(""); setShowForm(false); } }
+      { onSuccess: () => { setName(""); setNote(""); setMapsUrl(""); setProposedDate(""); setLat(""); setLng(""); setSearchQuery(""); setSearchResults([]); setShowForm(false); } }
     );
   }
 
@@ -1008,13 +1070,13 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
                 onClick={(e) => { e.stopPropagation(); setActivePopupId(spot.id === activePopupId ? null : spot.id); }}
                 className="transition-transform active:scale-110"
               >
-                <div className={`w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center ${spot.is_confirmed ? "bg-primary" : "bg-foreground/80"}`}>
+                <div className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center" style={{ background: spot.is_confirmed ? "hsl(252 75% 70%)" : "hsl(252 45% 52%)" }}>
                   <MapPin size={14} className="text-white" />
                 </div>
                 <div className="w-0 h-0 mx-auto" style={{
                   borderLeft: "5px solid transparent",
                   borderRight: "5px solid transparent",
-                  borderTop: `7px solid ${spot.is_confirmed ? "hsl(252 75% 80%)" : "hsl(252 30% 35%)"}`,
+                  borderTop: `7px solid ${spot.is_confirmed ? "hsl(252 75% 70%)" : "hsl(252 45% 52%)"}`,
                 }} />
               </button>
             </Marker>
@@ -1060,7 +1122,7 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
               <p className="text-xs text-foreground flex-1 leading-snug">
                 <span className="font-semibold">{spot.added_by_profile?.name ?? "Someone"}</span>
                 {" "}added{" "}
-                <span className="font-medium" style={{ color: "hsl(252 75% 70%)" }}>{spot.name}</span>
+                <span className="font-semibold text-white">{spot.name}</span>
               </p>
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo(spot.created_at)}</span>
             </div>
@@ -1108,14 +1170,24 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => voteSpot({ spotId: spot.id, circleId, voted: spot.user_voted })}
-                  disabled={isVoting}
-                  className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 flex-shrink-0 ${spot.user_voted ? "bg-primary/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                >
-                  <Heart size={15} fill={spot.user_voted ? "currentColor" : "none"} />
-                  <span className="text-[10px] leading-none">{spot.vote_count}</span>
-                </button>
+                <div className="flex flex-col gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => voteSpot({ spotId: spot.id, circleId, voted: spot.user_voted })}
+                    disabled={isVoting}
+                    className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 ${spot.user_voted ? "bg-primary/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                  >
+                    <Heart size={15} fill={spot.user_voted ? "currentColor" : "none"} />
+                    <span className="text-[10px] leading-none">{spot.vote_count}</span>
+                  </button>
+                  {(spot.added_by === user?.id || isAdmin) && (
+                    <button
+                      onClick={() => deleteSpot({ spotId: spot.id, circleId })}
+                      className="flex items-center justify-center px-2.5 py-2 rounded-xl bg-muted text-muted-foreground active:scale-95 transition-all"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Footer actions */}
@@ -1163,17 +1235,36 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <div>
-              <h2 className="font-serif text-xl font-medium text-foreground">Add a spot</h2>
-              <p className="text-xs text-muted-foreground mt-1">Suggest a venue for the circle to discover and vote on.</p>
+              <h2 className="font-serif text-xl font-medium text-foreground">Add your favourite spots</h2>
+              <p className="text-xs text-muted-foreground mt-1">Search for a venue to pin it on the shared map.</p>
             </div>
             <div className="space-y-3">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Venue name"
-                maxLength={80}
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
+              {/* Mapbox venue search */}
+              <div className="relative">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Search for a venue (e.g. Asana Groove)"
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                {searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 bg-card rounded-xl shadow-floating mt-1 overflow-hidden border border-border">
+                    {searchResults.map((r) => (
+                      <button
+                        key={r.mapbox_id}
+                        onClick={() => selectSearchResult(r)}
+                        className="w-full text-left px-4 py-2.5 border-b border-border last:border-0 transition-colors active:bg-muted"
+                      >
+                        <p className="text-sm font-medium text-foreground leading-snug">{r.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{r.address}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {lat && lng && (
+                  <p className="text-[10px] text-primary-foreground px-1 mt-1">📍 Pinned on map</p>
+                )}
+              </div>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -1182,20 +1273,6 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
                 maxLength={200}
                 className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
               />
-              <div className="space-y-1">
-                <input
-                  value={mapsUrl}
-                  onChange={(e) => setMapsUrl(e.target.value)}
-                  placeholder="Google Maps link (optional)"
-                  type="url"
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                />
-                {lat && lng ? (
-                  <p className="text-[10px] text-primary-foreground px-1">📍 Coordinates detected — will appear on map</p>
-                ) : mapsUrl ? (
-                  <p className="text-[10px] text-muted-foreground px-1">Tip: use a link with coordinates (e.g. from "Share → Copy link" in Google Maps)</p>
-                ) : null}
-              </div>
               <input
                 type="date"
                 value={proposedDate}
@@ -1217,121 +1294,365 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
   );
 }
 
-// ─── Plans tab ────────────────────────────────────────────────────────────────
+// ─── Plans tab (includes circle favourite spots) ───────────────────────────────
 
 function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }) {
-  const { mutate: create, isPending } = useCreateCircleEvent();
-  const { data: events = [], isLoading } = useCircleEvents(circle.id);
-  const [showForm, setShowForm] = useState(false);
+  const { user } = useAuth();
+  const { mutate: create, isPending: isCreating } = useCreateCircleEvent();
+  const { mutate: addSpot, isPending: isAddingSpot } = useAddCircleSpot();
+  const { mutate: voteSpot } = useVoteCircleSpot();
+  const { mutate: deleteSpot } = useDeleteCircleSpot();
+  const { data: events = [], isLoading: eventsLoading } = useCircleEvents(circle.id);
+  const { data: spots = [], isLoading: spotsLoading } = useCircleSpots(circle.id);
+
+  // Plan form
+  const [showPlanForm, setShowPlanForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
-  const [location, setLocation] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [locationResults, setLocationResults] = useState<{ mapbox_id: string; name: string; address: string }[]>([]);
+  const [locationTimer, setLocationTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number; mapsUrl: string } | null>(null);
+  const [planSession] = useState(() => crypto.randomUUID());
+
+  // Spot form
+  const [showSpotForm, setShowSpotForm] = useState(false);
+  const [spotQuery, setSpotQuery] = useState("");
+  const [spotResults, setSpotResults] = useState<{ mapbox_id: string; name: string; address: string }[]>([]);
+  const [spotTimer, setSpotTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [spotCoords, setSpotCoords] = useState<{ lat: number; lng: number; mapsUrl: string } | null>(null);
+  const [spotNote, setSpotNote] = useState("");
+  const [spotSession] = useState(() => crypto.randomUUID());
+
+  // Map & list interaction
+  const [activePopupId, setActivePopupId] = useState<string | null>(null);
+  const [expandedSpotId, setExpandedSpotId] = useState<string | null>(null);
+
+  async function searchVenue(query: string, setResults: typeof setLocationResults, token: string) {
+    if (!query.trim() || query.length < 2) { setResults([]); return; }
+    try {
+      const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_TOKEN}&session_token=${token}&language=es,en&limit=5&proximity=-3.7038,40.4168`;
+      const data = await fetch(url).then(r => r.json());
+      setResults((data.suggestions ?? []).map((s: any) => ({ mapbox_id: s.mapbox_id, name: s.name, address: s.full_address ?? s.place_formatted ?? "" })));
+    } catch { setResults([]); }
+  }
+
+  async function retrieveVenue(mapbox_id: string, token: string): Promise<{ lat: number; lng: number; mapsUrl: string } | null> {
+    try {
+      const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapbox_id}?access_token=${MAPBOX_TOKEN}&session_token=${token}`;
+      const data = await fetch(url).then(r => r.json());
+      const f = data.features?.[0];
+      if (!f) return null;
+      const [lng, lat] = f.geometry.coordinates;
+      return { lat, lng, mapsUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` };
+    } catch { return null; }
+  }
 
   if (!isMember) {
     return (
       <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
         <Lock size={24} className="text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Join the circle to propose plans</p>
+        <p className="text-sm text-muted-foreground">Join the circle to see plans and propose gatherings</p>
       </div>
     );
   }
 
-  function handleSubmit() {
-    if (!title.trim()) return;
-    create(
-      { circle_id: circle.id, title: title.trim(), description: description.trim() || undefined, date: date || new Date().toISOString(), location: location.trim() || undefined, status: 'pending' },
-      { onSuccess: () => { setTitle(""); setDescription(""); setDate(""); setLocation(""); setShowForm(false); } }
-    );
-  }
+  const mappedSpots = spots.filter(s => s.latitude != null && s.longitude != null);
+  const [centerLng, centerLat] = cityCenter(circle.city);
 
   return (
-    <div className="space-y-3 relative pb-16">
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-4">Loading plans…</p>
-      ) : events.length === 0 ? (
-        <div className="bg-card rounded-2xl p-6 shadow-soft text-center space-y-1">
-          <Sparkles size={28} className="text-muted-foreground/50 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No plans yet. Propose a gathering for the circle!</p>
+    <div className="space-y-5 pb-8">
+
+      {/* ── Upcoming plans ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Upcoming plans</p>
+          <button
+            onClick={() => setShowPlanForm(true)}
+            className="flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full"
+          >
+            <Plus size={12} /> New plan
+          </button>
         </div>
-      ) : (
-        events.map((plan) => (
-          <div key={plan.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-foreground leading-snug">{plan.title}</p>
-              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${plan.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {plan.status === 'approved' ? 'Confirmed' : 'Proposed'}
-              </span>
-            </div>
-            {plan.location && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <MapPin size={11} /> {plan.location}
-              </div>
-            )}
-            {plan.date && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <CalendarDays size={11} /> {new Date(plan.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-              </div>
-            )}
-            {plan.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{plan.description}</p>
-            )}
+        {eventsLoading ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Loading…</p>
+        ) : events.length === 0 ? (
+          <div className="bg-card rounded-2xl p-5 shadow-soft text-center space-y-1">
+            <Sparkles size={24} className="text-muted-foreground/50 mx-auto mb-1" />
+            <p className="text-sm text-muted-foreground">No plans yet — propose the first gathering!</p>
           </div>
-        ))
-      )}
+        ) : (
+          <div className="space-y-2.5">
+            {events.map((plan) => (
+              <div key={plan.id} className="bg-card rounded-2xl p-4 shadow-soft space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-foreground leading-snug">{plan.title}</p>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${plan.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {plan.status === 'approved' ? 'Confirmed' : 'Proposed'}
+                  </span>
+                </div>
+                {plan.location && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin size={11} /> {plan.location}
+                  </div>
+                )}
+                {plan.date && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <CalendarDays size={11} /> {new Date(plan.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </div>
+                )}
+                {plan.description && (
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{plan.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      <button
-        onClick={() => setShowForm(true)}
-        className="fixed bottom-28 right-5 w-14 h-14 rounded-full shadow-floating flex items-center justify-center z-10 transition-transform active:scale-95 gradient-cta"
-        aria-label="Propose a plan"
-      >
-        <Plus size={26} className="text-white" />
-      </button>
+      {/* ── Circle favourite spots ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">⭐ Circle favourite spots</p>
+          <button
+            onClick={() => setShowSpotForm(true)}
+            className="flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full"
+          >
+            <Plus size={12} /> Add spot
+          </button>
+        </div>
 
-      {showForm && (
+        {spotsLoading ? (
+          <p className="text-sm text-muted-foreground text-center py-2">Loading…</p>
+        ) : spots.length === 0 ? (
+          <div className="bg-card rounded-2xl p-4 shadow-soft text-center">
+            <p className="text-xs text-muted-foreground">Add favourite venues — they'll appear on the map</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Map with clickable pins */}
+            <div className="rounded-2xl overflow-hidden shadow-soft" style={{ height: 210 }}>
+              <Map
+                mapboxAccessToken={MAPBOX_TOKEN}
+                initialViewState={{ longitude: centerLng, latitude: centerLat, zoom: 12.5 }}
+                style={{ width: "100%", height: "100%" }}
+                mapStyle="mapbox://styles/mapbox/streets-v12"
+                onClick={() => setActivePopupId(null)}
+              >
+                {mappedSpots.map((spot) => (
+                  <Marker key={spot.id} longitude={spot.longitude!} latitude={spot.latitude!} anchor="bottom">
+                    <button onClick={(e) => { e.stopPropagation(); setActivePopupId(spot.id === activePopupId ? null : spot.id); }}
+                      className="flex flex-col items-center transition-transform active:scale-110"
+                      style={{ transform: activePopupId === spot.id ? "scale(1.2)" : "scale(1)" }}>
+                      <div className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center"
+                        style={{ background: spot.is_confirmed ? "hsl(252 75% 70%)" : "hsl(252 45% 52%)" }}>
+                        <MapPin size={14} className="text-white" />
+                      </div>
+                      <div className="w-0 h-0" style={{
+                        borderLeft: "5px solid transparent", borderRight: "5px solid transparent",
+                        borderTop: `7px solid ${spot.is_confirmed ? "hsl(252 75% 70%)" : "hsl(252 45% 52%)"}`,
+                      }} />
+                    </button>
+                  </Marker>
+                ))}
+                {activePopupId && (() => {
+                  const s = mappedSpots.find(x => x.id === activePopupId);
+                  if (!s) return null;
+                  return (
+                    <Popup longitude={s.longitude!} latitude={s.latitude!} anchor="bottom" offset={44}
+                      closeButton={false} closeOnClick={false} style={{ padding: 0 }}>
+                      <div className="bg-white rounded-xl p-2.5 shadow-floating" style={{ minWidth: 150, maxWidth: 200 }}>
+                        <p className="text-xs font-semibold text-gray-800 leading-snug">{s.name}</p>
+                        {s.note && <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">{s.note}</p>}
+                        <p className="text-[10px] text-gray-400 mt-1">by {s.added_by_profile?.name ?? "a member"} · 💜 {s.vote_count}</p>
+                        {s.google_maps_url && (
+                          <a href={s.google_maps_url} target="_blank" rel="noopener noreferrer"
+                            className="mt-1.5 flex items-center gap-1 text-[10px] text-blue-500 font-medium">
+                            <ExternalLink size={9} /> Open in Maps
+                          </a>
+                        )}
+                      </div>
+                    </Popup>
+                  );
+                })()}
+              </Map>
+            </div>
+
+            {/* Spot cards — tappable to expand */}
+            <div className="space-y-2">
+              {spots.map((spot) => {
+                const isExpanded = expandedSpotId === spot.id;
+                const pinColor = spot.is_confirmed ? "hsl(252 75% 70%)" : "hsl(252 45% 52%)";
+                return (
+                  <div key={spot.id} className="bg-card rounded-2xl shadow-soft overflow-hidden">
+                    {/* Main row */}
+                    <button
+                      onClick={() => setExpandedSpotId(isExpanded ? null : spot.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                    >
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: pinColor }}>
+                        <MapPin size={14} className="text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground leading-snug truncate">{spot.name}</p>
+                        {spot.note && !isExpanded && (
+                          <p className="text-xs text-muted-foreground truncate">{spot.note}</p>
+                        )}
+                      </div>
+                      {/* Vote */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); voteSpot({ spotId: spot.id, circleId: circle.id, voted: spot.user_voted }); }}
+                        className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 flex-shrink-0 ${spot.user_voted ? "bg-primary/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                      >
+                        <Heart size={14} fill={spot.user_voted ? "currentColor" : "none"} />
+                        <span className="text-[10px] leading-none">{spot.vote_count}</span>
+                      </button>
+                    </button>
+
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div className="px-4 pb-3 space-y-2 border-t border-border pt-2">
+                        {spot.note && <p className="text-xs text-muted-foreground leading-relaxed">{spot.note}</p>}
+                        <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                          <span>Added by <span className="font-medium text-foreground">{spot.added_by_profile?.name ?? "a member"}</span></span>
+                          {spot.proposed_date && (
+                            <span className="flex items-center gap-1">
+                              <CalendarDays size={10} />
+                              {new Date(spot.proposed_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2 pt-0.5">
+                          {spot.google_maps_url && (
+                            <a href={spot.google_maps_url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted text-xs font-medium text-primary-foreground">
+                              <ExternalLink size={11} /> Open in Maps
+                            </a>
+                          )}
+                          {(spot.added_by === user?.id || circle.isAdmin) && (
+                            <button
+                              onClick={() => deleteSpot({ spotId: spot.id, circleId: circle.id })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted text-xs font-medium text-muted-foreground"
+                            >
+                              <X size={11} /> Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Propose a plan sheet ── */}
+      {showPlanForm && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+          <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowPlanForm(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "85vh", paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <div>
               <h2 className="font-serif text-xl font-medium text-foreground">Propose a plan</h2>
-              <p className="text-xs text-muted-foreground mt-1">Share an idea for a gathering. The admin will confirm.</p>
+              <p className="text-xs text-muted-foreground mt-1">Share a gathering idea. The admin will confirm.</p>
             </div>
             <div className="space-y-3">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Plan title (e.g. Sunday brunch at La Musa)"
-                maxLength={80}
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
-              <input
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none"
-              />
-              <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Location (optional)"
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tell us more… (optional)"
-                rows={2}
-                maxLength={300}
-                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
-              />
+              <input value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title (e.g. Sunday brunch at La Musa)" maxLength={80}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" />
+              <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none" />
+              <div className="relative">
+                <input value={locationQuery}
+                  onChange={(e) => { setLocationQuery(e.target.value); setLocationCoords(null); if (locationTimer) clearTimeout(locationTimer); setLocationTimer(setTimeout(() => searchVenue(e.target.value, setLocationResults, planSession), 350)); }}
+                  placeholder="📍 Search location (optional)"
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" />
+                {locationResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 bg-card rounded-xl shadow-floating mt-1 overflow-hidden border border-border">
+                    {locationResults.map((r) => (
+                      <button key={r.mapbox_id} onClick={async () => { setLocationQuery(r.name); setLocationResults([]); const c = await retrieveVenue(r.mapbox_id, planSession); setLocationCoords(c); }}
+                        className="w-full text-left px-4 py-2.5 border-b border-border last:border-0 active:bg-muted">
+                        <p className="text-sm font-medium text-foreground leading-snug">{r.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{r.address}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {locationCoords && <p className="text-[10px] text-primary-foreground px-1 mt-1">📍 Will be saved to circle spots</p>}
+              </div>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tell us more… (optional)" rows={2} maxLength={300}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none" />
             </div>
             <button
-              onClick={handleSubmit}
-              disabled={!title.trim() || isPending}
+              onClick={() => {
+                if (!title.trim()) return;
+                create(
+                  { circle_id: circle.id, title: title.trim(), description: description.trim() || undefined, date: date || new Date().toISOString(), location: locationQuery.trim() || undefined, status: 'pending' },
+                  { onSuccess: () => {
+                    if (locationQuery.trim() && locationCoords) addSpot({ circle_id: circle.id, name: locationQuery.trim(), google_maps_url: locationCoords.mapsUrl, latitude: locationCoords.lat, longitude: locationCoords.lng });
+                    setTitle(""); setDescription(""); setDate(""); setLocationQuery(""); setLocationCoords(null); setShowPlanForm(false);
+                  }}
+                );
+              }}
+              disabled={!title.trim() || isCreating}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              {isPending ? "Proposing…" : "Propose plan"}
+              {isCreating ? "Proposing…" : "Propose plan"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add a spot sheet ── */}
+      {showSpotForm && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowSpotForm(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <div>
+              <h2 className="font-serif text-xl font-medium text-foreground">Add your favourite spots</h2>
+              <p className="text-xs text-muted-foreground mt-1">Search for a venue to pin it on the circle's map.</p>
+            </div>
+            <div className="space-y-3">
+              <div className="relative">
+                <input value={spotQuery}
+                  onChange={(e) => { setSpotQuery(e.target.value); setSpotCoords(null); if (spotTimer) clearTimeout(spotTimer); setSpotTimer(setTimeout(() => searchVenue(e.target.value, setSpotResults, spotSession), 350)); }}
+                  placeholder="Search for a venue (e.g. Asana Groove)"
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" />
+                {spotResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 bg-card rounded-xl shadow-floating mt-1 overflow-hidden border border-border">
+                    {spotResults.map((r) => (
+                      <button key={r.mapbox_id} onClick={async () => { setSpotQuery(r.name); setSpotResults([]); const c = await retrieveVenue(r.mapbox_id, spotSession); setSpotCoords(c); }}
+                        className="w-full text-left px-4 py-2.5 border-b border-border last:border-0 active:bg-muted">
+                        <p className="text-sm font-medium text-foreground leading-snug">{r.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{r.address}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {spotCoords && <p className="text-[10px] text-primary-foreground px-1 mt-1">📍 Pinned on map</p>}
+              </div>
+              <textarea value={spotNote} onChange={(e) => setSpotNote(e.target.value)}
+                placeholder="Note (e.g. great terrace, 20 min from Sol…)" rows={2} maxLength={200}
+                className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none" />
+            </div>
+            <button
+              onClick={() => {
+                if (!spotQuery.trim()) return;
+                addSpot(
+                  { circle_id: circle.id, name: spotQuery.trim(), note: spotNote.trim() || undefined, google_maps_url: spotCoords?.mapsUrl, latitude: spotCoords?.lat, longitude: spotCoords?.lng },
+                  { onSuccess: () => { setSpotQuery(""); setSpotNote(""); setSpotCoords(null); setShowSpotForm(false); }}
+                );
+              }}
+              disabled={!spotQuery.trim() || isAddingSpot}
+              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {isAddingSpot ? "Adding…" : "Add to circle"}
             </button>
           </div>
         </div>

@@ -2,15 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
-/** Returns total interest count for an event */
+/** Returns total interest count for an event — counts confirmed bookings */
 export function useEventInterestCount(eventId: string) {
   return useQuery({
     queryKey: ["event_interest_count", eventId],
     queryFn: async () => {
       const { count } = await supabase
-        .from("event_interest")
+        .from("bookings")
         .select("*", { count: "exact", head: true })
-        .eq("event_id", eventId);
+        .eq("event_id", eventId)
+        .eq("status", "confirmed");
       return count ?? 0;
     },
     enabled: !!eventId,

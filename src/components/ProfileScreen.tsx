@@ -2,8 +2,7 @@ import { useState, useRef } from "react";
 import {
   ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
-  HelpCircle, Sparkles, FileText, ArrowLeft, CreditCard, Settings, LogOut,
-  Copy,
+  HelpCircle, Sparkles, FileText, ArrowLeft, Settings, LogOut,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
@@ -84,9 +83,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showNotificationsSheet, setShowNotificationsSheet] = useState(false);
   const [showSubscriptionSheet, setShowSubscriptionSheet] = useState(false);
-  const [showCreditsSheet, setShowCreditsSheet] = useState(false);
-  const [showReferralSheet, setShowReferralSheet] = useState(false);
-  const [referralCopied, setReferralCopied] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [supportMessages, setSupportMessages] = useState<Array<{ role: 'user' | 'bot'; content: string }>>([
@@ -128,30 +124,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const memberId = profile?.id
     ? `NM-MAD-${String(parseInt(profile.id.replace(/-/g, '').substring(0, 6), 16) % 9000 + 1000).padStart(4, '0')}`
     : 'NM-MAD-????';
-
-  const referralCode = profile?.id
-    ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
-    : '........';
-
-  function copyReferralCode() {
-    navigator.clipboard?.writeText(referralCode);
-    setReferralCopied(true);
-    setTimeout(() => setReferralCopied(false), 2000);
-  }
-
-  function shareReferral() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
-    if (navigator.share) {
-      navigator.share({ title: 'Join Nomaya', text }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(text);
-    }
-  }
-
-  function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  }
 
   async function handleAvatarUpload() {
     if (!profile?.id) return;
@@ -254,7 +226,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         title: "Plan and credits",
         items: [
           { icon: Sparkles, label: "Subscription", value: ritualBadge?.label ?? "Member", onPress: () => setShowSubscriptionSheet(true) },
-          { icon: CreditCard, label: "Credits", value: `€${((profile?.credits_cents ?? 0) / 100).toFixed(2)}`, onPress: () => setShowCreditsSheet(true) },
         ],
       },
       {
@@ -876,62 +847,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
-      {/* ── Host Pathway ── */}
-      {(() => {
-        const eventsAttended = bookings.length;
-        // referrals not tracked yet, show 0; rating not tracked, show placeholder
-        const steps = [
-          { label: "8 events attended", done: eventsAttended >= 8, value: `${Math.min(eventsAttended, 8)}/8` },
-          { label: "2 referrals made", done: false, value: "0/2" },
-          { label: "4.8+ rating", done: false, value: "—" },
-          { label: "Host onboarding", done: false, value: "Pending" },
-        ];
-        const doneCount = steps.filter((s) => s.done).length;
-        return (
-          <div className="mx-5 mt-5 bg-card rounded-2xl p-5 shadow-card">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Host Pathway</p>
-              <span className="text-[10px] text-muted-foreground">{doneCount}/4 complete</span>
-            </div>
-            <h3 className="font-serif text-base font-medium text-foreground mb-3">Become a Nomaya Host</h3>
-            <div className="w-full h-1.5 bg-muted rounded-full mb-4 overflow-hidden">
-              <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / 4) * 100}%`, background: "hsl(var(--primary-foreground))" }} />
-            </div>
-            <div className="space-y-2.5">
-              {steps.map(({ label, done, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${done ? "border-primary bg-primary" : "border-border"}`}>
-                      {done && <Check size={10} className="text-primary-foreground" />}
-                    </div>
-                    <span className={`text-sm ${done ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── Referral banner ── */}
-      <button
-        onClick={() => setShowReferralSheet(true)}
-        className="mx-5 mt-5 rounded-2xl overflow-hidden shadow-card active:scale-[0.98] transition-all duration-200 w-[calc(100%-2.5rem)]"
-        style={{ background: "hsl(252 30% 40%)" }}
-      >
-        <div className="px-5 py-4 flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Grow the circle</p>
-            <p className="font-serif text-white text-base leading-snug">Invite a woman you'd love<br />to see at your table.</p>
-            <p className="text-xs text-white/60 mt-1.5">10€ credit · 15% off for her →</p>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ml-3 flex-shrink-0">
-            <span className="text-2xl">🎁</span>
-          </div>
-        </div>
-      </button>
-
       {/* ── Sign out ── */}
       <div className="px-5 mt-6 mb-2">
         <button
@@ -1105,150 +1020,75 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         );
       })()}
 
-      {/* Credits sheet */}
-      {showCreditsSheet && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCreditsSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-            <h2 className="font-serif text-xl font-medium text-foreground">Your Credits</h2>
-            <div className="bg-muted rounded-2xl p-5 text-center space-y-1">
-              <p className="font-mono text-4xl font-bold text-foreground">€{((profile?.credits_cents ?? 0) / 100).toFixed(2)}</p>
-              <p className="text-sm text-muted-foreground">available balance</p>
-            </div>
-            <div className="bg-muted rounded-2xl p-4 space-y-3">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">How to earn credits</p>
-              {[
-                { icon: "🎟️", label: "Attend an event", value: "+4 credits" },
-                { icon: "🎁", label: "Refer a friend", value: "+10 credits" },
-                { icon: "⭐", label: "Leave a review", value: "+2 credits" },
-              ].map(({ icon, label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{icon}</span>
-                    <span className="text-sm text-foreground">{label}</span>
-                  </div>
-                  <span className="text-sm font-medium text-primary">{value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="bg-muted rounded-2xl p-4">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">How to use credits</p>
-              <p className="text-sm text-foreground">Credits are applied automatically at checkout on your next event booking.</p>
-            </div>
-            <button
-              onClick={() => { setShowCreditsSheet(false); setShowReferralSheet(true); }}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm"
-            >
-              Earn credits — Grow the circle
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Referral sheet */}
-      {showReferralSheet && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReferralSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
-            <div className="w-10 h-1 bg-border rounded-full mx-auto" />
-            <div className="pt-1 space-y-4">
-              <h2 className="font-serif text-2xl font-normal text-foreground leading-snug">
-                Invite a woman you'd love to see at your table.
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">She receives</p>
-                  <div className="space-y-1.5">
-                    {["15% off her first event", "Early access"].map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }} />
-                        <span className="text-sm text-foreground">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">You receive</p>
-                  <div className="space-y-1.5">
-                    {["10€ Nomaya credit once she attends", "+1 Circle Point"].map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }} />
-                        <span className="text-sm text-foreground">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground italic">Growing the circle has its privileges.</p>
-            </div>
-
-            {/* Referral code */}
-            <div className="bg-muted rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Your referral code</p>
-              <div className="flex items-center justify-between">
-                <p className="font-mono text-2xl font-bold text-foreground tracking-wider">{referralCode}</p>
-                <button
-                  onClick={copyReferralCode}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm font-medium transition-all active:scale-95"
-                  style={{ color: referralCopied ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
-                >
-                  {referralCopied ? <Check size={14} /> : <Copy size={14} />}
-                  {referralCopied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-            </div>
-
-            {/* WhatsApp */}
-            <button
-              onClick={shareOnWhatsApp}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-sm flex items-center justify-center gap-2"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="white" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              Share on WhatsApp
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Member card modal */}
       {showMemberCard && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
-            <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("member_card.your_card")}</h2>
-            <div className="rounded-2xl overflow-hidden shadow-card mb-5" style={{ background: "#5f5095" }}>
-              <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
-                <Logo className="h-20 w-auto mx-auto object-contain opacity-95" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
+          <div className="relative w-full max-w-sm space-y-4">
+            {/* The card */}
+            <div
+              className="rounded-3xl overflow-hidden shadow-2xl"
+              style={{ background: "linear-gradient(135deg, hsl(252 45% 38%) 0%, hsl(252 55% 28%) 60%, hsl(270 40% 22%) 100%)" }}
+            >
+              {/* Top strip */}
+              <div className="px-7 pt-7 pb-5 flex items-start justify-between">
+                <Logo className="h-10 w-auto object-contain opacity-90" />
+                <div className="text-right">
+                  <p className="text-[9px] tracking-[0.2em] uppercase text-white/50 mb-0.5">Level</p>
+                  <p className="text-sm font-medium text-white leading-tight">
+                    {ritualBadge ? `${ritualBadge.icon} ${ritualBadge.label}` : "🌸 Founding Circle"}
+                  </p>
+                </div>
               </div>
-              <div className="px-6 py-5 space-y-4">
-                <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
-                  <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
+
+              {/* Avatar + name */}
+              <div className="px-7 pb-6 flex items-center gap-4">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} className="w-16 h-16 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center flex-shrink-0 text-2xl"
+                    style={{ background: "hsl(252 40% 55%)" }}>
+                    {profile?.name?.[0] ?? "N"}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-serif text-2xl text-white leading-tight truncate">{profile?.name || "Member"}</p>
+                  <p className="text-xs text-white/60 mt-0.5">{profile?.city || "Madrid"} · Since {memberSince}</p>
                 </div>
+              </div>
+
+              {/* Bottom strip */}
+              <div className="px-7 py-4 flex items-center justify-between" style={{ background: "rgba(0,0,0,0.25)" }}>
                 <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
-                  <p className="font-serif text-lg text-white">{profile?.name || "Member"}</p>
+                  <p className="text-[9px] tracking-[0.2em] uppercase text-white/40 mb-0.5">Member ID</p>
+                  <p className="font-mono text-sm font-semibold text-white tracking-widest">{memberId}</p>
                 </div>
-                <div className="pt-1 border-t border-white/10">
-                  <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
+                <div className="flex gap-1">
+                  <div className="w-8 h-8 rounded-full opacity-60" style={{ background: "hsl(252 60% 70%)" }} />
+                  <div className="w-8 h-8 rounded-full -ml-3 opacity-40" style={{ background: "hsl(280 50% 75%)" }} />
                 </div>
               </div>
             </div>
-            <p className="text-center text-xs text-muted-foreground mb-4">{t("member_card.wallet_soon")}</p>
-            <button
-              onClick={() => {
-                const text = `Nomaya Member — ${profile?.name || "Member"}\n${ritualBadge ? ritualBadge.label : "Member"}\nMember since ${memberSince}\nnomaya.app`;
-                if (navigator.share) { navigator.share({ title: "Nomaya Member Card", text }); }
-                else { navigator.clipboard?.writeText(text); }
-              }}
-              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
-            >
-              {t("member_card.share")}
-            </button>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowMemberCard(false)}
+                className="flex-1 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white text-sm font-medium backdrop-blur-sm"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  const text = `Nomaya Member — ${profile?.name || "Member"}\n${ritualBadge ? ritualBadge.label : "Member"}\nMember since ${memberSince}\nnomaya.app`;
+                  if (navigator.share) { navigator.share({ title: "Nomaya Member Card", text }); }
+                  else { navigator.clipboard?.writeText(text); }
+                }}
+                className="flex-1 py-3.5 rounded-2xl gradient-cta text-white text-sm font-medium"
+              >
+                {t("member_card.share")}
+              </button>
+            </div>
           </div>
         </div>
       )}

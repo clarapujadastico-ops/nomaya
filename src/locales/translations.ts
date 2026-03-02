@@ -4,7 +4,8 @@ type TranslationMap = Record<string, Record<Lang, string>>;
 export const translations: TranslationMap = {
   // Navigation
   "nav.events":    { en: "Events",  es: "Eventos" },
-  "nav.map":       { en: "Map",     es: "Mapa" },
+  "nav.community": { en: "Community", es: "Comunidad" },
+  "nav.rewards":   { en: "Rewards",   es: "Premios" },
   "nav.circles":   { en: "Circles", es: "Círculos" },
   "nav.profile":   { en: "Profile", es: "Perfil" },
 

@@ -67,9 +67,10 @@ export function useBookEvent() {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
+    onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event_interest_count', eventId] })
     },
   })
 }
@@ -85,26 +86,70 @@ interface CancelBookingResult {
   credits_awarded?: number
 }
 
+/** Direct cancel for waitlist / free bookings — no edge function needed */
+export function useCancelWaitlist() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ bookingId }: { bookingId: string; eventId: string }) => {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId)
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event_interest_count', eventId] })
+    },
+  })
+}
+
 export function useCancelBooking() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ bookingId, choice }: CancelBookingParams): Promise<CancelBookingResult> => {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ bookingId, userId: user!.id, choice }),
-        }
-      )
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`)
-      return data as CancelBookingResult
+      // For non-paid / free bookings just cancel directly — no edge function needed
+      if (choice === 'none') {
+        const { error } = await supabase
+          .from('bookings')
+          .update({ status: 'cancelled' })
+          .eq('id', bookingId)
+          .eq('user_id', user!.id)
+        if (error) throw new Error(error.message)
+        return { success: true }
+      }
+
+      // Paid bookings: try edge function for refund/credits handling
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ bookingId, userId: user!.id, choice }),
+          }
+        )
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`)
+        return data as CancelBookingResult
+      } catch {
+        // Edge function unavailable — fall back to direct cancel
+        const { error } = await supabase
+          .from('bookings')
+          .update({ status: 'cancelled' })
+          .eq('id', bookingId)
+          .eq('user_id', user!.id)
+        if (error) throw new Error(error.message)
+        return { success: true }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })

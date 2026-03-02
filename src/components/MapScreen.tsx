@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
-import { Calendar, Ticket, Users, CheckCircle2, MapPin, MessageCircle, Star } from "lucide-react";
+import { Calendar, Ticket, Users, CheckCircle2, MapPin, MessageCircle, Star, Share2, ExternalLink } from "lucide-react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
 import { useMyCircleEvents } from "@/hooks/useCircleEvents";
+import { useMyCircleSpots } from "@/hooks/useCircleSpots";
 import { Logo } from "./Logo";
 import { useLang } from "@/contexts/LanguageContext";
 import { EventGroupScreen } from "./EventGroupScreen";
@@ -66,8 +67,10 @@ export function MapScreen() {
   const { data: allEvents = [], isLoading: eventsLoading } = useEvents();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: circleEvents = [], isLoading: circleEventsLoading } = useMyCircleEvents();
+  const { data: circleSpots = [], isLoading: spotsLoading } = useMyCircleSpots();
+  const [spotsPopupId, setSpotsPopupId] = useState<string | null>(null);
 
-  const isLoading = eventsLoading || bookingsLoading || circleEventsLoading;
+  const isLoading = eventsLoading || bookingsLoading || circleEventsLoading || spotsLoading;
   const bookedIds = new Set(bookings.map((b) => b.event_id));
 
   // "All Events" — only confirmed (non-TBC) events
@@ -154,7 +157,7 @@ export function MapScreen() {
             initialViewState={{ longitude: -3.7038, latitude: 40.4168, zoom: 12.5 }}
             style={{ width: "100%", height: "100%" }}
             mapStyle="mapbox://styles/mapbox/streets-v12"
-            onClick={() => setPopupId(null)}
+            onClick={() => { setPopupId(null); setSpotsPopupId(null); }}
           >
             <NavigationControl position="bottom-right" showCompass={false} />
 
@@ -263,6 +266,60 @@ export function MapScreen() {
               );
             })()}
 
+            {/* Circle spots markers */}
+            {view === "lists" && circleSpots.filter(s => s.latitude != null && s.longitude != null).map((spot) => {
+              const isSelected = spotsPopupId === spot.id;
+              return (
+                <Marker key={`sp-${spot.id}`} longitude={spot.longitude!} latitude={spot.latitude!} anchor="bottom">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSpotsPopupId(spot.id === spotsPopupId ? null : spot.id); }}
+                    className="transition-transform duration-200"
+                    style={{ transform: isSelected ? "scale(1.25)" : "scale(1)" }}
+                  >
+                    <div className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center bg-primary">
+                      <Star size={14} className="text-white" />
+                    </div>
+                    <div className="w-0 h-0 mx-auto" style={{
+                      borderLeft: "5px solid transparent",
+                      borderRight: "5px solid transparent",
+                      borderTop: "7px solid hsl(252 75% 80%)",
+                    }} />
+                  </button>
+                </Marker>
+              );
+            })}
+
+            {/* Circle spot popup */}
+            {view === "lists" && spotsPopupId && (() => {
+              const spot = circleSpots.find(s => s.id === spotsPopupId);
+              if (!spot || spot.latitude == null || spot.longitude == null) return null;
+              return (
+                <Popup
+                  longitude={spot.longitude} latitude={spot.latitude}
+                  anchor="bottom" offset={48}
+                  closeButton={false} closeOnClick={false}
+                  style={{ padding: 0 }}
+                >
+                  <div className="bg-white rounded-xl overflow-hidden shadow-floating" style={{ width: 190 }}>
+                    <div className="p-2.5 space-y-1">
+                      <span className="text-[10px] font-medium text-gray-400">{spot.circle_name}</span>
+                      <p className="text-sm font-serif font-medium text-gray-800 leading-snug">{spot.name}</p>
+                      {spot.note && <p className="text-xs text-gray-500">{spot.note}</p>}
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="text-[10px] text-gray-400">💜 {spot.vote_count}</span>
+                        {spot.google_maps_url && (
+                          <a href={spot.google_maps_url} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] text-blue-500 font-medium flex items-center gap-0.5">
+                            <ExternalLink size={9} /> Maps
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              );
+            })()}
+
             {/* Circle event popup */}
             {selectedCircleEvent && (() => {
               const [lng, lat] = approxCoords(selectedCircleEvent.id);
@@ -308,12 +365,67 @@ export function MapScreen() {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
         ) : view === "lists" ? (
-          <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
-            <Star size={28} className="text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Coming soon — your circles' favourite spots, all in one place.
-            </p>
-          </div>
+          circleSpots.length === 0 ? (
+            <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+              <Star size={28} className="text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                No spots yet — add your favourite venues in the Circles tab!
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Export button */}
+              <button
+                onClick={async () => {
+                  const text = circleSpots.map(s =>
+                    `${s.name}${s.note ? ` — ${s.note}` : ""}${s.google_maps_url ? `\n${s.google_maps_url}` : ""}`
+                  ).join("\n\n");
+                  if (navigator.share) {
+                    await navigator.share({ title: "Nomaya Spots", text });
+                  } else {
+                    await navigator.clipboard.writeText(text);
+                    alert("Spots copied to clipboard!");
+                  }
+                }}
+                className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-medium text-foreground shadow-soft mb-3"
+              >
+                <Share2 size={14} className="text-primary-foreground" />
+                Export to Google Maps
+              </button>
+
+              <div className="space-y-2.5">
+                {circleSpots.map((spot) => (
+                  <button
+                    key={spot.id}
+                    onClick={() => setSpotsPopupId(spot.id === spotsPopupId ? null : spot.id)}
+                    className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl bg-card border transition-all text-left shadow-soft ${
+                      spotsPopupId === spot.id ? "border-primary" : "border-border"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <MapPin size={14} className="text-primary-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-snug">{spot.name}</p>
+                      <p className="text-xs text-muted-foreground">{spot.circle_name}</p>
+                      {spot.note && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{spot.note}</p>}
+                    </div>
+                    {spot.google_maps_url && (
+                      <a
+                        href={spot.google_maps_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center w-8 h-8 rounded-xl bg-card border border-border flex-shrink-0 mt-0.5"
+                      >
+                        <ExternalLink size={13} className="text-primary-foreground" />
+                      </a>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )
         ) : officialEvents.length === 0 && visibleCircleEvents.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
             {view === "circles"

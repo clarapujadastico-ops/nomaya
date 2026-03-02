@@ -72,7 +72,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
 
     const statusBadge =
       event.spotsLeft === 0
-        ? "Sold out"
+        ? "Fully booked"
         : event.isTbc
         ? null   // handled separately below
         : null;
@@ -80,7 +80,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
     const subtext = event.isTbc
       ? interestCount > 0 ? `${interestCount} interested` : "Notify me"
       : event.spotsLeft === 0
-      ? "Waitlist"
+      ? "Fully booked"
       : isAlmostFull
       ? `${event.spotsLeft} spots left`
       : `${event.spotsLeft} spots`;

@@ -1,18 +1,262 @@
-import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, X, Shield, Bell, BellOff } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star } from "lucide-react";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
 import { useEvents } from "@/hooks/useEvents";
-import { useBookings, useBookEvent, useCancelBooking } from "@/hooks/useBookings";
+import { useBookings, useBookEvent, useCancelBooking, useCancelWaitlist } from "@/hooks/useBookings";
 import { useProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
 import { useEnsureEventCircle } from "@/hooks/useCircles";
+import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
+import { resolveEventImage } from "@/assets/eventImages";
+import { useMyRatingsForEvent, useRateAttendee } from "@/hooks/useAttendeeRatings";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { AppEvent } from "@/types/database";
 import { useEventAttendees } from "@/hooks/useEventAttendees";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
+import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
+
+const IMG_PREFIX = "__img__:";
+
+async function uploadEventPhoto(circleId: string, file: File): Promise<string | null> {
+  try {
+    const path = `circle-photos/${circleId}/${Date.now()}.${file.name.split(".").pop() ?? "jpg"}`;
+    const { error } = await supabase.storage.from("Events").upload(path, file, { upsert: false, contentType: file.type });
+    if (error) throw error;
+    return supabase.storage.from("Events").getPublicUrl(path).data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
+function EventChatSheet({ circleId, event, onClose }: { circleId: string; event: AppEvent; onClose: () => void }) {
+  const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const { data: messages = [], isLoading } = useCircleMessages(circleId);
+  const { mutate: send, isPending: isSending } = useSendMessage();
+  const { data: attendees = [] } = useEventAttendees(event.id);
+  const { data: myRatings = {} } = useMyRatingsForEvent(event.id);
+  const { mutate: rateAttendee } = useRateAttendee();
+  const [tab, setTab] = useState<"photos" | "chat" | "rate">("chat");
+  const [text, setText] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (tab === "chat") bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, tab]);
+
+  function handleSend() {
+    if (!text.trim()) return;
+    send({ circleId, content: text.trim(), senderName: profile?.name ?? undefined });
+    setText("");
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    const url = await uploadEventPhoto(circleId, file);
+    if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
+    setIsUploading(false);
+    e.target.value = "";
+  }
+
+  const photos = messages.filter(m => m.content.startsWith(IMG_PREFIX));
+  const chatMessages = messages.filter(m => !m.content.startsWith(IMG_PREFIX));
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-background flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-12 pb-3">
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-card">
+          <ArrowLeft size={18} className="text-foreground" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="font-serif text-base font-medium text-foreground truncate">{event.title}</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex-shrink-0 flex border-b border-border mx-5">
+        {(["photos", "chat", "rate"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+              tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
+            }`}
+          >
+            {t === "photos" && <ImageIcon size={14} />}
+            {t === "chat" && <Send size={13} />}
+            {t === "rate" && <Star size={14} />}
+            {t === "photos" ? "Photos" : t === "chat" ? "Chat" : "Rate"}
+          </button>
+        ))}
+      </div>
+
+      {/* Photos tab */}
+      {tab === "photos" && (
+        <>
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">Loading…</p>}
+            {!isLoading && photos.length === 0 && (
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <ImageIcon size={36} className="text-muted-foreground opacity-40" />
+                <p className="text-sm font-medium text-foreground">No photos yet</p>
+                <p className="text-xs text-muted-foreground max-w-[200px]">Be the first to share a moment from this event.</p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              {photos.map((msg) => (
+                <div key={msg.id} className="relative rounded-2xl overflow-hidden aspect-square">
+                  <img
+                    src={msg.content.replace(IMG_PREFIX, "")}
+                    alt="event photo"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent px-2 py-1.5">
+                    <p className="text-[10px] text-white/90">{msg.sender?.name ?? "Attendee"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex-shrink-0 border-t border-border px-4 py-3 pb-8 bg-background">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full py-3 rounded-2xl bg-card flex items-center justify-center gap-2 text-sm font-medium text-foreground active:scale-[0.98] transition-all disabled:opacity-50"
+            >
+              {isUploading
+                ? <div className="w-4 h-4 rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
+                : <ImageIcon size={16} className="text-muted-foreground" />}
+              {isUploading ? "Uploading…" : "Share your memories"}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Chat tab */}
+      {tab === "chat" && (
+        <>
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">Loading…</p>}
+            {!isLoading && chatMessages.length === 0 && (
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <p className="text-sm font-medium text-foreground">No messages yet</p>
+                <p className="text-xs text-muted-foreground">Say hello to your fellow attendees 👋</p>
+              </div>
+            )}
+            {chatMessages.map((msg) => {
+              const isOwn = msg.user_id === user?.id;
+              const time = new Date(msg.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+              return (
+                <div key={msg.id} className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
+                  {msg.sender?.avatar_url ? (
+                    <img src={msg.sender.avatar_url} className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+                      {msg.sender?.name?.[0] ?? "?"}
+                    </div>
+                  )}
+                  <div className={`max-w-[75%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
+                    {!isOwn && <p className="text-[10px] text-muted-foreground mb-0.5 px-1">{msg.sender?.name ?? "Attendee"}</p>}
+                    <div className={`px-3 py-2 rounded-2xl text-sm leading-snug ${isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-card text-foreground rounded-tl-sm"}`}>
+                      {msg.content}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 px-1">{time}</p>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+          <div className="flex-shrink-0 border-t border-border px-4 py-3 pb-8 flex items-center gap-2 bg-background">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              placeholder="Say something…"
+              className="flex-1 bg-card rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!text.trim() || isSending}
+              className="w-10 h-10 rounded-xl flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all flex-shrink-0"
+              style={{ background: "hsl(38 82% 62%)" }}
+            >
+              <Send size={16} className="text-white" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Rate tab */}
+      {tab === "rate" && (
+        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+          <div className="bg-card rounded-2xl px-4 py-3">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Ratings help build trust in the community. A score of <span className="text-foreground font-medium">4.8+</span> is required to become a Nomaya host.
+            </p>
+          </div>
+          {attendees.filter((a) => a.user_id !== user?.id).length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <Star size={32} className="text-muted-foreground opacity-40" />
+              <p className="text-sm text-muted-foreground">No other attendees to rate yet.</p>
+            </div>
+          )}
+          {attendees
+            .filter((a) => a.user_id !== user?.id)
+            .map((attendee) => {
+              const current = myRatings[attendee.user_id] ?? 0;
+              return (
+                <div key={attendee.user_id} className="flex items-center gap-3 bg-card rounded-2xl px-4 py-3">
+                  {attendee.profile?.avatar_url ? (
+                    <img src={attendee.profile.avatar_url} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-medium flex-shrink-0">
+                      {attendee.profile?.name?.[0] ?? "?"}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{attendee.profile?.name ?? "Attendee"}</p>
+                    <div className="flex gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => rateAttendee({ eventId: event.id, ratedId: attendee.user_id, rating: star })}
+                          className="active:scale-90 transition-transform"
+                        >
+                          <Star
+                            size={20}
+                            className={star <= current ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground"}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {current > 0 && (
+                    <span className="text-xs text-muted-foreground flex-shrink-0">Rated</span>
+                  )}
+                </div>
+              );
+            })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function fmtDate(dateStr: string): string {
   const [, month, day] = dateStr.split("-");
@@ -111,14 +355,17 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const isUnverified = false; // TODO: re-enable when verification flow is ready
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [eventChat, setEventChat] = useState<{ circleId: string; event: AppEvent } | null>(null);
 
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [showMapSheet, setShowMapSheet] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showCancelSheet, setShowCancelSheet] = useState(false);
   const [cancelChoice, setCancelChoice] = useState<'refund' | 'credits'>('credits');
   const [cancelOutcome, setCancelOutcome] = useState<string | null>(null);
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
+  const { mutate: cancelWaitlist, isPending: isCancellingWaitlist } = useCancelWaitlist();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
 
@@ -129,6 +376,19 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       Stripe.initialize({ publishableKey });
     }
   }, []);
+
+  // Reset cancel/map state whenever the user opens a different event
+  useEffect(() => {
+    setCancelOutcome(null);
+    setShowCancelSheet(false);
+    setBookingError(null);
+    setShowMapSheet(false);
+  }, [selectedEvent]);
+
+  // Clear stale "cancelled" message if the user re-books the same event
+  useEffect(() => {
+    if (isBooked && cancelOutcome) setCancelOutcome(null);
+  }, [isBooked]);
 
   // Interest / notify-me (for TBC events)
   const { isInterested, toggle: toggleInterest, isPending: isTogglingInterest } = useEventInterest(selectedEvent ?? "");
@@ -245,10 +505,12 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               {/* Interest count card */}
               <div className="rounded-2xl p-5 text-center space-y-1 shadow-soft" style={{ background: "hsl(252 30% 40%)" }}>
                 <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2">Women interested</p>
-                <p className="font-serif text-5xl font-medium text-white">{interestCount}</p>
+                {interestCount > 0 && (
+                  <p className="font-serif text-5xl font-medium text-white">{interestCount}</p>
+                )}
                 <p className="text-xs text-white/60 mt-1">
                   {interestCount === 0
-                    ? "Be the first to register interest"
+                    ? "Be the first to register interest ✨"
                     : interestCount === 1
                     ? "1 woman wants to know when this opens"
                     : `${interestCount} women want to know when this opens`}
@@ -277,7 +539,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 <p className="text-sm font-medium text-foreground mt-0.5">{event.city}</p>
                 {isBooked ? (
                   <button
-                    onClick={() => onOpenMap?.()}
+                    onClick={() => setShowMapSheet(true)}
                     className="text-xs text-primary font-medium mt-0.5"
                   >
                     See map →
@@ -294,14 +556,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <p className="text-sm text-muted-foreground leading-relaxed">
               {event.description || `A carefully curated gathering for women who share a love of ${event.category.toLowerCase()}. Small group of max ${event.totalSpots} participants. Come as you are. Leave feeling connected.`}
             </p>
-            {isBooked && (
-              <button
-                onClick={() => onOpenMap?.()}
-                className="flex items-center gap-1.5 mt-3 text-sm text-primary font-medium"
-              >
-                📍 See map — view exact address
-              </button>
-            )}
           </div>
 
           {attendees.length > 0 && (
@@ -460,12 +714,24 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           )}
 
           {isBooked && !cancelOutcome && (
-            <button
-              onClick={() => { setCancelOutcome(null); setShowCancelSheet(true); }}
-              className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98]"
-            >
-              {t("events.cancel_reservation")}
-            </button>
+            event.isTbc ? (
+              <button
+                onClick={() => booking && cancelWaitlist({ bookingId: booking.id, eventId: selectedEvent! }, {
+                  onSuccess: () => setCancelOutcome("✓ Removed from waitlist"),
+                })}
+                disabled={isCancellingWaitlist}
+                className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                {isCancellingWaitlist ? "Leaving…" : "Leave waitlist"}
+              </button>
+            ) : (
+              <button
+                onClick={() => { setCancelOutcome(null); setShowCancelSheet(true); }}
+                className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98]"
+              >
+                {t("events.cancel_reservation")}
+              </button>
+            )
           )}
         </div>
       </div>
@@ -586,6 +852,101 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         );
       })()}
 
+      {/* ── Map sheet ──────────────────────────────────────────────────────── */}
+      {showMapSheet && (() => {
+        const token = import.meta.env.VITE_MAPBOX_TOKEN;
+        const lat = event.latitude ?? 40.4168;
+        const lng = event.longitude ?? -3.7038;
+        const hasExact = event.latitude != null && event.longitude != null;
+        const mapsUrl = `maps://?ll=${lat},${lng}&q=${encodeURIComponent(hasExact ? event.title : event.city)}`;
+
+        function addToCalendar() {
+          const date = event.rawDate ?? "";
+          const time = (event.time ?? "00:00").replace(":", "");
+          const dtStart = date ? `${date.replace(/-/g, "")}T${time}00` : "";
+          const dtEnd = dtStart ? `${date.replace(/-/g, "")}T${String(parseInt(time.slice(0, 2)) + 2).padStart(2, "0")}${time.slice(2)}00` : "";
+          const ics = [
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Nomaya//EN",
+            "BEGIN:VEVENT",
+            dtStart ? `DTSTART:${dtStart}` : "",
+            dtEnd ? `DTEND:${dtEnd}` : "",
+            `SUMMARY:${event.title}`,
+            `LOCATION:${event.city}`,
+            `DESCRIPTION:${(event.description ?? "").replace(/\n/g, "\\n")}`,
+            "END:VEVENT", "END:VCALENDAR",
+          ].filter(Boolean).join("\r\n");
+          const a = document.createElement("a");
+          a.href = `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
+          a.download = "nomaya-event.ics";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        return (
+          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMapSheet(false)} />
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-1" />
+              <div style={{ height: 240 }}>
+                {token ? (
+                  <Map
+                    mapboxAccessToken={token}
+                    initialViewState={{ longitude: lng, latitude: lat, zoom: 14 }}
+                    style={{ width: "100%", height: "100%" }}
+                    mapStyle="mapbox://styles/mapbox/dark-v11"
+                  >
+                    <NavigationControl position="bottom-right" showCompass={false} />
+                    <Marker longitude={lng} latitude={lat} anchor="bottom">
+                      <div>
+                        <div
+                          className="w-9 h-9 rounded-full border-2 border-white shadow-floating flex items-center justify-center"
+                          style={{ background: "hsl(252 50% 65%)" }}
+                        >
+                          <span className="text-white text-xs">📍</span>
+                        </div>
+                        <div className="w-0 h-0 mx-auto" style={{
+                          borderLeft: "5px solid transparent",
+                          borderRight: "5px solid transparent",
+                          borderTop: "7px solid hsl(252 50% 65%)",
+                        }} />
+                      </div>
+                    </Marker>
+                  </Map>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                    <p className="text-sm text-muted-foreground">📍 {event.city}</p>
+                  </div>
+                )}
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-0.5">Location</p>
+                  <p className="text-sm font-medium text-foreground">{event.city}</p>
+                  {!hasExact && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Exact address shared after booking confirmation</p>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => window.open(mapsUrl, "_blank")}
+                    className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium"
+                  >
+                    📍 Open in Maps
+                  </button>
+                  <button
+                    onClick={addToCalendar}
+                    className="flex-1 py-3 rounded-2xl bg-muted border border-border text-foreground text-sm font-medium"
+                  >
+                    📅 Add to Calendar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
 </>
     );
   }
@@ -645,7 +1006,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {/* View tabs */}
       <div className="flex gap-2 px-5 mb-3">
         {([
-          { id: "suggested", label: "✦ Suggested" },
+          { id: "suggested", label: "Suggested" },
           { id: "all",       label: "All events" },
           { id: "week",      label: "This week" },
         ] as const).map((tab) => (
@@ -740,13 +1101,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       disabled={isOpeningChat}
                       onClick={async () => {
                         const circleId = await ensureEventCircle({ eventId: booking.event_id, eventTitle: ev.title });
-                        onOpenCircle?.(circleId, 'chat');
+                        setEventChat({ circleId, event: ev });
                       }}
                       className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform disabled:opacity-60"
                     >
                       <div className="h-24 relative">
-                        {ev.image_url ? (
-                          <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
+                        {resolveEventImage(ev.title, ev.image_url ?? "") ? (
+                          <img src={resolveEventImage(ev.title, ev.image_url ?? "")} alt={ev.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full" style={{ background: ev.category?.color ?? "hsl(252 30% 45%)" }} />
                         )}
@@ -767,35 +1128,52 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           )}
 
           {/* All events — 2-column grid */}
-          <div className="px-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-serif text-lg font-medium text-foreground">
-                {view === "suggested" ? "Suggested for you" : view === "week" ? "This week" : activeFilter === "All" ? t("events.upcoming") : activeFilter}
-              </h2>
-              {hasFilters && (
-                <button
-                  onClick={() => setAppliedFilters(defaultFilters)}
-                  className="flex items-center gap-1 text-xs text-primary"
-                >
-                  <X size={12} /> {t("events.clear")}
-                </button>
+          {view === "suggested" && !hasFilters && !searchQuery ? (
+            <>
+              <div className="px-5 mb-6">
+                <h2 className="font-serif text-lg font-medium text-foreground mb-3">Suggested for you</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {filtered.slice(0, 4).map((event) => (
+                    <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
+                      onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
+                  ))}
+                </div>
+              </div>
+              {filtered.length > 4 && (
+                <div className="px-5">
+                  <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.upcoming")}</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {filtered.slice(4).map((event) => (
+                      <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
+                        onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
+                    ))}
+                  </div>
+                </div>
               )}
+            </>
+          ) : (
+            <div className="px-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-serif text-lg font-medium text-foreground">
+                  {view === "week" ? "This week" : activeFilter === "All" ? t("events.upcoming") : activeFilter}
+                </h2>
+                {hasFilters && (
+                  <button onClick={() => setAppliedFilters(defaultFilters)} className="flex items-center gap-1 text-xs text-primary">
+                    <X size={12} /> {t("events.clear")}
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {filtered.map((event) => (
+                  <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
+                    onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
+                ))}
+                {filtered.length === 0 && (
+                  <p className="col-span-2 text-sm text-muted-foreground text-center py-8">{t("events.no_results")}</p>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {filtered.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  variant="grid"
-                  locked={isUnverified}
-                  onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
-                />
-              ))}
-              {filtered.length === 0 && (
-                <p className="col-span-2 text-sm text-muted-foreground text-center py-8">{t("events.no_results")}</p>
-              )}
-            </div>
-          </div>
+          )}
         </>
       )}
 
@@ -941,6 +1319,15 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </button>
           </div>
         </div>
+      )}
+
+      {/* Event photo-sharing sheet */}
+      {eventChat && (
+        <EventChatSheet
+          circleId={eventChat.circleId}
+          event={eventChat.event}
+          onClose={() => setEventChat(null)}
+        />
       )}
     </div>
   );

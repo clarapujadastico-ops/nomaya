@@ -6,13 +6,14 @@ import { AuthScreen } from "@/components/AuthScreen";
 import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { BottomNav } from "@/components/BottomNav";
 import { EventsScreen } from "@/components/EventsScreen";
-import { MapScreen } from "@/components/MapScreen";
+import { GrowScreen } from "@/components/GrowScreen";
+import { RewardsScreen } from "@/components/RewardsScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { BookingsScreen } from "@/components/BookingsScreen";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 
-type Tab = "events" | "map" | "groups" | "profile";
+type Tab = "events" | "community" | "groups" | "rewards" | "profile";
 
 function LoadingScreen() {
   return (
@@ -74,11 +75,11 @@ function AppShell() {
         {activeTab === "events" && (
           <EventsScreen
             onOpenCircle={handleOpenCircle}
-            onOpenMap={() => setActiveTab("map")}
             onSeeAllBookings={() => setShowAllBookings(true)}
           />
         )}
-        {activeTab === "map" && <MapScreen />}
+        {activeTab === "community" && <GrowScreen />}
+        {activeTab === "rewards" && <RewardsScreen />}
         {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
         {activeTab === "profile" && (
           <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />

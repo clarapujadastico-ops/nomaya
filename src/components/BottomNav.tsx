@@ -1,7 +1,7 @@
-import { Calendar, Map, Users, User } from "lucide-react";
+import { Calendar, Sparkles, Users, User } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 
-type Tab = "events" | "map" | "groups" | "profile";
+type Tab = "events" | "community" | "groups" | "profile";
 
 interface BottomNavProps {
   active: Tab;
@@ -9,10 +9,10 @@ interface BottomNavProps {
 }
 
 const tabs: { id: Tab; labelKey: string; icon: typeof Calendar }[] = [
-  { id: "events",  labelKey: "nav.events",  icon: Calendar },
-  { id: "map",     labelKey: "nav.map",     icon: Map },
-  { id: "groups",  labelKey: "nav.circles", icon: Users },
-  { id: "profile", labelKey: "nav.profile", icon: User },
+  { id: "events",    labelKey: "nav.events",    icon: Calendar },
+  { id: "community", labelKey: "nav.community", icon: Sparkles },
+  { id: "groups",    labelKey: "nav.circles",   icon: Users },
+  { id: "profile",   labelKey: "nav.profile",   icon: User },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
@@ -29,7 +29,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`flex flex-col items-center gap-0.5 py-3 px-4 relative transition-all duration-200 border-t-2 ${
+            className={`flex flex-col items-center gap-0.5 py-3 px-2 relative transition-all duration-200 border-t-2 ${
               isActive ? "border-primary" : "border-transparent"
             }`}
           >
