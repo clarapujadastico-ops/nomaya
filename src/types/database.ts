@@ -184,7 +184,6 @@ export interface Database {
           cover_url: string | null
           city: string
           is_private: boolean
-          event_policy: 'open' | 'review'
           event_id: string | null
           created_by: string
           created_at: string
@@ -197,7 +196,6 @@ export interface Database {
           cover_url?: string | null
           city?: string
           is_private?: boolean
-          event_policy?: 'open' | 'review'
           event_id?: string | null
           created_by: string
           created_at?: string
@@ -210,7 +208,6 @@ export interface Database {
           cover_url?: string | null
           city?: string
           is_private?: boolean
-          event_policy?: 'open' | 'review'
           event_id?: string | null
           created_by?: string
           created_at?: string
@@ -337,7 +334,6 @@ export interface Database {
           cover_url: string | null
           city: string
           is_private: boolean
-          event_policy: string | null
           event_id: string | null
           created_by: string
           created_at: string
@@ -394,7 +390,6 @@ export interface AppCircle {
   categoryColor: string
   isMember: boolean
   isAdmin: boolean
-  eventPolicy: 'open' | 'review'
 }
 
 /** Membership row with nested circle data */
@@ -428,7 +423,6 @@ export function toAppCircle(row: CircleRow, userId: string, membershipRole: 'adm
     categoryColor: row.category_color ?? 'hsl(252 30% 45%)',
     isMember: membershipRole !== null,
     isAdmin: membershipRole === 'admin',
-    eventPolicy: (row.event_policy as 'open' | 'review') ?? 'review',
   }
 }
 

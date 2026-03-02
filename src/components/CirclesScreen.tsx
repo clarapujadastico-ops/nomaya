@@ -25,7 +25,7 @@ import { resolveCircleImage } from "@/assets/circleImages";
 import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSpot } from "@/hooks/useCircleSpots";
 import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleEventPolicy, useUpdateCircleCover } from "@/hooks/useCircles";
+import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
@@ -235,14 +235,6 @@ function EventsTab({ circle, onCreateEvent }: { circle: AppCircle; onCreateEvent
   return (
     <div className="space-y-3 relative pb-16">
       {/* Info banner for members in review-mode circles */}
-      {!circle.isAdmin && circle.eventPolicy === 'review' && (
-        <div className="flex items-start gap-2 bg-card rounded-2xl p-3 shadow-soft">
-          <Info size={14} className="text-muted-foreground flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Event proposals are reviewed by the admin before they appear to all members.
-          </p>
-        </div>
-      )}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground text-center py-4">Loading events…</p>
@@ -369,9 +361,9 @@ function EventsTab({ circle, onCreateEvent }: { circle: AppCircle; onCreateEvent
 // ─── Create circle event sheet ────────────────────────────────────────────────
 
 function CreateCircleEventSheet({
-  circleId, isAdmin, eventPolicy, onClose,
+  circleId, isAdmin, onClose,
 }: {
-  circleId: string; isAdmin: boolean; eventPolicy: 'open' | 'review'; onClose: () => void;
+  circleId: string; isAdmin: boolean; onClose: () => void;
 }) {
   const { mutate: create, isPending } = useCreateCircleEvent();
   const [title, setTitle] = useState("");
@@ -380,11 +372,11 @@ function CreateCircleEventSheet({
   const [location, setLocation] = useState("");
   const [maxSpots, setMaxSpots] = useState("");
 
-  const willBePending = !isAdmin && eventPolicy === 'review';
+  const willBePending = false;
 
   function handleSubmit() {
     if (!title.trim() || !date) return;
-    const status = isAdmin || eventPolicy === 'open' ? 'approved' : 'pending';
+    const status = 'approved';
     create(
       {
         circle_id: circleId,
@@ -542,7 +534,6 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
   const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
   const { mutate: respond } = useRespondToJoinRequest();
-  const { mutate: updatePolicy } = useUpdateCircleEventPolicy();
   const { data: myRequests = [] } = useMyJoinRequests();
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
@@ -678,28 +669,6 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               </div>
             </div>
 
-            {/* Admin: event submission policy toggle */}
-            {circle.isAdmin && (
-              <div className="bg-card rounded-2xl p-4 shadow-soft">
-                <h3 className="font-serif text-base font-medium text-foreground mb-3">Event settings</h3>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">Members can propose events</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {circle.eventPolicy === 'open'
-                        ? "Events post directly without approval"
-                        : "Events require your approval first"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => updatePolicy({ circleId: circle.id, policy: circle.eventPolicy === 'open' ? 'review' : 'open' })}
-                    className={`w-11 h-6 rounded-full transition-colors flex-shrink-0 relative ${circle.eventPolicy === 'open' ? "bg-primary" : "bg-border"}`}
-                  >
-                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${circle.eventPolicy === 'open' ? "left-6" : "left-1"}`} />
-                  </button>
-                </div>
-              </div>
-            )}
 
             {circle.isPrivate && (
               <div className="bg-card rounded-2xl p-4 shadow-soft flex items-start gap-3">
@@ -806,7 +775,6 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
         <CreateCircleEventSheet
           circleId={circle.id}
           isAdmin={circle.isAdmin}
-          eventPolicy={circle.eventPolicy}
           onClose={() => setShowCreateEvent(false)}
         />
       )}
