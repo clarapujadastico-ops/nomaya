@@ -97,17 +97,17 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { isInterested, toggle: toggleInterest, isPending: isTogglingInterest } = useEventInterest(selectedEvent ?? "");
   const { data: interestCount = 0 } = useEventInterestCount(selectedEvent ?? "");
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingEvents = events.filter((e) => e.isTbc || new Date(e.rawDate) >= today);
+  const featured = upcomingEvents.filter((e) => e.featured);
+
   // Fixed category order — only show if events exist in that category
   const ALLOWED_CATEGORIES = ["Arts & Crafts", "Food & Dining", "Fitness", "Wellness"];
   const categories = useMemo(() => {
     const existing = new Set(upcomingEvents.map((e) => e.category).filter(Boolean));
     return ["All", ...ALLOWED_CATEGORIES.filter((c) => existing.has(c))];
   }, [upcomingEvents]);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const upcomingEvents = events.filter((e) => e.isTbc || new Date(e.rawDate) >= today);
-  const featured = upcomingEvents.filter((e) => e.featured);
 
   const filtered = useMemo(() => {
     let list = activeFilter === "All"
