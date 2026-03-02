@@ -254,7 +254,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         title: "Plan and credits",
         items: [
           { icon: Sparkles, label: "Subscription", value: ritualBadge?.label ?? "Member", onPress: () => setShowSubscriptionSheet(true) },
-          { icon: CreditCard, label: "Credits", value: `${bookings.length * 4} credits`, onPress: () => setShowCreditsSheet(true) },
+          { icon: CreditCard, label: "Credits", value: `€${((profile?.credits_cents ?? 0) / 100).toFixed(2)}`, onPress: () => setShowCreditsSheet(true) },
         ],
       },
       {
@@ -417,8 +417,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                   <span className="font-medium text-foreground">{bookings.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Credits earned</span>
-                  <span className="font-medium text-foreground">{bookings.length * 4}</span>
+                  <span className="text-muted-foreground">Credits</span>
+                  <span className="font-medium text-foreground">€{((profile?.credits_cents ?? 0) / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Circles joined</span>
@@ -1113,8 +1113,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <h2 className="font-serif text-xl font-medium text-foreground">Your Credits</h2>
             <div className="bg-muted rounded-2xl p-5 text-center space-y-1">
-              <p className="font-mono text-4xl font-bold text-foreground">{bookings.length * 4}</p>
-              <p className="text-sm text-muted-foreground">credits available</p>
+              <p className="font-mono text-4xl font-bold text-foreground">€{((profile?.credits_cents ?? 0) / 100).toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">available balance</p>
             </div>
             <div className="bg-muted rounded-2xl p-4 space-y-3">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">How to earn credits</p>
@@ -1134,7 +1134,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             </div>
             <div className="bg-muted rounded-2xl p-4">
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">How to use credits</p>
-              <p className="text-sm text-foreground">Credits can be used as discounts on future event bookings. Coming soon!</p>
+              <p className="text-sm text-foreground">Credits are applied automatically at checkout on your next event booking.</p>
             </div>
             <button
               onClick={() => { setShowCreditsSheet(false); setShowReferralSheet(true); }}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, ChevronDown, X, Shield, Bell, BellOff } from "lucide-react";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
@@ -8,7 +8,10 @@ import { useBookings, useBookEvent, useCancelBooking } from "@/hooks/useBookings
 import { useProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
 import { useEnsureEventCircle } from "@/hooks/useCircles";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import type { AppEvent } from "@/types/database";
+import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 
 function fmtDate(dateStr: string): string {
   const [, month, day] = dateStr.split("-");
@@ -66,18 +69,27 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
   const { data: events = [], isLoading } = useEvents();
   const { data: bookings = [] } = useBookings();
   const { data: profile } = useProfile();
+  const { user } = useAuth();
   const isUnverified = profile?.verification_status === "unverified";
 
   const [searchQuery, setSearchQuery] = useState("");
 
   const [bookingError, setBookingError] = useState<string | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showCancelSheet, setShowCancelSheet] = useState(false);
+  const [cancelChoice, setCancelChoice] = useState<'refund' | 'credits'>('credits');
+  const [cancelOutcome, setCancelOutcome] = useState<string | null>(null);
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
+
+  // Initialise Stripe once on mount (no-op if key not set)
+  useEffect(() => {
+    const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    if (publishableKey) {
+      Stripe.initialize({ publishableKey });
+    }
+  }, []);
 
   // Interest / notify-me (for TBC events)
   const { isInterested, toggle: toggleInterest, isPending: isTogglingInterest } = useEventInterest(selectedEvent ?? "");
@@ -245,7 +257,7 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
             </button>
           ) : event.isTbc ? (
             <button
-              onClick={() => { setBookingError(null); !isBooked && bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) }); }}
+              onClick={() => { setBookingError(null); !isBooked && bookEvent({ eventId: selectedEvent }, { onError: (e) => setBookingError(e.message) }); }}
               disabled={isBooked || isBooking}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
@@ -253,103 +265,231 @@ export function EventsScreen({ onOpenCircle }: EventsScreenProps = {}) {
             </button>
           ) : (
             <button
-              onClick={() => {
+              onClick={async () => {
                 setBookingError(null);
-                if (isBooked || isBooking || event.spotsLeft === 0) return;
-                if (event.price !== "Free") {
-                  setShowPayment(true);
-                } else {
-                  bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) });
+                if (isBooked || isBooking || isProcessingPayment || event.spotsLeft === 0) return;
+
+                if (event.price === "Free") {
+                  bookEvent(
+                    { eventId: selectedEvent },
+                    { onError: (e) => setBookingError(e.message) }
+                  );
+                  return;
+                }
+
+                // Paid event — use Stripe Payment Sheet
+                setIsProcessingPayment(true);
+                try {
+                  const fnRes = await fetch(
+                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent-`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                      },
+                      body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
+                    }
+                  );
+
+                  const data = await fnRes.json();
+                  if (!fnRes.ok) {
+                    throw new Error(data?.error ?? data?.warning ?? `HTTP ${fnRes.status}`);
+                  }
+
+                  // Graceful degradation: Stripe not yet configured
+                  if (data?.warning === 'Stripe not configured') {
+                    setBookingError("Payment setup coming soon — booking confirmed for now.");
+                    bookEvent(
+                      { eventId: selectedEvent },
+                      { onError: (e) => setBookingError(e.message) }
+                    );
+                    return;
+                  }
+
+                  const { clientSecret, publishableKey, amountCents } = data;
+
+                  // Re-initialise with the key returned from the server (handles pk_live_ vs pk_test_)
+                  if (publishableKey) {
+                    await Stripe.initialize({ publishableKey });
+                  }
+
+                  await Stripe.createPaymentSheet({
+                    paymentIntentClientSecret: clientSecret,
+                    merchantDisplayName: 'Nomaya',
+                  });
+
+                  // Listen for completion before presenting
+                  const listener = await Stripe.addListener(
+                    PaymentSheetEventsEnum.Completed,
+                    () => {
+                      bookEvent(
+                        {
+                          eventId: selectedEvent,
+                          paymentIntentId: clientSecret.split('_secret_')[0],
+                          amountCentsPaid: amountCents,
+                        },
+                        { onError: (e) => setBookingError(e.message) }
+                      );
+                      listener.remove();
+                    }
+                  );
+
+                  await Stripe.presentPaymentSheet();
+                } catch (err) {
+                  setBookingError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+                } finally {
+                  setIsProcessingPayment(false);
                 }
               }}
-              disabled={isBooked || isBooking || event.spotsLeft === 0}
+              disabled={isBooked || isBooking || isProcessingPayment || event.spotsLeft === 0}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
               {isBooked
                 ? "✓ Spot reserved"
-                : isBooking
-                ? "Reserving…"
+                : isBooking || isProcessingPayment
+                ? "Processing…"
                 : event.spotsLeft === 0
                 ? t("events.fully_booked")
                 : `Reserve my spot · ${event.price}`}
             </button>
           )}
 
-          {isBooked && (
+          {cancelOutcome && (
+            <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 text-sm text-foreground text-center">
+              {cancelOutcome}
+            </div>
+          )}
+
+          {isBooked && !cancelOutcome && (
             <button
-              onClick={() => booking && cancelBooking(booking.id)}
-              disabled={isCancelling}
-              className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+              onClick={() => { setCancelOutcome(null); setShowCancelSheet(true); }}
+              className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98]"
             >
-              {isCancelling ? t("events.cancelling") : t("events.cancel_reservation")}
+              {t("events.cancel_reservation")}
             </button>
           )}
         </div>
       </div>
 
-      {/* Payment sheet */}
-      {showPayment && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPayment(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 pb-10 space-y-4">
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-            <div>
-              <h2 className="font-serif text-xl font-medium text-foreground">Payment</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">{event.title} · <span className="font-medium text-foreground">{event.price}</span></p>
-            </div>
-            <div className="space-y-3">
-              <div className="bg-muted rounded-xl px-4 py-3">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Card number</p>
-                <input
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim())}
-                  placeholder="1234 5678 9012 3456"
-                  inputMode="numeric"
-                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none tracking-wider"
-                />
-              </div>
+      {/* ── Cancellation sheet ──────────────────────────────────────────── */}
+      {showCancelSheet && booking && (() => {
+        const isPaid = booking.payment_status === 'succeeded' && (booking.amount_cents_paid ?? 0) > 0;
+        const eventDate = event.rawDate ? new Date(`${event.rawDate}T${event.time ?? '00:00'}`) : null;
+        const hoursUntil = eventDate ? (eventDate.getTime() - Date.now()) / 3_600_000 : Infinity;
+        const isEligible = isPaid && hoursUntil >= 48;
+        const isTooLate = isPaid && hoursUntil < 48;
+        const amountEur = ((booking.amount_cents_paid ?? 0) / 100).toFixed(2);
+        const creditsEur = (Math.round((booking.amount_cents_paid ?? 0) * 1.1) / 100).toFixed(2);
+
+        return (
+          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCancelSheet(false)} />
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto" />
+              <h2 className="font-serif text-xl font-medium text-foreground text-center">Cancel reservation</h2>
+
+              {isEligible && (
+                <>
+                  <p className="text-xs text-muted-foreground text-center">Choose how you'd like your refund</p>
+                  <div className="space-y-3">
+                    {/* Credits option */}
+                    <button
+                      onClick={() => setCancelChoice('credits')}
+                      className={`w-full rounded-2xl p-4 border-2 text-left transition-all ${cancelChoice === 'credits' ? 'border-primary bg-primary/10' : 'border-border bg-muted'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xl mt-0.5">✨</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Nomaya Credits + 10% bonus</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">€{creditsEur} to spend on future events</p>
+                        </div>
+                        <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'credits' ? 'border-primary bg-primary' : 'border-border'}`}>
+                          {cancelChoice === 'credits' && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    </button>
+                    {/* Refund option */}
+                    <button
+                      onClick={() => setCancelChoice('refund')}
+                      className={`w-full rounded-2xl p-4 border-2 text-left transition-all ${cancelChoice === 'refund' ? 'border-primary bg-primary/10' : 'border-border bg-muted'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xl mt-0.5">💳</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Full refund</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">€{amountEur} back to your original payment method</p>
+                        </div>
+                        <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'refund' ? 'border-primary bg-primary' : 'border-border'}`}>
+                          {cancelChoice === 'refund' && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
+                    Cancellations 48h+ before the event receive a full refund or Nomaya Credits with a 10% bonus. Credits are applied automatically at checkout.
+                  </p>
+                </>
+              )}
+
+              {isTooLate && (
+                <>
+                  <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4 text-center space-y-1">
+                    <p className="text-sm font-medium text-foreground">Non-refundable cancellation</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This event is less than 48 hours away. Cancellations within 48h of the event are non-refundable.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {!isPaid && (
+                <p className="text-sm text-muted-foreground text-center">Are you sure you want to cancel your spot?</p>
+              )}
+
               <div className="flex gap-3">
-                <div className="flex-1 bg-muted rounded-xl px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Expiry</p>
-                  <input
-                    value={cardExpiry}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                      setCardExpiry(v.length > 2 ? `${v.slice(0,2)}/${v.slice(2)}` : v);
-                    }}
-                    placeholder="MM/YY"
-                    inputMode="numeric"
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                  />
-                </div>
-                <div className="flex-1 bg-muted rounded-xl px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">CVC</p>
-                  <input
-                    value={cardCvc}
-                    onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                    placeholder="123"
-                    inputMode="numeric"
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-                  />
-                </div>
+                <button
+                  onClick={() => setShowCancelSheet(false)}
+                  className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
+                >
+                  Keep my spot
+                </button>
+                <button
+                  disabled={isCancelling}
+                  onClick={() => {
+                    const choice = isEligible ? cancelChoice : 'none';
+                    cancelBooking(
+                      { bookingId: booking.id, choice },
+                      {
+                        onSuccess: (result) => {
+                          setShowCancelSheet(false);
+                          if (result.credits_awarded) {
+                            setCancelOutcome(`✨ €${(result.credits_awarded / 100).toFixed(2)} credits added to your account`);
+                          } else if (result.refunded_cents) {
+                            setCancelOutcome(`✓ €${(result.refunded_cents / 100).toFixed(2)} refund initiated`);
+                          } else {
+                            setCancelOutcome('✓ Reservation cancelled');
+                          }
+                        },
+                        onError: (e) => {
+                          setShowCancelSheet(false);
+                          setBookingError(e.message);
+                        },
+                      }
+                    );
+                  }}
+                  className="flex-1 py-3 rounded-2xl bg-red-500/80 text-white text-sm font-medium disabled:opacity-50"
+                >
+                  {isCancelling ? 'Cancelling…' : isTooLate ? 'Cancel anyway' : 'Confirm cancellation'}
+                </button>
               </div>
             </div>
-            <button
-              onClick={() => {
-                setShowPayment(false);
-                setBookingError(null);
-                bookEvent(selectedEvent, { onError: (e) => setBookingError(e.message) });
-              }}
-              disabled={isBooking}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60"
-            >
-              {isBooking ? "Processing…" : `Pay & Reserve · ${event.price}`}
-            </button>
-            <p className="text-center text-[10px] text-muted-foreground">Payments powered by Stripe</p>
           </div>
-        </div>
-      )}
-      </>
+        );
+      })()}
+
+</>
     );
   }
 

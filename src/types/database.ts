@@ -23,6 +23,7 @@ export interface Database {
           badges: string[]
           favourite_song: string | null
           favourite_food: string | null
+          credits_cents: number
           created_at: string
         }
         Insert: {
@@ -42,6 +43,7 @@ export interface Database {
           badges?: string[]
           favourite_song?: string | null
           favourite_food?: string | null
+          credits_cents?: number
           created_at?: string
         }
         Update: {
@@ -61,6 +63,7 @@ export interface Database {
           badges?: string[]
           favourite_song?: string | null
           favourite_food?: string | null
+          credits_cents?: number
           created_at?: string
         }
       }
@@ -146,6 +149,9 @@ export interface Database {
           user_id: string
           event_id: string
           status: 'confirmed' | 'cancelled' | 'waitlisted'
+          stripe_payment_intent_id: string | null
+          payment_status: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
+          amount_cents_paid: number | null
           created_at: string
         }
         Insert: {
@@ -153,6 +159,9 @@ export interface Database {
           user_id: string
           event_id: string
           status?: 'confirmed' | 'cancelled' | 'waitlisted'
+          stripe_payment_intent_id?: string | null
+          payment_status?: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
+          amount_cents_paid?: number | null
           created_at?: string
         }
         Update: {
@@ -160,6 +169,9 @@ export interface Database {
           user_id?: string
           event_id?: string
           status?: 'confirmed' | 'cancelled' | 'waitlisted'
+          stripe_payment_intent_id?: string | null
+          payment_status?: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
+          amount_cents_paid?: number | null
           created_at?: string
         }
       }
@@ -445,6 +457,8 @@ export interface BookingWithEvent {
   id: string
   event_id: string
   status: 'confirmed' | 'cancelled' | 'waitlisted'
+  payment_status: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
+  amount_cents_paid: number | null
   created_at: string
   event: {
     id: string
