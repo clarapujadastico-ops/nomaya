@@ -91,7 +91,7 @@ export function useCancelBooking() {
   return useMutation({
     mutationFn: async ({ bookingId, choice }: CancelBookingParams): Promise<CancelBookingResult> => {
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking-`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`,
         {
           method: 'POST',
           headers: {

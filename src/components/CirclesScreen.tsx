@@ -537,7 +537,7 @@ function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () =>
 
 // ─── Detail view ──────────────────────────────────────────────────────────────
 
-function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => void }) {
+function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBack: () => void; initialTab?: 'chat' | 'about' }) {
   const { mutate: join, isPending: isJoining } = useJoinCircle();
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
   const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
@@ -547,7 +547,7 @@ function CircleDetail({ circle, onBack }: { circle: AppCircle; onBack: () => voi
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
   const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
-  const [activeTab, setActiveTab] = useState<"about" | "chat" | "spots" | "plans" | "events" | "requests">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "spots" | "plans" | "events" | "requests">(initialTab ?? "about");
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
@@ -1545,9 +1545,9 @@ function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; on
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-interface CirclesScreenProps { initialCircleId?: string; }
+interface CirclesScreenProps { initialCircleId?: string; initialTab?: 'chat' | 'about'; }
 
-export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
+export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProps) {
   const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
   const [showCreate, setShowCreate] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
@@ -1572,7 +1572,7 @@ export function CirclesScreen({ initialCircleId }: CirclesScreenProps) {
       }
       return null;
     }
-    return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} />;
+    return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} initialTab={initialTab} />;
   }
 
   const myCircles = circles.filter((c) => c.isMember || c.isAdmin);

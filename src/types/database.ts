@@ -338,6 +338,7 @@ export interface Database {
           city: string
           is_private: boolean
           event_policy: string | null
+          event_id: string | null
           created_by: string
           created_at: string
           member_count: number

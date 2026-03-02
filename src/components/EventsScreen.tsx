@@ -53,7 +53,7 @@ const CAT_KEYS: Record<string, string> = {
 };
 
 interface EventsScreenProps {
-  onOpenCircle?: (id: string) => void;
+  onOpenCircle?: (id: string, tab?: 'chat' | 'about') => void;
   onOpenMap?: () => void;
   onSeeAllBookings?: () => void;
 }
@@ -240,6 +240,14 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <p className="text-sm text-muted-foreground leading-relaxed">
               {event.description || `A carefully curated gathering for women who share a love of ${event.category.toLowerCase()}. Small group of max ${event.totalSpots} participants. Come as you are. Leave feeling connected.`}
             </p>
+            {isBooked && (
+              <button
+                onClick={() => onOpenMap?.()}
+                className="flex items-center gap-1.5 mt-3 text-sm text-primary font-medium"
+              >
+                📍 See map — view exact address
+              </button>
+            )}
           </div>
 
           <div className="bg-card rounded-2xl p-4 shadow-soft">
@@ -295,7 +303,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 setIsProcessingPayment(true);
                 try {
                   const fnRes = await fetch(
-                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent-`,
+                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
                     {
                       method: 'POST',
                       headers: {
@@ -634,7 +642,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       disabled={isOpeningChat}
                       onClick={async () => {
                         const circleId = await ensureEventCircle({ eventId: booking.event_id, eventTitle: ev.title });
-                        onOpenCircle?.(circleId);
+                        onOpenCircle?.(circleId, 'chat');
                       }}
                       className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform disabled:opacity-60"
                     >

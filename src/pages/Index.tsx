@@ -27,6 +27,7 @@ function AppShell() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
+  const [openCircleTab, setOpenCircleTab] = useState<'chat' | 'about' | undefined>(undefined);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Determine ONCE whether onboarding is needed.
@@ -51,13 +52,14 @@ function AppShell() {
 
   usePushNotifications(handlePushNavigate);
 
-  function handleOpenCircle(id: string) {
+  function handleOpenCircle(id: string, tab?: 'chat' | 'about') {
     setOpenCircleId(id);
+    setOpenCircleTab(tab);
     setActiveTab("groups");
   }
 
   function handleTabChange(tab: Tab) {
-    if (tab !== "groups") setOpenCircleId(undefined);
+    if (tab !== "groups") { setOpenCircleId(undefined); setOpenCircleTab(undefined); }
     setActiveTab(tab);
   }
 
@@ -77,7 +79,7 @@ function AppShell() {
           />
         )}
         {activeTab === "map" && <MapScreen />}
-        {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} />}
+        {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
         {activeTab === "profile" && (
           <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
         )}
