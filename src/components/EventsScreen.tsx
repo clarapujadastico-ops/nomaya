@@ -72,7 +72,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { data: bookings = [] } = useBookings();
   const { data: profile } = useProfile();
   const { user } = useAuth();
-  const isUnverified = profile?.verification_status === "unverified";
+  const isUnverified = false; // TODO: re-enable when verification flow is ready
 
   const [searchQuery, setSearchQuery] = useState("");
 
