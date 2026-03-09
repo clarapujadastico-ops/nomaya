@@ -19,7 +19,11 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
 
     case 'circle_join_approved':
     case 'circle_join_rejected':
+    case 'circle_join':
+    case 'circle_join_request':
     case 'circle_message':
+    case 'circle_reminder':
+    case 'circle_plan_suggestion':
     case 'circle_event_approved':
     case 'circle_event_rejected':
       return circle_id ? { tab: 'groups', circleId: circle_id } : { tab: 'groups' }

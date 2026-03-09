@@ -82,10 +82,34 @@ export function useJoinCircle() {
         .select()
         .single()
       if (error) throw error
-      return data
+
+      // Fetch circle admin to notify
+      const { data: adminMember } = await supabase
+        .from('circle_memberships')
+        .select('user_id')
+        .eq('circle_id', circleId)
+        .eq('role', 'admin')
+        .maybeSingle()
+
+      // Fetch circle name for notification body
+      const { data: circle } = await supabase
+        .from('circles')
+        .select('name')
+        .eq('id', circleId)
+        .maybeSingle()
+
+      return { circleId, adminUserId: adminMember?.user_id ?? null, circleName: circle?.name ?? 'your circle' }
     },
-    onSuccess: () => {
+    onSuccess: ({ circleId, adminUserId, circleName }) => {
       queryClient.invalidateQueries({ queryKey: ['circles'] })
+      if (adminUserId && adminUserId !== user!.id) {
+        sendPush({
+          userId: adminUserId,
+          title: '👋 New member!',
+          body: `Someone just joined ${circleName}.`,
+          data: { type: 'circle_join', circle_id: circleId },
+        })
+      }
     },
   })
 }
@@ -121,9 +145,25 @@ export function useRequestJoinCircle() {
         .from('circle_join_requests')
         .insert({ circle_id: circleId, user_id: user!.id, message, status: 'pending' })
       if (error) throw error
+
+      // Fetch admin + circle name for notification
+      const [{ data: adminMember }, { data: circle }] = await Promise.all([
+        supabase.from('circle_memberships').select('user_id').eq('circle_id', circleId).eq('role', 'admin').maybeSingle(),
+        supabase.from('circles').select('name').eq('id', circleId).maybeSingle(),
+      ])
+
+      return { circleId, adminUserId: adminMember?.user_id ?? null, circleName: circle?.name ?? 'your circle' }
     },
-    onSuccess: () => {
+    onSuccess: ({ circleId, adminUserId, circleName }) => {
       queryClient.invalidateQueries({ queryKey: ['join_requests'] })
+      if (adminUserId) {
+        sendPush({
+          userId: adminUserId,
+          title: '🔔 New join request',
+          body: `Someone wants to join ${circleName}. Tap to review.`,
+          data: { type: 'circle_join_request', circle_id: circleId },
+        })
+      }
     },
   })
 }

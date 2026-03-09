@@ -31,7 +31,7 @@ async function uploadEventPhoto(circleId: string, file: File): Promise<string | 
   }
 }
 
-function EventChatSheet({ circleId, event, onClose }: { circleId: string; event: AppEvent; onClose: () => void }) {
+export function EventChatSheet({ circleId, event, onClose }: { circleId: string; event: { id: string; title: string }; onClose: () => void }) {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: messages = [], isLoading } = useCircleMessages(circleId);
@@ -369,6 +369,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
 
+  // Compute isBooked here (before any useEffect that depends on it) to avoid TDZ
+  const booking = bookings.find((b) => b.event_id === selectedEvent);
+  const isBooked = !!booking;
+
   // Initialise Stripe once on mount (no-op if key not set)
   useEffect(() => {
     const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -469,9 +473,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         </div>
       );
     }
-
-    const booking = bookings.find((b) => b.event_id === selectedEvent);
-    const isBooked = !!booking;
 
     return (
       <>
@@ -855,12 +856,24 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {/* ── Map sheet ──────────────────────────────────────────────────────── */}
       {showMapSheet && (() => {
         const token = import.meta.env.VITE_MAPBOX_TOKEN;
-        const lat = event.latitude ?? 40.4168;
-        const lng = event.longitude ?? -3.7038;
-        const hasExact = event.latitude != null && event.longitude != null;
+
+        // Venue overrides for events without DB coordinates (keyed by title fragment)
+        const VENUE_OVERRIDES: Record<string, { lat: number; lng: number; name: string }> = {
+          "vinyasa":   { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+          "holistic":  { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+          "yoga":      { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+          "longevity": { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+        };
+        const venueKey = Object.keys(VENUE_OVERRIDES).find(k => event.title.toLowerCase().includes(k));
+        const venueOverride = event.latitude == null && venueKey ? VENUE_OVERRIDES[venueKey] : null;
+
+        const lat = event.latitude ?? venueOverride?.lat ?? 40.4168;
+        const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
+        const hasExact = event.latitude != null || venueOverride != null;
+        const locationLabel = event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid");
         const mapsUrl = `maps://?ll=${lat},${lng}&q=${encodeURIComponent(hasExact ? event.title : event.city)}`;
 
-        function addToCalendar() {
+        async function addToCalendar() {
           const date = event.rawDate ?? "";
           const time = (event.time ?? "00:00").replace(":", "");
           const dtStart = date ? `${date.replace(/-/g, "")}T${time}00` : "";
@@ -871,10 +884,18 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             dtStart ? `DTSTART:${dtStart}` : "",
             dtEnd ? `DTEND:${dtEnd}` : "",
             `SUMMARY:${event.title}`,
-            `LOCATION:${event.city}`,
+            `LOCATION:${locationLabel}`,
             `DESCRIPTION:${(event.description ?? "").replace(/\n/g, "\\n")}`,
             "END:VEVENT", "END:VCALENDAR",
           ].filter(Boolean).join("\r\n");
+
+          // iOS: share the .ics file — iOS routes it to Calendar app
+          const file = new File([ics], "nomaya-event.ics", { type: "text/calendar" });
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: event.title });
+            return;
+          }
+          // Fallback for non-iOS
           const a = document.createElement("a");
           a.href = `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
           a.download = "nomaya-event.ics";
@@ -894,7 +915,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     mapboxAccessToken={token}
                     initialViewState={{ longitude: lng, latitude: lat, zoom: 14 }}
                     style={{ width: "100%", height: "100%" }}
-                    mapStyle="mapbox://styles/mapbox/dark-v11"
+                    mapStyle="mapbox://styles/mapbox/streets-v12"
                   >
                     <NavigationControl position="bottom-right" showCompass={false} />
                     <Marker longitude={lng} latitude={lat} anchor="bottom">
@@ -922,8 +943,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               <div className="px-5 py-4 space-y-3">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-muted-foreground mb-0.5">Location</p>
-                  <p className="text-sm font-medium text-foreground">{event.city}</p>
-                  {!hasExact && (
+                  <p className="text-sm font-medium text-foreground">{locationLabel}</p>
+                  {event.latitude == null && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">Exact address shared after booking confirmation</p>
                   )}
                 </div>

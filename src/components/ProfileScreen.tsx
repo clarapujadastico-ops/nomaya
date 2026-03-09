@@ -1022,73 +1022,40 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Member card modal */}
       {showMemberCard && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
-          <div className="relative w-full max-w-sm space-y-4">
-            {/* The card */}
-            <div
-              className="rounded-3xl overflow-hidden shadow-2xl"
-              style={{ background: "linear-gradient(135deg, hsl(252 45% 38%) 0%, hsl(252 55% 28%) 60%, hsl(270 40% 22%) 100%)" }}
-            >
-              {/* Top strip */}
-              <div className="px-7 pt-7 pb-5 flex items-start justify-between">
-                <Logo className="h-10 w-auto object-contain opacity-90" />
-                <div className="text-right">
-                  <p className="text-[9px] tracking-[0.2em] uppercase text-white/50 mb-0.5">Level</p>
-                  <p className="text-sm font-medium text-white leading-tight">
-                    {ritualBadge ? `${ritualBadge.icon} ${ritualBadge.label}` : "🌸 Founding Circle"}
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+            <h2 className="font-serif text-xl font-medium text-foreground mb-4">{t("member_card.your_card")}</h2>
+            <div className="rounded-2xl overflow-hidden shadow-card mb-5" style={{ background: "#5f5095" }}>
+              <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
+                <Logo className="h-20 w-auto mx-auto object-contain opacity-95" />
               </div>
-
-              {/* Avatar + name */}
-              <div className="px-7 pb-6 flex items-center gap-4">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} className="w-16 h-16 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center flex-shrink-0 text-2xl"
-                    style={{ background: "hsl(252 40% 55%)" }}>
-                    {profile?.name?.[0] ?? "N"}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="font-serif text-2xl text-white leading-tight truncate">{profile?.name || "Member"}</p>
-                  <p className="text-xs text-white/60 mt-0.5">{profile?.city || "Madrid"} · Since {memberSince}</p>
-                </div>
-              </div>
-
-              {/* Bottom strip */}
-              <div className="px-7 py-4 flex items-center justify-between" style={{ background: "rgba(0,0,0,0.25)" }}>
+              <div className="px-6 py-5 space-y-4">
                 <div>
-                  <p className="text-[9px] tracking-[0.2em] uppercase text-white/40 mb-0.5">Member ID</p>
-                  <p className="font-mono text-sm font-semibold text-white tracking-widest">{memberId}</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
+                  <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
                 </div>
-                <div className="flex gap-1">
-                  <div className="w-8 h-8 rounded-full opacity-60" style={{ background: "hsl(252 60% 70%)" }} />
-                  <div className="w-8 h-8 rounded-full -ml-3 opacity-40" style={{ background: "hsl(280 50% 75%)" }} />
+                <div>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
+                  <p className="font-serif text-lg text-white">{profile?.name || "Member"}</p>
+                </div>
+                <div className="pt-1 border-t border-white/10">
+                  <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
                 </div>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowMemberCard(false)}
-                className="flex-1 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white text-sm font-medium backdrop-blur-sm"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  const text = `Nomaya Member — ${profile?.name || "Member"}\n${ritualBadge ? ritualBadge.label : "Member"}\nMember since ${memberSince}\nnomaya.app`;
-                  if (navigator.share) { navigator.share({ title: "Nomaya Member Card", text }); }
-                  else { navigator.clipboard?.writeText(text); }
-                }}
-                className="flex-1 py-3.5 rounded-2xl gradient-cta text-white text-sm font-medium"
-              >
-                {t("member_card.share")}
-              </button>
-            </div>
+            <p className="text-center text-xs text-muted-foreground mb-4">{t("member_card.wallet_soon")}</p>
+            <button
+              onClick={() => {
+                const text = `Nomaya Member — ${profile?.name || "Member"}\n${ritualBadge ? ritualBadge.label : "Member"}\nMember since ${memberSince}\nnomaya.app`;
+                if (navigator.share) { navigator.share({ title: "Nomaya Member Card", text }); }
+                else { navigator.clipboard?.writeText(text); }
+              }}
+              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
+            >
+              {t("member_card.share")}
+            </button>
           </div>
         </div>
       )}

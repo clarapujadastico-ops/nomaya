@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { ArrowLeft, Ticket } from "lucide-react";
 import { useBookings } from "@/hooks/useBookings";
+import { useEnsureEventCircle } from "@/hooks/useCircles";
+import { EventChatSheet } from "@/components/EventsScreen";
 
 interface BookingsScreenProps {
   onBack: () => void;
@@ -35,6 +38,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export function BookingsScreen({ onBack }: BookingsScreenProps) {
   const { data: bookings = [], isLoading } = useBookings();
+  const { mutateAsync: ensureEventCircle, isPending: isOpening } = useEnsureEventCircle();
+  const [openGroup, setOpenGroup] = useState<{ circleId: string; event: { id: string; title: string } } | null>(null);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -46,13 +51,21 @@ export function BookingsScreen({ onBack }: BookingsScreenProps) {
     (b) => b.event && new Date(b.event.date) < today
   );
 
+  async function openEventGroup(eventId: string, eventTitle: string) {
+    const circleId = await ensureEventCircle({ eventId, eventTitle });
+    setOpenGroup({ circleId, event: { id: eventId, title: eventTitle } });
+  }
+
   function BookingRow({ booking }: { booking: (typeof bookings)[number] }) {
     const ev = booking.event!;
     const timeStr = (ev as any).time
       ? (ev as any).time.slice(0, 5)
       : null;
     return (
-      <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+      <button
+        onClick={() => openEventGroup(ev.id, ev.title)}
+        disabled={isOpening}
+        className="w-full flex items-center gap-3 py-3 border-b border-border last:border-0 text-left active:opacity-70 transition-opacity disabled:opacity-50">
         {/* Thumbnail */}
         <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
           {ev.image_url ? (
@@ -75,7 +88,7 @@ export function BookingsScreen({ onBack }: BookingsScreenProps) {
 
         {/* Badge */}
         <StatusBadge status={booking.status} />
-      </div>
+      </button>
     );
   }
 
@@ -127,6 +140,14 @@ export function BookingsScreen({ onBack }: BookingsScreenProps) {
             </div>
           )}
         </div>
+      )}
+
+      {openGroup && (
+        <EventChatSheet
+          circleId={openGroup.circleId}
+          event={openGroup.event}
+          onClose={() => setOpenGroup(null)}
+        />
       )}
     </div>
   );

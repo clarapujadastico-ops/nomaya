@@ -68,7 +68,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             </div>
             <div className="space-y-2.5 mt-3">
               {[
-                { icon: "🪪", label: "A photo of your ID", note: "Passport, DNI, or driver's licence" },
+                { icon: "🪪", label: "A photo of your ID", note: "Passport, DNI, NIE, or any national ID — gender field (F) must be visible" },
                 { icon: "🤳", label: "A selfie", note: "So we can match your face to your ID" },
               ].map(({ icon, label, note }) => (
                 <div key={label} className="flex items-center gap-3 py-2 border-t border-border">
@@ -139,7 +139,10 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             Scan your ID
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Passport, DNI, or driver's licence.
+            Passport, DNI, NIE, or driver's licence.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Make sure the <span className="text-foreground font-medium">gender field is visible</span> — it should show <span className="text-foreground font-medium">F</span> (female), which is the standard across Spanish DNI/NIE, EU and international passports (ICAO standard), and most national IDs worldwide.
           </p>
         </div>
 
