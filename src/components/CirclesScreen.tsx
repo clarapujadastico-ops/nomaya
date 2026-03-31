@@ -279,11 +279,10 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
           return (
             <div
               key={msg.id}
-              className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}
+              className={`flex gap-2 items-start ${isOwn ? "flex-row-reverse" : ""}`}
               onTouchStart={!isOwn ? () => handleLongPressStart(msg.id, msg.user_id, msg.content) : undefined}
               onTouchEnd={!isOwn ? handleLongPressEnd : undefined}
               onTouchMove={!isOwn ? handleLongPressEnd : undefined}
-              onContextMenu={!isOwn ? (e) => { e.preventDefault(); setModerationTarget({ messageId: msg.id, reportedUserId: msg.user_id, messageContent: msg.content }); } : undefined}
             >
               {msg.sender?.avatar_url ? (
                 <img src={msg.sender.avatar_url} className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5" />
@@ -310,6 +309,15 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
                 )}
                 <p className="text-[10px] text-muted-foreground mt-0.5 px-1">{time}</p>
               </div>
+              {!isOwn && (
+                <button
+                  onClick={() => setModerationTarget({ messageId: msg.id, reportedUserId: msg.user_id, messageContent: msg.content })}
+                  className="flex-shrink-0 mt-1 opacity-40 hover:opacity-100 transition-opacity"
+                  title="Report or block"
+                >
+                  <Flag size={12} className="text-muted-foreground" />
+                </button>
+              )}
             </div>
           );
         })}
