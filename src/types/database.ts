@@ -288,6 +288,46 @@ export interface Database {
           created_at?: string
         }
       }
+      reports: {
+        Row: {
+          id: string
+          reporter_id: string
+          reported_user_id: string
+          message_id: string | null
+          circle_id: string | null
+          message_content: string | null
+          created_at: string
+          status: 'pending' | 'reviewed' | 'resolved'
+        }
+        Insert: {
+          id?: string
+          reporter_id: string
+          reported_user_id: string
+          message_id?: string | null
+          circle_id?: string | null
+          message_content?: string | null
+          created_at?: string
+          status?: 'pending' | 'reviewed' | 'resolved'
+        }
+        Update: {
+          status?: 'pending' | 'reviewed' | 'resolved'
+        }
+      }
+      blocked_users: {
+        Row: {
+          id: string
+          blocker_id: string
+          blocked_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          blocker_id: string
+          blocked_id: string
+          created_at?: string
+        }
+        Update: Record<string, never>
+      }
       circle_events: {
         Row: {
           id: string

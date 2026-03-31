@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon, Heart, ExternalLink, Sparkles } from "lucide-react";
+import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon, Heart, ExternalLink, Sparkles, Flag, UserX } from "lucide-react";
 import Map, { Marker, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -28,7 +28,9 @@ import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/
 import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
-import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
+import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages"
+import { useBlockedUsers, useReportMessage, useBlockUser } from "@/hooks/useModeration"
+import { useLang } from "@/contexts/LanguageContext";
 import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
@@ -72,8 +74,14 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "Creative":         "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=300&fit=crop&auto=format",
   "Social":           "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop&auto=format",
   "Professional":     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&auto=format",
+  "Cultural":         "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=300&fit=crop&auto=format",
+  "Foodie":           "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=400&h=300&fit=crop&auto=format",
   "General":          "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop&auto=format",
 };
+
+function stripEmoji(str: string): string {
+  return str.replace(/\p{Extended_Pictographic}/gu, '').trim();
+}
 
 function circleCoverImage(name: string, coverUrl: string, category: string): string {
   const resolved = resolveCircleImage(name, coverUrl);
@@ -106,27 +114,45 @@ async function uploadChatImage(circleId: string): Promise<string | null> {
   }
 }
 
+const EULA_KEY = "nomaya_terms_accepted";
+
+type ModerationTarget = { messageId: string; reportedUserId: string; messageContent: string } | null;
+
 function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean }) {
   const { user } = useAuth();
+  const { t } = useLang();
   const { data: profile } = useProfile();
-  const { data: messages = [], isLoading } = useCircleMessages(isMember ? circleId : null);
+  const { data: blockedIds = [] } = useBlockedUsers();
   const { mutate: send, isPending: isSending } = useSendMessage();
+  const { mutate: reportMessage } = useReportMessage();
+  const { mutate: blockUser } = useBlockUser();
+
   const [text, setText] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem(EULA_KEY) === "true");
+  const [moderationTarget, setModerationTarget] = useState<ModerationTarget>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: allMessages = [], isLoading } = useCircleMessages(isMember && termsAccepted ? circleId : null);
+  const messages = allMessages.filter((m) => !blockedIds.includes(m.user_id));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (!isMember) {
-    return (
-      <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
-        <Lock size={24} className="text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Join the circle to access the chat</p>
-      </div>
-    );
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  function acceptTerms() {
+    localStorage.setItem(EULA_KEY, "true");
+    setTermsAccepted(true);
   }
 
   function handleSend() {
@@ -135,13 +161,49 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
     setText("");
   }
 
+  function handleLongPressStart(messageId: string, reportedUserId: string, messageContent: string) {
+    longPressTimer.current = setTimeout(() => {
+      setModerationTarget({ messageId, reportedUserId, messageContent });
+    }, 600);
+  }
+
+  function handleLongPressEnd() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function handleReport() {
+    if (!moderationTarget) return;
+    reportMessage({
+      messageId: moderationTarget.messageId,
+      reportedUserId: moderationTarget.reportedUserId,
+      circleId,
+      messageContent: moderationTarget.messageContent,
+    });
+    setModerationTarget(null);
+    showToast(t("chat.reported"));
+  }
+
+  function handleBlock() {
+    setConfirmBlock(true);
+  }
+
+  function confirmBlockUser() {
+    if (!moderationTarget) return;
+    blockUser(moderationTarget.reportedUserId);
+    setModerationTarget(null);
+    setConfirmBlock(false);
+    showToast(t("chat.blocked"));
+  }
+
   async function handleImageButton() {
     setIsUploadingImage(true);
     try {
       const url = await uploadChatImage(circleId);
       if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
     } catch {
-      // Capacitor camera unavailable (simulator/web) — fall back to file input
       fileInputRef.current?.click();
     } finally {
       setIsUploadingImage(false);
@@ -165,9 +227,46 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
     }
   }
 
+  if (!isMember) {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
+        <Lock size={24} className="text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Join the circle to access the chat</p>
+      </div>
+    );
+  }
+
+  // ── EULA gate ────────────────────────────────────────────────────────────────
+  if (!termsAccepted) {
+    return (
+      <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4 text-center">
+          <Shield size={32} className="text-primary" />
+          <h3 className="font-serif text-lg font-medium text-foreground">{t("eula.title")}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{t("eula.body")}</p>
+          <button
+            onClick={acceptTerms}
+            className="w-full bg-primary text-primary-foreground rounded-2xl py-3 text-sm font-medium transition-all active:scale-95"
+          >
+            {t("eula.agree")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+      {/* Toast */}
+      {toast && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background text-xs px-4 py-2 rounded-full shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      {/* Message list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 320 }}>
         {isLoading && <p className="text-xs text-muted-foreground text-center">Loading…</p>}
         {!isLoading && messages.length === 0 && (
@@ -178,7 +277,14 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
           const isImage = msg.content.startsWith(IMG_PREFIX);
           const time = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
           return (
-            <div key={msg.id} className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
+            <div
+              key={msg.id}
+              className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}
+              onTouchStart={!isOwn ? () => handleLongPressStart(msg.id, msg.user_id, msg.content) : undefined}
+              onTouchEnd={!isOwn ? handleLongPressEnd : undefined}
+              onTouchMove={!isOwn ? handleLongPressEnd : undefined}
+              onContextMenu={!isOwn ? (e) => { e.preventDefault(); setModerationTarget({ messageId: msg.id, reportedUserId: msg.user_id, messageContent: msg.content }); } : undefined}
+            >
               {msg.sender?.avatar_url ? (
                 <img src={msg.sender.avatar_url} className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5" />
               ) : (
@@ -209,6 +315,8 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
         })}
         <div ref={bottomRef} />
       </div>
+
+      {/* Input bar */}
       <div className="border-t border-border p-3 flex items-center gap-2">
         <button
           onClick={handleImageButton}
@@ -236,6 +344,61 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
           <Send size={15} className="text-primary-foreground" />
         </button>
       </div>
+
+      {/* Report / Block action sheet */}
+      {moderationTarget && !confirmBlock && (
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setModerationTarget(null)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <h3 className="font-serif text-base font-medium text-foreground text-center">{t("chat.actions")}</h3>
+            <button
+              onClick={handleReport}
+              className="w-full flex items-center gap-3 bg-muted rounded-2xl px-4 py-3 text-sm text-foreground"
+            >
+              <Flag size={16} className="text-muted-foreground" />
+              {t("chat.report")}
+            </button>
+            <button
+              onClick={handleBlock}
+              className="w-full flex items-center gap-3 bg-muted rounded-2xl px-4 py-3 text-sm text-red-400"
+            >
+              <UserX size={16} className="text-red-400" />
+              {t("chat.block")}
+            </button>
+            <button
+              onClick={() => setModerationTarget(null)}
+              className="w-full text-center text-sm text-muted-foreground py-2"
+            >
+              {t("chat.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Block confirmation */}
+      {confirmBlock && moderationTarget && (
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setConfirmBlock(false); setModerationTarget(null); }} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
+            <h3 className="font-serif text-base font-medium text-foreground text-center">{t("chat.block_confirm")}</h3>
+            <p className="text-sm text-muted-foreground text-center">{t("chat.block_detail")}</p>
+            <button
+              onClick={confirmBlockUser}
+              className="w-full bg-red-500 text-white rounded-2xl py-3 text-sm font-medium"
+            >
+              {t("chat.block")}
+            </button>
+            <button
+              onClick={() => { setConfirmBlock(false); setModerationTarget(null); }}
+              className="w-full text-center text-sm text-muted-foreground py-2"
+            >
+              {t("chat.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -568,6 +731,15 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab]);
 
+  const { mutate: sendPromptMsg } = useSendMessage();
+  const [promptAnswers, setPromptAnswers] = useState<Record<number, string>>({});
+  const [promptSubmitted, setPromptSubmitted] = useState<Record<number, boolean>>({});
+  const descParts = circle.description.split('---');
+  const mainDesc = descParts[0].trim();
+  const prompts = descParts[1]
+    ? descParts[1].split('\n').filter(l => l.trim().startsWith('Q:')).map(l => l.replace(/^Q:\s*/, '').trim())
+    : [];
+
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
@@ -634,7 +806,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               {circle.category}
             </span>
           )}
-          <h2 className="font-serif text-2xl font-medium text-white drop-shadow-md">{circle.name}</h2>
+          <h2 className="font-serif text-2xl font-medium text-white drop-shadow-md">{stripEmoji(circle.name)}</h2>
           <p className="text-xs text-white/80 mt-0.5 drop-shadow-sm">
             {circle.city} · {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
           </p>
@@ -676,8 +848,41 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
           <>
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-base font-medium text-foreground mb-2">About</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{circle.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{mainDesc}</p>
             </div>
+
+            {prompts.length > 0 && prompts.map((q, i) => (
+              <div key={i} className="bg-card rounded-2xl p-4 shadow-soft space-y-3">
+                <p className="text-sm font-medium text-foreground">{q}</p>
+                {promptSubmitted[i] ? (
+                  <p className="text-xs text-primary font-medium">✓ Shared with the circle!</p>
+                ) : isMember ? (
+                  <>
+                    <textarea
+                      value={promptAnswers[i] ?? ''}
+                      onChange={e => setPromptAnswers(prev => ({ ...prev, [i]: e.target.value }))}
+                      placeholder="Your answer…"
+                      rows={2}
+                      className="w-full rounded-xl bg-secondary text-sm text-foreground px-3 py-2 resize-none border border-border placeholder:text-muted-foreground focus:outline-none"
+                    />
+                    <button
+                      disabled={!promptAnswers[i]?.trim()}
+                      onClick={() => {
+                        const answer = promptAnswers[i]?.trim();
+                        if (!answer) return;
+                        sendPromptMsg({ circleId: circle.id, content: `💡 ${q}\n"${answer}"` });
+                        setPromptSubmitted(prev => ({ ...prev, [i]: true }));
+                      }}
+                      className="w-full py-2 rounded-xl gradient-cta text-white text-xs font-medium disabled:opacity-40 transition-all active:scale-[0.98]"
+                    >
+                      Share with circle
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">Join the circle to answer.</p>
+                )}
+              </div>
+            ))}
 
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-base font-medium text-foreground mb-3">Members</h3>
@@ -1815,7 +2020,7 @@ function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; on
       </div>
       <div className="flex-1 px-4 py-3.5 flex flex-col justify-between">
         <div>
-          <h3 className="font-serif text-base font-medium text-foreground">{circle.name}</h3>
+          <h3 className="font-serif text-base font-medium text-foreground">{stripEmoji(circle.name)}</h3>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             <Users size={11} />
             {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
@@ -1838,6 +2043,8 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
   const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
   const [showCreate, setShowCreate] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [circleView, setCircleView] = useState<"mine" | "categories" | "discover">("mine");
   const { data: circles = [], isLoading } = useCircles();
   const { data: profile } = useProfile();
   const isUnverified = profile?.verification_status !== 'verified';
@@ -1862,8 +2069,16 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
     return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} initialTab={initialTab} />;
   }
 
-  const myCircles = circles.filter((c) => c.isMember || c.isAdmin);
-  const discover = circles.filter((c) => !c.isMember && !c.isAdmin);
+  const circleCategories = ["All", ...Array.from(new Set(
+    circles.map((c) => c.category).filter((cat) => cat && cat !== "General")
+  )).sort()];
+  const categoryFiltered = activeCategory === "All"
+    ? circles
+    : circles.filter((c) => c.category === activeCategory);
+  const displayedCircles =
+    circleView === "mine"       ? circles.filter((c) => c.isMember || c.isAdmin) :
+    circleView === "discover"   ? circles.filter((c) => !c.isMember && !c.isAdmin) :
+    categoryFiltered;
 
   return (
     <div className="mobile-container flex flex-col bg-background pb-24">
@@ -1880,11 +2095,51 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
         </div>
       </div>
 
-      <div className="mx-5 mb-5 bg-secondary rounded-2xl p-4 border border-border">
+      <div className="mx-5 mb-4 bg-secondary rounded-2xl p-4 border border-border">
         <p className="text-sm text-muted-foreground leading-relaxed">
           ✦ Circles are intimate groups built around shared interests. Join one or propose a new circle.
         </p>
       </div>
+
+      {/* View tabs */}
+      <div className="flex gap-2 px-5 mb-3">
+        {([
+          { id: "mine",       label: "My Circles" },
+          { id: "categories", label: "Categories" },
+          { id: "discover",   label: "Discover" },
+        ] as const).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setCircleView(tab.id)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
+              circleView === tab.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-muted-foreground border-border"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Category sub-filter — only in Categories view */}
+      {circleView === "categories" && !isLoading && circleCategories.length > 1 && (
+        <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-3">
+          {circleCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+                activeCategory === cat
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -1892,31 +2147,27 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
         </div>
       ) : (
         <>
-          {myCircles.length > 0 && (
-            <div className="px-5 mb-6">
-              <h2 className="font-serif text-lg font-medium text-foreground mb-3">My circles</h2>
-              <div className="space-y-3">
-                {myCircles.map((circle) => (
-                  <CircleCard key={circle.id} circle={circle} onClick={() => setSelectedId(circle.id)} />
-                ))}
-              </div>
-            </div>
-          )}
-          {discover.length > 0 && (
+          {displayedCircles.length > 0 ? (
             <div className="px-5">
-              <h2 className="font-serif text-lg font-medium text-foreground mb-1">Discover circles</h2>
-              <p className="text-xs text-muted-foreground mb-3">Open circles you can join now.</p>
               <div className="space-y-3">
-                {discover.map((circle) => (
-                  <CircleCard key={circle.id} circle={circle} onClick={() => setSelectedId(circle.id)} dimmed={circle.isPrivate} />
+                {displayedCircles.map((circle) => (
+                  <CircleCard
+                    key={circle.id}
+                    circle={circle}
+                    onClick={() => setSelectedId(circle.id)}
+                    dimmed={circleView === "discover" && circle.isPrivate}
+                  />
                 ))}
               </div>
             </div>
-          )}
-          {circles.length === 0 && (
+          ) : (
             <div className="flex-1 flex flex-col items-center justify-center px-10 gap-3">
               <Users size={36} className="text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">No circles yet. Be the first to create one.</p>
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                {circleView === "mine" ? "You haven't joined any circles yet." :
+                 circleView === "discover" ? "No circles to discover right now." :
+                 "No circles in this category."}
+              </p>
             </div>
           )}
         </>
