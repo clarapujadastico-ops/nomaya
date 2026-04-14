@@ -196,6 +196,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       });
       if (!photo.base64String) return;
       setIsUploadingAvatar(true);
+      // Show immediately as data URL while uploading
+      setLocalAvatarUrl(`data:image/jpeg;base64,${photo.base64String}`);
       const url = await uploadAvatar(photo.base64String, profile.id);
       setLocalAvatarUrl(url);
       updateProfile({ avatar_url: url });
@@ -211,21 +213,26 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     const file = e.target.files?.[0];
     if (!file || !profile?.id) return;
     setIsUploadingAvatar(true);
-    try {
+
+    // Show preview immediately from local file — no waiting for upload
+    const dataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const dataUrl = ev.target?.result as string;
-        const base64 = dataUrl.split(",")[1];
-        const url = await uploadAvatar(base64, profile.id!);
-        setLocalAvatarUrl(url);
-        updateProfile({ avatar_url: url });
-        setIsUploadingAvatar(false);
-      };
+      reader.onload = (ev) => resolve(ev.target?.result as string);
       reader.readAsDataURL(file);
+    });
+    setLocalAvatarUrl(dataUrl);
+
+    // Upload in background and replace with real URL when done
+    try {
+      const base64 = dataUrl.split(",")[1];
+      const url = await uploadAvatar(base64, profile.id!);
+      setLocalAvatarUrl(url);
+      updateProfile({ avatar_url: url });
     } catch {
+      // Keep showing local preview even if upload failed
+    } finally {
       setIsUploadingAvatar(false);
     }
-    // reset so same file can be re-selected
     e.target.value = "";
   }
 
