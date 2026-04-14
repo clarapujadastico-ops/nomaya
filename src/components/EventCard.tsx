@@ -1,6 +1,18 @@
-import { Calendar, MapPin, Users, Bell } from "lucide-react";
+import { Calendar, MapPin, Users, Bell, Bus } from "lucide-react";
 import type { AppEvent } from "@/types/database";
 import { useEventInterestCount } from "@/hooks/useEventInterest";
+import { useLang } from "@/contexts/LanguageContext";
+
+function tripMeta(event: AppEvent): { type: string; transport: boolean } | null {
+  if (event.category !== "Trips") return null;
+  const t = event.title.toLowerCase();
+  const d = event.description.toLowerCase();
+  const type = t.includes("weekend") ? "Weekend"
+    : t.includes("retreat")         ? "Retreat"
+    : "Day Trip";
+  const transport = d.includes("transport included") || d.includes("transportation included");
+  return { type, transport };
+}
 
 export type { AppEvent as Event };
 
@@ -12,6 +24,7 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, variant = "default", onClick, locked = false }: EventCardProps) {
+  const { t } = useLang();
   const spotsPercent = (event.spotsLeft / event.totalSpots) * 100;
   const isAlmostFull = spotsPercent <= 30;
   const { data: interestCount = 0 } = useEventInterestCount(event.id);
@@ -34,7 +47,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           </span>
           <h3 className="font-serif text-xl text-white font-medium leading-tight mb-1">{event.title}</h3>
           {event.isTbc ? (
-            <span className="text-xs font-medium text-white/70 italic">Coming soon</span>
+            <span className="text-xs font-medium text-white/70 italic">{t("card.coming_soon")}</span>
           ) : (
             <>
               <div className="flex items-center gap-3 text-white/80 text-xs">
@@ -77,13 +90,15 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
         ? null   // handled separately below
         : null;
 
+    const trip = tripMeta(event);
+    const going = event.totalSpots - event.spotsLeft;
     const subtext = event.isTbc
-      ? interestCount > 0 ? `${interestCount} interested` : "Notify me"
+      ? interestCount > 0 ? `${t("card.join_waitlist")} · ${interestCount} ${t("card.interested")}` : t("card.join_waitlist")
       : event.spotsLeft === 0
-      ? "Fully booked"
-      : isAlmostFull
-      ? `${event.spotsLeft} spots left`
-      : `${event.spotsLeft} spots`;
+      ? t("card.fully_booked")
+      : going > 0
+      ? `${going} ${t("card.going")} · ${event.spotsLeft} ${t("card.spots_left")}`
+      : `${event.spotsLeft} ${t("card.spots_left")}`;
 
     return (
       <button
@@ -108,29 +123,42 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           {/* Status badge */}
           {statusBadge && (
             <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
-              <span className="text-[10px] font-semibold text-gray-800">{statusBadge}</span>
+              <span className="text-[10px] font-semibold text-gray-800">{event.spotsLeft === 0 ? t("card.fully_booked") : statusBadge}</span>
             </div>
           )}
 
-          {/* TBC — bell badge */}
-          {event.isTbc && (
+          {/* TBC badge — trip variant or generic */}
+          {event.isTbc && trip && (
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full backdrop-blur-sm bg-black/60">
+                <span className="text-[10px] font-semibold text-white">{trip.type}</span>
+              </span>
+              {trip.transport && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full backdrop-blur-sm bg-black/60">
+                  <Bus size={9} className="text-white" />
+                  <span className="text-[10px] font-semibold text-white">{t("card.transport")}</span>
+                </span>
+              )}
+            </div>
+          )}
+          {event.isTbc && !trip && (
             <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full backdrop-blur-sm" style={{ background: "hsl(252 30% 45% / 0.85)" }}>
               <Bell size={9} className="text-white" />
-              <span className="text-[10px] font-semibold text-white">Coming soon</span>
+              <span className="text-[10px] font-semibold text-white">{t("card.coming_soon")}</span>
             </div>
           )}
 
           {/* "New" badge for recently added events */}
           {event.featured && !statusBadge && !event.isTbc && (
             <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm">
-              <span className="text-[10px] font-semibold text-gray-800">New</span>
+              <span className="text-[10px] font-semibold text-gray-800">{t("card.new")}</span>
             </div>
           )}
         </div>
 
         {/* Info below image */}
         <div className="p-2.5">
-          <p className="text-[10px] text-muted-foreground">{dateDisplay}</p>
+          {!event.isTbc && <p className="text-[10px] text-muted-foreground">{dateDisplay}</p>}
           <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mt-0.5">
             {event.title}
           </h3>
@@ -160,7 +188,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           <h3 className="font-serif text-base font-medium text-foreground leading-snug mt-0.5">{event.title}</h3>
         </div>
         {event.isTbc ? (
-          <p className="text-xs text-muted-foreground italic mt-2">Coming soon</p>
+          <p className="text-xs text-muted-foreground italic mt-2">{t("card.coming_soon")}</p>
         ) : (
           <div className="space-y-1 mt-2">
             <div className="flex items-center gap-3 text-muted-foreground text-xs">

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<array/>
+	<key>images</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Resources/StripeUICore.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBrandStripe</string>
+			<key>relativePath</key>
+			<string>./brand_stripe.imageset</string>
+			<key>swiftSymbol</key>
+			<string>brandStripe</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Resources/StripeUICore.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameFormErrorIcon</string>
+			<key>relativePath</key>
+			<string>./form_error_icon.imageset</string>
+			<key>swiftSymbol</key>
+			<string>formErrorIcon</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Resources/StripeUICore.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameIconChevronDown</string>
+			<key>relativePath</key>
+			<string>./icon_chevron_down.imageset</string>
+			<key>swiftSymbol</key>
+			<string>iconChevronDown</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Resources/StripeUICore.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameIconClear</string>
+			<key>relativePath</key>
+			<string>./icon_clear.imageset</string>
+			<key>swiftSymbol</key>
+			<string>iconClear</string>
+		</dict>
+	</array>
+	<key>symbols</key>
+	<array/>
+</dict>
+</plist>

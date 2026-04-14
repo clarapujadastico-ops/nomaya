@@ -45,19 +45,90 @@ function formatDate(dateStr: string): string {
   return `${months[parseInt(month) - 1]} ${parseInt(day)}`;
 }
 
-function getBotResponse(msg: string): string {
+interface BotEvent { title: string; date: string; price: string; isTbc: boolean; spotsLeft: number }
+
+function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[] = []): string {
   const lower = msg.toLowerCase();
-  if (/hello|hi|hey|hola/.test(lower)) return "Hi! I'm Nomaya's assistant. How can I help you today? 💜";
-  if (/book|reserv|spot/.test(lower)) return "To book an event, tap any event card then 'Reserve your spot'. Having trouble with a specific event?";
-  if (/cancel/.test(lower)) return "You can cancel a reservation from the event detail page. Cancellation policies vary per event.";
-  if (/circle|chat|group/.test(lower)) return "Circles are private groups where Nomaya members connect and plan together. Join or create one from the Circles tab!";
-  if (/payment|pay|card|stripe|price|precio/.test(lower)) return "We accept card payments via Stripe. If you have payment issues, email us at hola@nomaya.app.";
-  if (/verify|verification|id/.test(lower)) return "To verify your ID, go to your Profile and tap the verification banner. It takes just a minute!";
-  if (/event/.test(lower)) return "We host workshops, wellness sessions, dinners and more across Madrid. Browse them all in the Events tab!";
-  if (/refund/.test(lower)) return "For refund requests, please email us at hola@nomaya.app with your booking details and we'll sort it out.";
-  if (/badge|founding|member/.test(lower)) return "Founding Member badges are awarded to those who attended our very first events. Keep attending to unlock more badges!";
-  if (/password|login|account/.test(lower)) return "For account issues, try logging out and back in. If the problem persists, email hola@nomaya.app.";
-  return "Thanks for reaching out! Our team will get back to you soon. You can also email us at hola@nomaya.app 💜";
+
+  // Greetings
+  if (/^(hello|hi|hey|hola|buenas|good morning|good afternoon)[\s!]*$/.test(lower))
+    return "Hi! I'm Nomaya's assistant 💜 I can help you with events, bookings, circles, payments and more. What do you need?";
+
+  // List events
+  if (/what event|which event|list.*event|event.*list|show.*event|what.*on|what.*happening|upcoming/.test(lower)) {
+    if (events.length === 0) return "I couldn't load the events right now. Head to the Experiences tab to browse them all!";
+    const lines = events.map(e =>
+      e.isTbc
+        ? `• ${e.title} — Coming soon (join waitlist)`
+        : `• ${e.title} — ${e.date} · ${e.price}${e.spotsLeft <= 3 && e.spotsLeft > 0 ? ` (only ${e.spotsLeft} spots left!)` : e.spotsLeft === 0 ? ' (fully booked)' : ''}`
+    );
+    return `Here's what's coming up in Madrid:\n\n${lines.join('\n')}\n\nTap any event in the Experiences tab to book your spot 🎨`;
+  }
+
+  // Booking help
+  if (/how.*book|how.*reserv|can i.*book|want to.*book|sign up.*event/.test(lower)) {
+    if (events.length > 0) {
+      const available = events.filter(e => !e.isTbc && e.spotsLeft > 0);
+      if (available.length > 0) return `To book, go to Experiences tab → tap any event → "Reserve my spot". These events still have spaces:\n\n${available.map(e => `• ${e.title} (${e.spotsLeft} spots)`).join('\n')}`;
+    }
+    return "Go to the Experiences tab, tap any event and hit 'Reserve my spot'. Paid events use Stripe for secure payment.";
+  }
+
+  // My bookings
+  if (/my booking|my reserv|what.*booked|did i book|have i registered/.test(lower)) {
+    if (bookings.length === 0) return "You don't have any confirmed bookings yet. Head to Experiences to find an event you love! 💜";
+    return `You have ${bookings.length} confirmed booking${bookings.length > 1 ? 's' : ''}. You can see them all in your Profile under "My events".`;
+  }
+
+  // Cancel
+  if (/cancel|leave waitlist|withdraw|remove.*booking/.test(lower))
+    return "To cancel a booking, open the event in the Experiences tab and tap 'Cancel reservation'. Cancellations more than 48h before the event are eligible for a refund or credits.";
+
+  // Refund
+  if (/refund|money back|charged|paid/.test(lower))
+    return "For paid events cancelled 48h+ in advance you can get a full refund or Nomaya credits (+10% bonus). Cancel from the event page. Still need help? Email hola@nomaya.app.";
+
+  // Payment
+  if (/payment|pay|card|stripe|price|cost|how much|precio/.test(lower)) {
+    if (events.length > 0) {
+      const paid = events.filter(e => !e.isTbc && e.price !== 'Free');
+      if (paid.length > 0) return `We use Stripe for secure payments. Current event prices:\n\n${paid.map(e => `• ${e.title}: ${e.price}`).join('\n')}\n\nProblems paying? Email hola@nomaya.app.`;
+    }
+    return "We accept card payments via Stripe. All transactions are secure. For payment issues email hola@nomaya.app.";
+  }
+
+  // Circles
+  if (/circle|group|chat|community/.test(lower))
+    return "Circles are private groups where members connect and plan together 💜 Browse them in the Circles tab. Some circles are open to join, others require a request.";
+
+  // Verification
+  if (/verify|verification|id|identity/.test(lower))
+    return "Nomaya is a verified women-only space. To verify, go to Profile → tap the verification banner → follow the steps. It only takes a minute!";
+
+  // Badges / levels
+  if (/badge|founding|level|tier|inner circle|keeper/.test(lower))
+    return "Badges are earned by attending events:\n• 🌸 Founding Circle — 1 event\n• ✨ Inner Circle — 3 events\n• 🔮 Keeper of the Circle — 5 events\n• 🏛️ Founding Member — attended our very first event";
+
+  // Credits / referral
+  if (/credit|referral|refer|code|discount/.test(lower))
+    return "Your Nomaya credits show in the Community tab. You earn credits by referring friends (€10 per referral). Your friend gets €7.50 welcome credit when they sign up with your code!";
+
+  // Account / login
+  if (/password|login|sign in|account|log out/.test(lower))
+    return "For login issues, try signing out and back in from the Profile tab. Still stuck? Email hola@nomaya.app and we'll help right away.";
+
+  // Contact / human
+  if (/human|person|speak to|talk to|contact|email|support team/.test(lower))
+    return "You can reach the Nomaya team directly at hola@nomaya.app 💜 We reply within 24h.";
+
+  // Waitlist / TBC
+  if (/waitlist|wait list|tbc|coming soon|notify/.test(lower)) {
+    const tbc = events.filter(e => e.isTbc);
+    if (tbc.length > 0) return `These events are coming soon — join the waitlist to get notified:\n\n${tbc.map(e => `• ${e.title}`).join('\n')}\n\nTap them in the Experiences tab to join!`;
+    return "Join the waitlist on any 'Coming soon' event in the Experiences tab to be the first to know when it opens!";
+  }
+
+  return "Happy to help! Could you tell me a bit more? You can also reach us at hola@nomaya.app 💜";
 }
 
 export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
@@ -70,6 +141,14 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const { mutate: updateProfile } = useUpdateProfile();
 
   const myCircles = allCircles.filter((c) => c.isMember || c.isAdmin);
+  const botEvents: BotEvent[] = allEvents.map(e => ({
+    title: e.title,
+    date: e.date ?? 'TBC',
+    price: e.price ?? 'Free',
+    isTbc: e.isTbc ?? false,
+    spotsLeft: e.spotsLeft ?? 0,
+  }));
+  const bookedEventIds = bookings.map(b => b.event_id);
 
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState("");
@@ -922,7 +1001,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                       setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
                       supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
                       setTimeout(() => {
-                        const reply = getBotResponse(msg);
+                        const reply = getBotResponse(msg, botEvents, bookedEventIds);
                         setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
                         supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
                         setIsSendingSupport(false);

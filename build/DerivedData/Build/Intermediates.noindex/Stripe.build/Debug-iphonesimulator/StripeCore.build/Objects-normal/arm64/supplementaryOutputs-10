@@ -1,0 +1,58 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Localization/STPLocalizationUtils.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizationUtils.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizationUtils.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizationUtils.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizationUtils.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizationUtils.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Localization/STPLocalizedString.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizedString.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizedString.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizedString.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizedString.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPLocalizedString.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Localization/String+Localized.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/String+Localized.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/String+Localized.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/String+Localized.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/String+Localized.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/String+Localized.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Telemetry/FraudDetectionData.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FraudDetectionData.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FraudDetectionData.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FraudDetectionData.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FraudDetectionData.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FraudDetectionData.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Telemetry/STPTelemetryClient.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPTelemetryClient.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPTelemetryClient.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPTelemetryClient.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPTelemetryClient.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/STPTelemetryClient.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Telemetry/UserDefaults+PaymentsCore.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UserDefaults+PaymentsCore.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UserDefaults+PaymentsCore.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UserDefaults+PaymentsCore.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UserDefaults+PaymentsCore.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UserDefaults+PaymentsCore.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/UI/UIActivityIndicatorView+Stripe.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIActivityIndicatorView+Stripe.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIActivityIndicatorView+Stripe.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIActivityIndicatorView+Stripe.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIActivityIndicatorView+Stripe.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIActivityIndicatorView+Stripe.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/UI/UIFont+Stripe.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIFont+Stripe.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIFont+Stripe.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIFont+Stripe.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIFont+Stripe.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/UIFont+Stripe.swiftdeps"
+  }
+}

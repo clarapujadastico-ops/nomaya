@@ -1,0 +1,163 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentElementConfiguration.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentElementConfiguration.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentElementConfiguration.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentElementConfiguration.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentElementConfiguration.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentElementConfiguration.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodIncentive.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodIncentive.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodIncentive.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodIncentive.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodIncentive.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodIncentive.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMME+API.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+API.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+API.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+API.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+API.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+API.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMME+Initialization.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Initialization.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Initialization.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Initialization.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Initialization.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Initialization.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMME+Internal.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Internal.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Internal.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Internal.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Internal.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+Internal.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMME+SwiftUI+Internal.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+SwiftUI+Internal.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+SwiftUI+Internal.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+SwiftUI+Internal.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+SwiftUI+Internal.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMME+SwiftUI+Internal.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMMEAnalyticsHelper.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEAnalyticsHelper.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEAnalyticsHelper.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEAnalyticsHelper.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEAnalyticsHelper.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEAnalyticsHelper.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMMEInfoModal.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEInfoModal.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEInfoModal.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEInfoModal.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEInfoModal.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEInfoModal.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMMEMultiPartnerView.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEMultiPartnerView.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEMultiPartnerView.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEMultiPartnerView.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEMultiPartnerView.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEMultiPartnerView.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMMESinglePartnerView.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMESinglePartnerView.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMESinglePartnerView.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMESinglePartnerView.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMESinglePartnerView.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMESinglePartnerView.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PMMEUIView.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEUIView.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEUIView.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEUIView.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEUIView.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PMMEUIView.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PaymentMethodMessagingElement+SwiftUI.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement+SwiftUI.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement+SwiftUI.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement+SwiftUI.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement+SwiftUI.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement+SwiftUI.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodMessagingElement/PaymentMethodMessagingElement.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodMessagingElement.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentMethodType.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodType.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodType.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodType.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodType.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentMethodType.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentOption+Images.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentOption+Images.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentOption+Images.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentOption+Images.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentOption+Images.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentOption+Images.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+API.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+API.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+API.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+API.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+API.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+API.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+ConfirmationTokens.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+ConfirmationTokens.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+ConfirmationTokens.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+ConfirmationTokens.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+ConfirmationTokens.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+ConfirmationTokens.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+DeferredAPI.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+DeferredAPI.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+DeferredAPI.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+DeferredAPI.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+DeferredAPI.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+DeferredAPI.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+Link.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+Link.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+Link.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+Link.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+Link.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+Link.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+PaymentMethodAvailability.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+PaymentMethodAvailability.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+PaymentMethodAvailability.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+PaymentMethodAvailability.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+PaymentMethodAvailability.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+PaymentMethodAvailability.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet+SwiftUI.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+SwiftUI.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+SwiftUI.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+SwiftUI.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+SwiftUI.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet+SwiftUI.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheet.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheet.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/PaymentSheetAppearance+Helpers.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheetAppearance+Helpers.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheetAppearance+Helpers.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheetAppearance+Helpers.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheetAppearance+Helpers.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentSheet.build/Objects-normal/arm64/PaymentSheetAppearance+Helpers.swiftdeps"
+  }
+}

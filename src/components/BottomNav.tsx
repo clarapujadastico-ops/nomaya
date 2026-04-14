@@ -20,7 +20,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-card border-t border-border flex items-center justify-around px-2 pb-safe z-50"
+      className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border flex items-center justify-around px-2 pb-safe z-[200]"
       style={{ boxShadow: "0 -4px 20px hsl(252 30% 30% / 0.15)" }}
     >
       {tabs.map(({ id, labelKey, icon: Icon }) => {

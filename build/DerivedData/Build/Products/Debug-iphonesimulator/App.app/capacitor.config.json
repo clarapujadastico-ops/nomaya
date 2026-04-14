@@ -1,0 +1,10 @@
+{
+	"appId": "com.nomaya.app",
+	"appName": "Nomaya",
+	"webDir": "dist",
+	"packageClassList": [
+		"StripePlugin",
+		"CAPCameraPlugin",
+		"PushNotificationsPlugin"
+	]
+}

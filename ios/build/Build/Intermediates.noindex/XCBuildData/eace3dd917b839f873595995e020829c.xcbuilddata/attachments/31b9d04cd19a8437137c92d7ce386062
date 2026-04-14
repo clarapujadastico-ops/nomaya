@@ -1,0 +1,4 @@
+module Stripe3DS2 {
+umbrella header "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/Stripe3DS2.h"
+export *
+}

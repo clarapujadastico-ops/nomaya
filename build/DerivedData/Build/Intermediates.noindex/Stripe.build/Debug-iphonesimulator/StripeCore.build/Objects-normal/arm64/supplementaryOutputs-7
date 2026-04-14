@@ -1,0 +1,65 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/FinancialConnectionsSDKResult.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsSDKResult.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsSDKResult.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsSDKResult.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsSDKResult.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsSDKResult.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/FinancialConnectionsStyle.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsStyle.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsStyle.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsStyle.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsStyle.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/FinancialConnectionsStyle.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/HostedAuthUrlBuilder.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/HostedAuthUrlBuilder.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/HostedAuthUrlBuilder.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/HostedAuthUrlBuilder.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/HostedAuthUrlBuilder.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/HostedAuthUrlBuilder.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/InstantDebitsLinkedBank.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/InstantDebitsLinkedBank.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/InstantDebitsLinkedBank.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/InstantDebitsLinkedBank.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/InstantDebitsLinkedBank.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/InstantDebitsLinkedBank.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/LinkBankPaymentMethod.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkBankPaymentMethod.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkBankPaymentMethod.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkBankPaymentMethod.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkBankPaymentMethod.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkBankPaymentMethod.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/LinkConsumerIncentive.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkConsumerIncentive.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkConsumerIncentive.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkConsumerIncentive.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkConsumerIncentive.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkConsumerIncentive.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/LinkMode.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkMode.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkMode.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkMode.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkMode.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/LinkMode.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/PrefillDetails.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/PrefillDetails.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/PrefillDetails.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/PrefillDetails.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/PrefillDetails.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/PrefillDetails.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripeCore/StripeCore/Source/Connections Bindings/URL+LinkBankPaymentMethod.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/URL+LinkBankPaymentMethod.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/URL+LinkBankPaymentMethod.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/URL+LinkBankPaymentMethod.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/URL+LinkBankPaymentMethod.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeCore.build/Objects-normal/arm64/URL+LinkBankPaymentMethod.swiftdeps"
+  }
+}

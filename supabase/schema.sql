@@ -62,6 +62,17 @@ CREATE TABLE IF NOT EXISTS public.bookings (
 --     CHECK (payment_status IN ('unpaid', 'succeeded', 'failed', 'refunded')),
 --   ADD COLUMN IF NOT EXISTS amount_cents_paid int;
 
+CREATE TABLE IF NOT EXISTS public.attendee_ratings (
+  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  rater_id   uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  rated_id   uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  event_id   uuid        NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  rating     smallint    NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (rater_id, rated_id, event_id),
+  CHECK (rater_id != rated_id)
+);
+
 -- ── View: events with spots left + category info ─────────────
 
 CREATE OR REPLACE VIEW public.events_with_spots AS
@@ -78,10 +89,11 @@ GROUP BY e.id, c.id;
 
 -- ── Row Level Security ───────────────────────────────────────
 
-ALTER TABLE public.profiles   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.events     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bookings   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendee_ratings  ENABLE ROW LEVEL SECURITY;
 
 -- profiles
 CREATE POLICY "Authenticated users can read all profiles"
@@ -115,6 +127,20 @@ CREATE POLICY "Users can create their own bookings"
 CREATE POLICY "Users can update their own bookings"
   ON public.bookings FOR UPDATE TO authenticated
   USING (auth.uid() = user_id);
+
+-- attendee_ratings
+-- Ratings are private: you can only see ratings you yourself gave
+CREATE POLICY "Users can read their own given ratings"
+  ON public.attendee_ratings FOR SELECT TO authenticated
+  USING (auth.uid() = rater_id);
+
+CREATE POLICY "Users can insert their own ratings"
+  ON public.attendee_ratings FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = rater_id AND rater_id != rated_id);
+
+CREATE POLICY "Users can update their own ratings"
+  ON public.attendee_ratings FOR UPDATE TO authenticated
+  USING (auth.uid() = rater_id);
 
 -- ── Seed: Categories ─────────────────────────────────────────
 

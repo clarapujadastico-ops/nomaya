@@ -1,0 +1,58 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Categories/UIWindow+StripeUICore.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/UIWindow+StripeUICore.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/UIWindow+StripeUICore.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/UIWindow+StripeUICore.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/UIWindow+StripeUICore.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/UIWindow+StripeUICore.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Controls/ActivityIndicator.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ActivityIndicator.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ActivityIndicator.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ActivityIndicator.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ActivityIndicator.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ActivityIndicator.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Controls/Button.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Button.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Button.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Button.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Button.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Button.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Controls/OneTimeCodeTextField-TextStorage.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField-TextStorage.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField-TextStorage.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField-TextStorage.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField-TextStorage.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField-TextStorage.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Controls/OneTimeCodeTextField.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextField.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Controls/OneTimeCodeTextFieldRepresentable.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextFieldRepresentable.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextFieldRepresentable.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextFieldRepresentable.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextFieldRepresentable.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/OneTimeCodeTextFieldRepresentable.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Checkbox/CheckboxButton.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxButton.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxButton.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxButton.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxButton.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxButton.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Checkbox/CheckboxElement.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxElement.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxElement.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxElement.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxElement.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/CheckboxElement.swiftdeps"
+  }
+}

@@ -26,6 +26,8 @@ export interface Database {
           credits_cents: number
           age_range: string | null
           life_stage: string | null
+          referral_code: string | null
+          referred_by: string | null
           created_at: string
         }
         Insert: {
@@ -48,6 +50,8 @@ export interface Database {
           credits_cents?: number
           age_range?: string | null
           life_stage?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           created_at?: string
         }
         Update: {

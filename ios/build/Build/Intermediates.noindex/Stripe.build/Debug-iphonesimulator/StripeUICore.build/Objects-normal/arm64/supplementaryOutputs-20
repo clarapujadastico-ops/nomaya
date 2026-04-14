@@ -1,0 +1,58 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/ContainerElement.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ContainerElement.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ContainerElement.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ContainerElement.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ContainerElement.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ContainerElement.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/DropdownFieldElement.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/DropdownFieldElement.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/DropdownFieldElement.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/DropdownFieldElement.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/DropdownFieldElement.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/DropdownFieldElement.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Element.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Element.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Element.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Element.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Element.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/Element.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/ElementsUI.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ElementsUI.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ElementsUI.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ElementsUI.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ElementsUI.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/ElementsUI.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Factories/Address/AddressSectionElement+DummyAddressLine.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement+DummyAddressLine.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement+DummyAddressLine.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement+DummyAddressLine.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement+DummyAddressLine.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement+DummyAddressLine.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Factories/Address/AddressSectionElement.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSectionElement.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Factories/Address/AddressSpec+ElementFactory.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec+ElementFactory.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec+ElementFactory.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec+ElementFactory.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec+ElementFactory.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec+ElementFactory.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/checkouts/stripe-ios-spm/StripeUICore/StripeUICore/Source/Elements/Factories/Address/AddressSpec.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripeUICore.build/Objects-normal/arm64/AddressSpec.swiftdeps"
+  }
+}

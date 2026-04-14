@@ -1,0 +1,44 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardExpiryInputTextField.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextField.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextField.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextField.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextField.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextField.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardExpiryInputTextFieldFormatter.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldFormatter.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldFormatter.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldFormatter.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldFormatter.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldFormatter.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardExpiryInputTextFieldValidator.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldValidator.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldValidator.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldValidator.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldValidator.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardExpiryInputTextFieldValidator.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardNumberInputTextField.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextField.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextField.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextField.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextField.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextField.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardNumberInputTextFieldFormatter.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldFormatter.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldFormatter.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldFormatter.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldFormatter.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldFormatter.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/Inputs/Card/STPCardNumberInputTextFieldValidator.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldValidator.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldValidator.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldValidator.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldValidator.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPCardNumberInputTextFieldValidator.swiftdeps"
+  }
+}

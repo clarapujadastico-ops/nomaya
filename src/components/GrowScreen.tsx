@@ -103,9 +103,8 @@ function RewardsTab({ profile }: { profile: { id?: string; credits_cents?: numbe
   const { t } = useLang();
   const [referralCopied, setReferralCopied] = useState(false);
 
-  const referralCode = profile?.id
-    ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
-    : '········';
+  const referralCode = (profile as any)?.referral_code
+    ?? (profile?.id ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase() : '········');
 
   const creditsEur = ((profile?.credits_cents ?? 0) / 100).toFixed(2);
 
@@ -116,7 +115,7 @@ function RewardsTab({ profile }: { profile: { id?: string; credits_cents?: numbe
   }
 
   function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜\n\nJoin Nomaya — a curated community for women in Madrid.\n\n👉 Download the app: https://apps.apple.com/app/nomaya/id6743720892\n\nUse my code *${referralCode}* when you sign up to get €7.50 welcome credit. I'll get €10 credit too 💜`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 

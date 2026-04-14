@@ -1,0 +1,89 @@
+{
+  "" : {
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin-primary.dia",
+    "emit-module-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin-primary-emit-module.dia",
+    "pch" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin-primary.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/ApplePay/ApplePayEvents.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayEvents~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/ApplePay/ApplePayExecutor.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/ApplePayExecutor~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/PaymentFlow/PaymentFlowEvents.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowEvents~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/PaymentFlow/PaymentFlowExecutor.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentFlowExecutor~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/PaymentSheet/PaymentSheetEvents.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetEvents~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/PaymentSheet/PaymentSheetExecutor.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetExecutor~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/PaymentSheetHelper.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/PaymentSheetHelper~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe/ios/Sources/StripePlugin/StripePlugin.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.dia",
+    "index-unit-output-path" : "/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorCommunityStripe.build/Debug-iphonesimulator/StripePlugin.build/Objects-normal/arm64/StripePlugin~partial.swiftmodule"
+  }
+}

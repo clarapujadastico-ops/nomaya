@@ -1,0 +1,49 @@
+{
+  "" : {
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin-primary.dia",
+    "emit-module-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin-primary-emit-module.dia",
+    "pch" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin-primary.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera/ios/Sources/CameraPlugin/CameraExtensions.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.dia",
+    "index-unit-output-path" : "/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraExtensions~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera/ios/Sources/CameraPlugin/CameraPlugin.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.dia",
+    "index-unit-output-path" : "/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraPlugin~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera/ios/Sources/CameraPlugin/CameraTypes.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.dia",
+    "index-unit-output-path" : "/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/CameraTypes~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera/ios/Sources/CameraPlugin/ImageSaver.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.dia",
+    "index-unit-output-path" : "/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/ios/build/Build/Intermediates.noindex/CapacitorCamera.build/Debug-iphonesimulator/CameraPlugin.build/Objects-normal/arm64/ImageSaver~partial.swiftmodule"
+  }
+}

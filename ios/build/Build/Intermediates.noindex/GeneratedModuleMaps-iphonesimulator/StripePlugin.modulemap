@@ -1,0 +1,4 @@
+module StripePlugin {
+header "StripePlugin-Swift.h"
+export *
+}

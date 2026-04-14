@@ -1,0 +1,44 @@
+{
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPFormTextField.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPFormTextField.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPFormTextField.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPFormTextField.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPFormTextField.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPFormTextField.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPLabeledFormTextFieldView.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledFormTextFieldView.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledFormTextFieldView.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledFormTextFieldView.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledFormTextFieldView.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledFormTextFieldView.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPLabeledMultiFormTextFieldView.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledMultiFormTextFieldView.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledMultiFormTextFieldView.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledMultiFormTextFieldView.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledMultiFormTextFieldView.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPLabeledMultiFormTextFieldView.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPPaymentCardTextFieldViewModel.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPPaymentCardTextFieldViewModel.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPPaymentCardTextFieldViewModel.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPPaymentCardTextFieldViewModel.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPPaymentCardTextFieldViewModel.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPPaymentCardTextFieldViewModel.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPValidatedTextField.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPValidatedTextField.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPValidatedTextField.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPValidatedTextField.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPValidatedTextField.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPValidatedTextField.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentsUI/StripePaymentsUI/Source/Internal/UI/Views/STPViewWithSeparator.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPViewWithSeparator.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPViewWithSeparator.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPViewWithSeparator.dia",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPViewWithSeparator.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/StripePaymentsUI.build/Objects-normal/arm64/STPViewWithSeparator.swiftdeps"
+  }
+}

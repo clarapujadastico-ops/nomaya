@@ -1,0 +1,142 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "capacitor-swift-pm",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
+          "name" : "capacitor-swift-pm"
+        },
+        "path" : "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/artifacts/capacitor-swift-pm/Cordova/Cordova.xcframework",
+        "source" : {
+          "checksum" : "fc7edd2feb10f2952ec74ddca842492b190b5d8d01eb0162270191bb279375c0",
+          "type" : "remote",
+          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.1.0/Cordova.xcframework.zip"
+        },
+        "targetName" : "Cordova"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "capacitor-swift-pm",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
+          "name" : "capacitor-swift-pm"
+        },
+        "path" : "/Users/clarapujadastico/nomaya-circles/ios/build/SourcePackages/artifacts/capacitor-swift-pm/Capacitor/Capacitor.xcframework",
+        "source" : {
+          "checksum" : "876ec9b674efcf06d566bebf0c01482b1e4ae1b5fbe83e43f8ffd5f2eebb4884",
+          "type" : "remote",
+          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.1.0/Capacitor.xcframework.zip"
+        },
+        "targetName" : "Capacitor"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "camera",
+          "kind" : "fileSystem",
+          "location" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera",
+          "name" : "camera"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/camera"
+        },
+        "subpath" : "camera"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "capacitor-swift-pm",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
+          "name" : "capacitor-swift-pm"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "1f324fe7bdbdc8c5cc28bea48a231545a8c2e823",
+            "version" : "8.1.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "capacitor-swift-pm"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "capapp-spm",
+          "kind" : "fileSystem",
+          "location" : "/Users/clarapujadastico/nomaya-circles/ios/App/CapApp-SPM",
+          "name" : "CapApp-SPM"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/clarapujadastico/nomaya-circles/ios/App/CapApp-SPM"
+        },
+        "subpath" : "capapp-spm"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "push-notifications",
+          "kind" : "fileSystem",
+          "location" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/push-notifications",
+          "name" : "push-notifications"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/push-notifications"
+        },
+        "subpath" : "push-notifications"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "stripe",
+          "kind" : "fileSystem",
+          "location" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe",
+          "name" : "stripe"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor-community/stripe"
+        },
+        "subpath" : "stripe"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "stripe-ios-spm",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/stripe/stripe-ios-spm.git",
+          "name" : "stripe-ios-spm"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "551b06f6f6e7e34a3acb069458184907a30884fd",
+            "version" : "25.3.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "stripe-ios-spm"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

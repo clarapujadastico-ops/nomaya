@@ -1,0 +1,29 @@
+{
+  "" : {
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin-primary.dia",
+    "emit-module-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin-primary-emit-module.dia",
+    "pch" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin-primary.swiftdeps"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsHandler.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.dia",
+    "index-unit-output-path" : "/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsHandler~partial.swiftmodule"
+  },
+  "/Users/clarapujadastico/nomaya-circles/node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsPlugin.swift" : {
+    "const-values" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.swiftconstvalues",
+    "dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.d",
+    "diagnostics" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.dia",
+    "index-unit-output-path" : "/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.o",
+    "llvm-bc" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.bc",
+    "object" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.o",
+    "swift-dependencies" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin.swiftdeps",
+    "swiftmodule" : "/Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/CapacitorPushNotifications.build/Debug-iphonesimulator/PushNotificationsPlugin.build/Objects-normal/arm64/PushNotificationsPlugin~partial.swiftmodule"
+  }
+}

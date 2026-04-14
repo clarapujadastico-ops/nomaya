@@ -1,0 +1,24 @@
+{
+  "source": "/Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/StripePaymentSheet/StripePaymentSheet/Source/PaymentSheet/WalletButtonsView/LinkInlineVerificationView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Enter the code sent to %@ to use your saved information.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Resend code",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 104
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -89,8 +89,8 @@ function AppShell() {
             <BookingsScreen onBack={() => setShowAllBookings(false)} />
           </div>
         )}
-        <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>
+      <BottomNav active={activeTab} onChange={handleTabChange} />
     </div>
   );
 }

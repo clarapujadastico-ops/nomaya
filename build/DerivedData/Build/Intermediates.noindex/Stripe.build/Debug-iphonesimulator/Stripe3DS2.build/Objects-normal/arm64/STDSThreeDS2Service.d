@@ -1,0 +1,37 @@
+dependencies: \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSThreeDS2Service.m \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/Build/Intermediates.noindex/Stripe.build/Debug-iphonesimulator/Stripe3DS2.build/DerivedSources/resource_bundle_accessor.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/module.modulemap \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSThreeDS2Service.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSAlreadyInitializedException.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSException.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSConfigParameters.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSDebuggerChecker.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSDeviceInformationManager.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSDirectoryServerCertificate.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSDirectoryServer.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSException+Internal.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSInvalidInputException.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSLocalizedString.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSBundleLocator.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSJailbreakChecker.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSIntegrityChecker.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSNotInitializedException.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSOSVersionChecker.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSSecTypeUtilities.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSSimulatorChecker.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSThreeDSProtocolVersion.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSTransaction+Private.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSTransaction.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/STDSThreeDSProtocolVersion+Private.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSUICustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSButtonCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSNavigationBarCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSLabelCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSTextFieldCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSFooterCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSSelectionCustomization.h \
+  /Users/clarapujadastico/nomaya-circles/build/DerivedData/SourcePackages/checkouts/stripe-ios-spm/Stripe3DS2/Stripe3DS2/include/STDSWarning.h

@@ -2,6 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
+export interface CircleSpotWithCircle extends CircleSpot {
+  circle_name: string;
+}
+
 export interface CircleSpot {
   id: string;
   circle_id: string;
@@ -68,6 +72,58 @@ export function useVoteCircleSpot() {
       await supabase.from("circle_spots").update({ vote_count: count ?? 0 }).eq("id", spotId);
     },
     onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["circle_spots", v.circleId] }),
+  });
+}
+
+/** Fetches spots from all circles the current user is a member of */
+export function useMyCircleSpots() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["my_circle_spots", user?.id],
+    queryFn: async (): Promise<CircleSpotWithCircle[]> => {
+      const { data: memberships, error: memErr } = await supabase
+        .from("circle_memberships")
+        .select("circle_id")
+        .eq("user_id", user!.id);
+      if (memErr) throw memErr;
+
+      const circleIds = (memberships ?? []).map((m: any) => m.circle_id);
+      if (circleIds.length === 0) return [];
+
+      const { data: spots, error: spotsErr } = await supabase
+        .from("circle_spots")
+        .select("*, added_by_profile:profiles!added_by(name, avatar_url), circle:circles(name)")
+        .in("circle_id", circleIds)
+        .order("vote_count", { ascending: false });
+      if (spotsErr) throw spotsErr;
+
+      return (spots ?? []).map((s: any) => ({
+        ...s,
+        vote_count: s.vote_count ?? 0,
+        user_voted: false,
+        circle_name: s.circle?.name ?? "",
+      })) as CircleSpotWithCircle[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useDeleteCircleSpot() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ spotId, circleId }: { spotId: string; circleId: string }) => {
+      const { error } = await supabase
+        .from("circle_spots")
+        .delete()
+        .eq("id", spotId)
+        .eq("added_by", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: (_, v) => {
+      qc.invalidateQueries({ queryKey: ["circle_spots", v.circleId] });
+      qc.invalidateQueries({ queryKey: ["my_circle_spots"] });
+    },
   });
 }
 
