@@ -25,7 +25,8 @@ async function uploadAvatar(base64: string, userId: string): Promise<string> {
   const path = `avatars/${userId}.jpg`;
   const { error } = await supabase.storage.from('Events').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
   if (error) throw error;
-  return supabase.storage.from('Events').getPublicUrl(path).data.publicUrl;
+  const base64url = supabase.storage.from('Events').getPublicUrl(path).data.publicUrl;
+  return `${base64url}?t=${Date.now()}`;
 }
 
 interface ProfileScreenProps {
@@ -1041,7 +1042,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           className="w-full h-full block disabled:opacity-70 active:opacity-80 transition-opacity"
         >
           {profile?.avatar_url ? (
-            <img src={`${profile.avatar_url}?v=${avatarCacheKey}`} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
+            <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-2">
               <span className="text-8xl opacity-40">🌸</span>
