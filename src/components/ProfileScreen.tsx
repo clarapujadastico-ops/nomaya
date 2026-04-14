@@ -113,7 +113,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [avatarCacheKey, setAvatarCacheKey] = useState(0);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const [notifSettings, setNotifSettings] = useState({
     newEvents: true,
@@ -197,8 +197,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       if (!photo.base64String) return;
       setIsUploadingAvatar(true);
       const url = await uploadAvatar(photo.base64String, profile.id);
+      setLocalAvatarUrl(url);
       updateProfile({ avatar_url: url });
-      setAvatarCacheKey(k => k + 1);
     } catch {
       // Capacitor camera unavailable (simulator/web) — fall back to file input
       avatarFileInputRef.current?.click();
@@ -217,8 +217,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         const dataUrl = ev.target?.result as string;
         const base64 = dataUrl.split(",")[1];
         const url = await uploadAvatar(base64, profile.id!);
+        setLocalAvatarUrl(url);
         updateProfile({ avatar_url: url });
-        setAvatarCacheKey(k => k + 1);
         setIsUploadingAvatar(false);
       };
       reader.readAsDataURL(file);
@@ -1041,8 +1041,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           onClick={handleAvatarUpload}
           className="w-full h-full block disabled:opacity-70 active:opacity-80 transition-opacity"
         >
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
+          {(localAvatarUrl ?? profile?.avatar_url) ? (
+            <img src={localAvatarUrl ?? profile!.avatar_url!} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-2">
               <span className="text-8xl opacity-40">🌸</span>
@@ -1063,7 +1063,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </button>
 
         {/* Camera badge — visible when photo already set */}
-        {profile?.avatar_url && (
+        {(localAvatarUrl ?? profile?.avatar_url) && (
           <button
             disabled={isUploadingAvatar}
             onClick={handleAvatarUpload}
