@@ -156,26 +156,6 @@ function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: st
         </div>
       </div>
 
-      {/* How to earn */}
-      <div className="bg-card rounded-2xl p-5 shadow-card">
-        <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-3">{t("grow.how_to_earn")}</p>
-        <div className="space-y-3">
-          {[
-            { icon: "🎟️", labelKey: "grow.earn_attend", value: "+4 credits" },
-            { icon: "🎁", labelKey: "grow.earn_refer",   value: "+10 credits" },
-            { icon: "⭐", labelKey: "grow.earn_review",  value: "+2 credits" },
-          ].map(({ icon, labelKey, value }) => (
-            <div key={labelKey} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{icon}</span>
-                <span className="text-sm text-foreground">{t(labelKey)}</span>
-              </div>
-              <span className="text-sm font-semibold" style={{ color: "hsl(252 50% 75%)" }}>{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Invite a friend */}
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
         <div>
@@ -189,7 +169,7 @@ function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: st
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted rounded-xl p-3 space-y-1.5">
             <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("grow.she_gets")}</p>
-            {[t("grow.perk_15off"), t("grow.perk_early_access")].map(item => (
+            {[t("grow.perk_friend_credit")].map(item => (
               <div key={item} className="flex items-start gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "hsl(252 50% 65%)" }} />
                 <span className="text-xs text-foreground leading-snug">{item}</span>
@@ -198,7 +178,7 @@ function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: st
           </div>
           <div className="bg-muted rounded-xl p-3 space-y-1.5">
             <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("grow.you_get")}</p>
-            {[t("grow.perk_credit"), t("grow.perk_circle_point")].map(item => (
+            {[t("grow.perk_credit")].map(item => (
               <div key={item} className="flex items-start gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "hsl(252 50% 65%)" }} />
                 <span className="text-xs text-foreground leading-snug">{item}</span>

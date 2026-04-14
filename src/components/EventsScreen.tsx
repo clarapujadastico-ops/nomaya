@@ -6,7 +6,7 @@ import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings, useBookEvent, useCancelBooking, useCancelWaitlist } from "@/hooks/useBookings";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
 import { useEnsureEventCircle } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
@@ -389,6 +389,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { data: events = [], isLoading } = useEvents();
   const { data: bookings = [] } = useBookings();
   const { data: profile } = useProfile();
+  const { mutate: updateProfile } = useUpdateProfile();
   const { user } = useAuth();
   const isUnverified = false; // TODO: re-enable when verification flow is ready
 
@@ -711,7 +712,16 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     return;
                   }
 
-                  const { clientSecret, publishableKey, amountCents } = data;
+                  // Credits covered the full price — no card needed
+                  if (data?.free === true) {
+                    bookEvent(
+                      { eventId: selectedEvent, amountCentsPaid: 0 },
+                      { onError: (e) => setBookingError(e.message) }
+                    );
+                    return;
+                  }
+
+                  const { clientSecret, publishableKey, amountCents, discountApplied } = data;
 
                   // Re-initialise with the key returned from the server (handles pk_live_ vs pk_test_)
                   if (publishableKey) {
@@ -727,6 +737,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   const listener = await Stripe.addListener(
                     PaymentSheetEventsEnum.Completed,
                     () => {
+                      // Zero out credits if a discount was applied
+                      if (discountApplied > 0) {
+                        updateProfile({ credits_cents: Math.max(0, (profile?.credits_cents ?? 0) - discountApplied) });
+                      }
                       bookEvent(
                         {
                           eventId: selectedEvent,

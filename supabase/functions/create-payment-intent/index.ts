@@ -31,17 +31,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Fetch event price using service role (bypasses RLS)
+    // Fetch event price + user credits using service role (bypasses RLS)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { data: event, error: eventError } = await supabase
-      .from('events')
-      .select('title, price_cents, currency')
-      .eq('id', eventId)
-      .single()
+    const [{ data: event, error: eventError }, { data: userProfile }] = await Promise.all([
+      supabase.from('events').select('title, price_cents, currency').eq('id', eventId).single(),
+      supabase.from('profiles').select('credits_cents').eq('id', userId).single(),
+    ])
 
     if (eventError || !event) {
       return new Response(
@@ -57,15 +56,36 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Apply credits (read from DB — never trust client)
+    const userCredits: number = (userProfile as any)?.credits_cents ?? 0
+    const discountCents = Math.min(userCredits, event.price_cents)
+    const chargeAmount = event.price_cents - discountCents
+
+    // Credits cover the full price — no Stripe needed
+    if (chargeAmount === 0) {
+      // Zero out credits server-side immediately
+      await supabase.from('profiles').update({ credits_cents: userCredits - discountCents }).eq('id', userId)
+      return new Response(
+        JSON.stringify({
+          free: true,
+          discountApplied: discountCents,
+          amountCents: 0,
+          currency: event.currency,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' })
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: event.price_cents,
+      amount: chargeAmount,
       currency: event.currency.toLowerCase(),
       metadata: {
         event_id: eventId,
         user_id: userId,
         event_title: event.title,
+        discount_cents: String(discountCents),
       },
     })
 
@@ -73,7 +93,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         clientSecret: paymentIntent.client_secret,
         publishableKey: stripePublishableKey,
-        amountCents: event.price_cents,
+        amountCents: chargeAmount,
+        originalAmountCents: event.price_cents,
+        discountApplied: discountCents,
         currency: event.currency,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
