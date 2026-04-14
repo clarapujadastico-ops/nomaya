@@ -71,7 +71,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="mobile-container relative overflow-hidden">
+      <div className="mobile-container relative overflow-x-hidden">
         {activeTab === "events" && (
           <EventsScreen
             onOpenCircle={handleOpenCircle}

@@ -145,7 +145,7 @@
 
 @layer utilities {
   .mobile-container {
-    @apply mx-auto w-full max-w-sm min-h-screen relative overflow-hidden;
+    @apply mx-auto w-full max-w-sm min-h-screen relative overflow-x-hidden;
   }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }
