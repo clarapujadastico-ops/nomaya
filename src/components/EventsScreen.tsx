@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star } from "lucide-react";
+import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight } from "lucide-react";
+import { MemberProfileSheet } from "./MemberProfileSheet";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
@@ -368,6 +369,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { mutate: cancelWaitlist, isPending: isCancellingWaitlist } = useCancelWaitlist();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
+  const [selectedAttendee, setSelectedAttendee] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
 
   // Compute isBooked here (before any useEffect that depends on it) to avoid TDZ
   const booking = bookings.find((b) => b.event_id === selectedEvent);
@@ -569,9 +571,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           {attendees.length > 0 && (
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-lg font-medium text-foreground mb-3">Who's coming</h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {attendees.map((a) => (
-                  <div key={a.user_id} className="flex items-center gap-3">
+                  <button
+                    key={a.user_id}
+                    onClick={() => a.profile && setSelectedAttendee(a.profile as import("@/hooks/useCircleMembers").MemberProfile)}
+                    className="w-full flex items-center gap-3 py-1.5 text-left active:opacity-70 transition-opacity"
+                  >
                     {a.profile?.avatar_url ? (
                       <img src={a.profile.avatar_url} alt={a.profile.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                     ) : (
@@ -582,10 +588,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">{a.profile?.name ?? "Member"}</p>
                       {a.profile?.bio && (
-                        <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{a.profile.bio}</p>
+                        <p className="text-xs text-muted-foreground leading-snug line-clamp-1">{a.profile.bio}</p>
                       )}
                     </div>
-                  </div>
+                    <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+                  </button>
                 ))}
               </div>
             </div>
@@ -1349,6 +1356,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </button>
           </div>
         </div>
+      )}
+
+      {/* Member profile sheet */}
+      {selectedAttendee && (
+        <MemberProfileSheet profile={selectedAttendee} onClose={() => setSelectedAttendee(null)} />
       )}
 
       {/* Event photo-sharing sheet */}

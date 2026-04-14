@@ -35,6 +35,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } from "@/hooks/useCircleEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
+import { MemberProfileSheet } from "./MemberProfileSheet";
 import { supabase } from "@/lib/supabase";
 import type { AppCircle } from "@/types/database";
 
@@ -733,7 +734,8 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { data: pendingRequests = [] } = useCircleJoinRequests(circle.isAdmin ? circle.id : null);
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
   const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
-  const [activeTab, setActiveTab] = useState<"about" | "chat" | "spots" | "plans" | "events" | "requests">(initialTab ?? "about");
+  const [activeTab, setActiveTab] = useState<"about" | "chat" | "members" | "spots" | "plans" | "events" | "requests">(initialTab ?? "about");
+  const [selectedMember, setSelectedMember] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
 
   // Navigate to the right tab when navigated from outside (e.g. push notification, event "Open chat")
   useEffect(() => {
@@ -825,15 +827,16 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
       {/* Tabs */}
       <div className="flex border-b border-border mx-5 mt-4 gap-1 overflow-x-auto">
-        {(["about", "chat", ...(isMember ? ["plans"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
+        {(["about", "chat", "members", ...(isMember ? ["plans"] : []), ...(circle.isAdmin ? ["requests"] : [])] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab as "about" | "chat" | "spots" | "plan" | "events" | "requests")}
+            onClick={() => setActiveTab(tab as "about" | "chat" | "members" | "spots" | "plans" | "events" | "requests")}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 whitespace-nowrap ${
               activeTab === tab ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
             }`}
           >
             {tab === "chat" && <MessageCircle size={14} />}
+            {tab === "members" && <Users size={14} />}
             {tab === "spots" && <MapPin size={14} />}
             {tab === "plans" && <Sparkles size={14} />}
             {tab === "events" && <CalendarDays size={14} />}
@@ -968,6 +971,43 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               </button>
             )}
           </>
+        ) : activeTab === "members" ? (
+          <div className="space-y-3">
+            {circleMembers.length === 0 ? (
+              <div className="bg-card rounded-2xl p-6 shadow-soft text-center">
+                <p className="text-sm text-muted-foreground">No members yet.</p>
+              </div>
+            ) : circleMembers.map((m) => (
+              <button
+                key={m.user_id}
+                onClick={() => m.profile && setSelectedMember(m.profile)}
+                className="w-full bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 text-left active:opacity-80 transition-opacity"
+              >
+                {m.profile?.avatar_url ? (
+                  <img src={m.profile.avatar_url} alt={m.profile.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-xl flex-shrink-0">🌸</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-foreground truncate">{m.profile?.name ?? "Member"}</p>
+                    {m.role === "admin" && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium flex-shrink-0">Admin</span>
+                    )}
+                  </div>
+                  {m.profile?.bio && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{m.profile.bio}</p>
+                  )}
+                  {m.profile?.instagram_url && (
+                    <p className="text-xs text-primary mt-0.5">
+                      @{m.profile.instagram_url.replace(/^https?:\/\/(www\.)?instagram\.com\/?/, "").replace(/\/$/, "").replace(/^@/, "")}
+                    </p>
+                  )}
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+              </button>
+            ))}
+          </div>
         ) : activeTab === "plans" ? (
           <PlansTab circle={circle} isMember={isMember} />
         ) : activeTab === "requests" ? (
@@ -1014,6 +1054,11 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
           <ChatPanel circleId={circle.id} isMember={isMember} />
         )}
       </div>
+
+      {/* Member profile sheet */}
+      {selectedMember && (
+        <MemberProfileSheet profile={selectedMember} onClose={() => setSelectedMember(null)} />
+      )}
 
       {/* Edit cover sheet */}
       {showEditCover && (
