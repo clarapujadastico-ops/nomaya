@@ -1193,9 +1193,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                           {fmtDate(ev.date)}
                         </span>
                       </div>
-                      <div className="bg-card px-2.5 py-2">
+                      <div className="bg-card px-2.5 py-2 h-14 flex flex-col justify-between">
                         <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
-                        <p className="text-[10px] text-primary mt-0.5">{t("events.open_chat")}</p>
+                        <p className="text-[10px] text-primary">{t("events.open_chat")}</p>
                       </div>
                     </button>
                   );

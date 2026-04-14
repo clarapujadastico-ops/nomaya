@@ -29,7 +29,7 @@ export function MemberProfileSheet({ profile, onClose }: Props) {
     <div className="fixed inset-0 z-[500] flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full bg-background rounded-t-3xl overflow-y-auto"
-        style={{ maxHeight: "92vh", paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+        style={{ maxHeight: "88vh", paddingBottom: "calc(80px + max(env(safe-area-inset-bottom), 1rem))" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
