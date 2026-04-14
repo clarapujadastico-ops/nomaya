@@ -34,6 +34,7 @@ async function uploadEventPhoto(circleId: string, file: File): Promise<string | 
 
 export function EventChatSheet({ circleId, event, onClose }: { circleId: string; event: { id: string; title: string }; onClose: () => void }) {
   const { user } = useAuth();
+  const { t: tl } = useLang();
   const { data: profile } = useProfile();
   const { data: messages = [], isLoading } = useCircleMessages(circleId);
   const { mutate: send, isPending: isSending } = useSendMessage();
@@ -96,7 +97,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
             {t === "photos" && <ImageIcon size={14} />}
             {t === "chat" && <Send size={13} />}
             {t === "rate" && <Star size={14} />}
-            {t === "members" ? "Members" : t === "photos" ? "Photos" : t === "chat" ? "Chat" : "Rate"}
+            {t === "members" ? tl("events.tab_members") : t === "photos" ? tl("events.tab_photos") : t === "chat" ? tl("events.tab_chat") : tl("events.tab_rate")}
           </button>
         ))}
       </div>

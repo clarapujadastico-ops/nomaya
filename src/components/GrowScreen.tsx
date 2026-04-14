@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Copy, Users } from "lucide-react";
 import { Logo } from "./Logo";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
 import { useCircles } from "@/hooks/useCircles";
 import { useLang } from "@/contexts/LanguageContext";
+
+function generateCode(name: string | undefined, id: string | undefined): string {
+  const prefix = name
+    ? name.trim().toUpperCase().replace(/[^A-Z]/g, '').substring(0, 5)
+    : '';
+  const suffix = (id ?? '').replace(/-/g, '').substring(0, 4).toUpperCase();
+  return (prefix + suffix).substring(0, 8) || Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 const TIERS = [
   { icon: "🌸", labelKey: "badge.founding_circle", events: 1, perkKeys: ["grow.perk_all_access", "grow.perk_founding_badge"] },
@@ -99,12 +107,18 @@ function ProgressTab({ eventsAttended, circles, onOpenCircle }: { eventsAttended
   );
 }
 
-function RewardsTab({ profile }: { profile: { id?: string; credits_cents?: number } | null | undefined }) {
+function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: string; credits_cents?: number } | null | undefined; onSaveCode: (code: string) => void }) {
   const { t } = useLang();
   const [referralCopied, setReferralCopied] = useState(false);
 
-  const referralCode = (profile as any)?.referral_code
-    ?? (profile?.id ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase() : '········');
+  const storedCode = (profile as any)?.referral_code as string | null | undefined;
+  const referralCode = storedCode || generateCode((profile as any)?.name, profile?.id) || '········';
+
+  useEffect(() => {
+    if (profile?.id && !storedCode && referralCode !== '········') {
+      onSaveCode(referralCode);
+    }
+  }, [profile?.id, storedCode]);
 
   const creditsEur = ((profile?.credits_cents ?? 0) / 100).toFixed(2);
 
@@ -221,9 +235,14 @@ function RewardsTab({ profile }: { profile: { id?: string; credits_cents?: numbe
 export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
   const { t } = useLang();
   const { data: profile } = useProfile();
+  const { mutate: updateProfile } = useUpdateProfile();
   const { data: bookings = [] } = useBookings();
   const { data: circles = [] } = useCircles();
   const [tab, setTab] = useState<"progress" | "rewards">("progress");
+
+  function handleSaveCode(code: string) {
+    updateProfile({ referral_code: code });
+  }
 
   return (
     <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-28">
@@ -254,7 +273,7 @@ export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => vo
       <div className="px-5">
         {tab === "progress"
           ? <ProgressTab eventsAttended={bookings.length} circles={circles} onOpenCircle={onOpenCircle} />
-          : <RewardsTab profile={profile} />
+          : <RewardsTab profile={profile} onSaveCode={handleSaveCode} />
         }
       </div>
     </div>

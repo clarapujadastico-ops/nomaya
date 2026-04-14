@@ -253,6 +253,10 @@ export const translations: TranslationMap = {
   "events.open_chat":      { en: "Open chat →",   es: "Abrir chat →" },
   "events.suggested_for_you": { en: "Suggested for you", es: "Sugeridos para ti" },
   "events.nomaya_only":    { en: "Nomaya Only",   es: "Solo Nomaya" },
+  "events.tab_members":    { en: "Members",       es: "Miembros" },
+  "events.tab_photos":     { en: "Photos",        es: "Fotos" },
+  "events.tab_chat":       { en: "Chat",          es: "Chat" },
+  "events.tab_rate":       { en: "Rate",          es: "Valorar" },
 
   // Event card
   "card.coming_soon":      { en: "Coming soon",   es: "Próximamente" },
