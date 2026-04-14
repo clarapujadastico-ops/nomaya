@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight, Users } from "lucide-react";
 import { MemberProfileSheet } from "./MemberProfileSheet";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
@@ -40,7 +40,8 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
   const { data: attendees = [] } = useEventAttendees(event.id);
   const { data: myRatings = {} } = useMyRatingsForEvent(event.id);
   const { mutate: rateAttendee } = useRateAttendee();
-  const [tab, setTab] = useState<"photos" | "chat" | "rate">("chat");
+  const [tab, setTab] = useState<"photos" | "chat" | "rate" | "members">("chat");
+  const [selectedMember, setSelectedMember] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
   const [text, setText] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -83,18 +84,19 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
 
       {/* Tabs */}
       <div className="flex-shrink-0 flex border-b border-border mx-5">
-        {(["photos", "chat", "rate"] as const).map((t) => (
+        {(["members", "photos", "chat", "rate"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
               tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
             }`}
           >
+            {t === "members" && <Users size={14} />}
             {t === "photos" && <ImageIcon size={14} />}
             {t === "chat" && <Send size={13} />}
             {t === "rate" && <Star size={14} />}
-            {t === "photos" ? "Photos" : t === "chat" ? "Chat" : "Rate"}
+            {t === "members" ? "Members" : t === "photos" ? "Photos" : t === "chat" ? "Chat" : "Rate"}
           </button>
         ))}
       </div>
@@ -254,6 +256,40 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
               );
             })}
         </div>
+      )}
+
+      {/* Members tab */}
+      {tab === "members" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          {attendees.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-16 text-center">
+              <p className="text-sm text-muted-foreground">No attendees yet.</p>
+            </div>
+          ) : attendees.map((a) => (
+            <button
+              key={a.user_id}
+              onClick={() => a.profile && setSelectedMember(a.profile as import("@/hooks/useCircleMembers").MemberProfile)}
+              className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 text-left active:opacity-70 transition-opacity"
+            >
+              {a.profile?.avatar_url ? (
+                <img src={a.profile.avatar_url} alt={a.profile.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-base font-medium flex-shrink-0">
+                  {a.profile?.name?.[0] ?? "?"}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">{a.profile?.name ?? "Member"}</p>
+                {a.profile?.bio && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{a.profile.bio}</p>}
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedMember && (
+        <MemberProfileSheet profile={selectedMember} onClose={() => setSelectedMember(null)} />
       )}
     </div>
   );
@@ -982,6 +1018,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         );
       })()}
 
+      {/* Member profile sheet */}
+      {selectedAttendee && (
+        <MemberProfileSheet profile={selectedAttendee} onClose={() => setSelectedAttendee(null)} />
+      )}
 </>
     );
   }
@@ -1356,11 +1396,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </button>
           </div>
         </div>
-      )}
-
-      {/* Member profile sheet */}
-      {selectedAttendee && (
-        <MemberProfileSheet profile={selectedAttendee} onClose={() => setSelectedAttendee(null)} />
       )}
 
       {/* Event photo-sharing sheet */}
