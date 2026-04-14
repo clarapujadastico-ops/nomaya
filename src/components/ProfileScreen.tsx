@@ -187,23 +187,29 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
   async function handleAvatarUpload() {
     if (!profile?.id) return;
+    let photo;
     try {
-      const photo = await CapCamera.getPhoto({
+      photo = await CapCamera.getPhoto({
         quality: 85,
         allowEditing: true,
         resultType: CameraResultType.Base64,
         source: CameraSource.Photos,
       });
-      if (!photo.base64String) return;
-      setIsUploadingAvatar(true);
-      // Show immediately as data URL while uploading
-      setLocalAvatarUrl(`data:image/jpeg;base64,${photo.base64String}`);
-      const url = await uploadAvatar(photo.base64String, profile.id);
-      setLocalAvatarUrl(url);
-      updateProfile({ avatar_url: url });
     } catch {
       // Capacitor camera unavailable (simulator/web) — fall back to file input
       avatarFileInputRef.current?.click();
+      return;
+    }
+    if (!photo.base64String) return;
+    setIsUploadingAvatar(true);
+    setLocalAvatarUrl(`data:image/jpeg;base64,${photo.base64String}`);
+    try {
+      const url = await uploadAvatar(photo.base64String, profile.id);
+      setLocalAvatarUrl(url);
+      updateProfile({ avatar_url: url });
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('Could not save photo. Please try again.');
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -214,7 +220,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     if (!file || !profile?.id) return;
     setIsUploadingAvatar(true);
 
-    // Show preview immediately from local file — no waiting for upload
     const dataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onload = (ev) => resolve(ev.target?.result as string);
@@ -222,14 +227,14 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     });
     setLocalAvatarUrl(dataUrl);
 
-    // Upload in background and replace with real URL when done
     try {
       const base64 = dataUrl.split(",")[1];
       const url = await uploadAvatar(base64, profile.id!);
       setLocalAvatarUrl(url);
       updateProfile({ avatar_url: url });
-    } catch {
-      // Keep showing local preview even if upload failed
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('Could not save photo. Please try again.');
     } finally {
       setIsUploadingAvatar(false);
     }

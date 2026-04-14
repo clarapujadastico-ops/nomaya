@@ -38,6 +38,9 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
+      // Propagate avatar/bio changes to everywhere the user appears
+      queryClient.invalidateQueries({ queryKey: ['circle_members'] })
+      queryClient.invalidateQueries({ queryKey: ['event_attendees'] })
     },
   })
 }
