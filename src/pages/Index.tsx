@@ -70,8 +70,8 @@ function AppShell() {
   if (inOnboarding) return <OnboardingFlow onComplete={() => setInOnboarding(false)} />;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="mobile-container relative overflow-x-hidden">
+    <div className="min-h-screen bg-background">
+      <div className="mobile-container">
         {activeTab === "events" && (
           <EventsScreen
             onOpenCircle={handleOpenCircle}
