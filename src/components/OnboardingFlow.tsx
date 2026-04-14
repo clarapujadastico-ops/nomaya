@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
-import { ChevronRight, Check, Instagram, Linkedin, Music2 } from "lucide-react";
+import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift } from "lucide-react";
 import { INTERESTS } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { VerificationFlow } from "./VerificationFlow";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { useApplyReferral } from "@/hooks/useReferral";
 
-type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "about_you" | "profile" | "verify";
+type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "about_you" | "profile" | "referral" | "verify";
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -61,7 +62,11 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [referralInput, setReferralInput] = useState("");
+  const [referralError, setReferralError] = useState<string | null>(null);
+  const [referralApplied, setReferralApplied] = useState(false);
   const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
+  const { mutate: applyReferral, isPending: isApplyingReferral } = useApplyReferral();
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -113,7 +118,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         ...(avatar_url ? { avatar_url } : {}),
       },
       {
-        onSuccess: () => setStep("verify"),
+        onSuccess: () => setStep("referral"),
         onError: (err) => {
           const msg = (err as Error).message ?? "";
           if (msg.includes("foreign key") || msg.includes("fkey")) {
@@ -571,6 +576,106 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             {isBusy ? t("onboarding.saving") : t("onboarding.continue")}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  /* ── REFERRAL ── */
+  if (step === "referral") {
+    function handleApplyCode() {
+      const code = referralInput.trim().toUpperCase();
+      if (!code) { setStep("verify"); return; }
+      setReferralError(null);
+      applyReferral(code, {
+        onSuccess: () => {
+          setReferralApplied(true);
+          setTimeout(() => setStep("verify"), 1400);
+        },
+        onError: () => {
+          setReferralError(language === 'es' ? "Código no válido. Compruébalo e inténtalo de nuevo." : "That code doesn't look right. Double-check and try again.");
+        },
+      });
+    }
+
+    return (
+      <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10" style={{ minHeight: "100dvh" }}>
+        <div className="mb-8">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+            {language === 'es' ? "Último paso" : "Almost there"}
+          </p>
+          <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}>
+            {language === 'es' ? "¿Tienes un\ncódigo de amiga?" : "Got a friend's\nreferral code?"}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            {language === 'es'
+              ? "Si alguien te invitó a Nomaya, introduce su código para que ambas recibáis créditos."
+              : "If a friend invited you to Nomaya, enter her code and you'll both get credits."}
+          </p>
+        </div>
+
+        <div className="bg-card rounded-2xl p-4 flex items-start gap-3 mb-6">
+          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Gift size={18} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {language === 'es' ? "Tú recibes €7,50 · Tu amiga recibe €10" : "You get €7.50 · Your friend gets €10"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {language === 'es' ? "Créditos Nomaya aplicados automáticamente" : "Nomaya credits applied automatically"}
+            </p>
+          </div>
+        </div>
+
+        {referralApplied ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+              <Check size={32} className="text-primary" />
+            </div>
+            <p className="text-base font-medium text-foreground">
+              {language === 'es' ? "¡Código aplicado! 💜" : "Code applied! 💜"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {language === 'es' ? "€7,50 de créditos añadidos a tu cuenta." : "€7.50 credits added to your account."}
+            </p>
+          </div>
+        ) : (
+          <div className="flex-1 space-y-3">
+            <input
+              value={referralInput}
+              onChange={e => { setReferralInput(e.target.value.toUpperCase()); setReferralError(null); }}
+              placeholder={language === 'es' ? "CÓDIGO DE AMIGA" : "FRIEND'S CODE"}
+              className="w-full bg-card rounded-2xl px-4 py-4 text-lg font-mono font-bold text-foreground placeholder:text-muted-foreground/40 focus:outline-none tracking-widest text-center uppercase"
+              maxLength={20}
+              autoCapitalize="characters"
+              autoCorrect="off"
+            />
+            {referralError && (
+              <p className="text-xs text-red-400 text-center">{referralError}</p>
+            )}
+          </div>
+        )}
+
+        {!referralApplied && (
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={handleApplyCode}
+              disabled={isApplyingReferral}
+              className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide gradient-cta text-white disabled:opacity-60"
+            >
+              {isApplyingReferral
+                ? (language === 'es' ? "Aplicando…" : "Applying…")
+                : referralInput.trim()
+                  ? (language === 'es' ? "Aplicar código" : "Apply code")
+                  : (language === 'es' ? "Continuar sin código" : "Continue without a code")}
+            </button>
+            {referralInput.trim() !== "" && (
+              <button onClick={() => setStep("verify")} className="w-full py-2 text-muted-foreground text-sm">
+                {language === 'es' ? "Saltar" : "Skip"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   }

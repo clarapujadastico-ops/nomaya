@@ -186,6 +186,41 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   ]);
   const [supportInput, setSupportInput] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
+
+  async function sendSupportMessage(msg: string) {
+    if (!msg || isSendingSupport) return;
+    setIsSendingSupport(true);
+    setSupportInput("");
+    setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
+    supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
+
+    let reply: string;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: msg,
+            context: { events: botEvents, bookingsCount: bookedEventIds.length },
+          }),
+        }
+      );
+      const json = await res.json();
+      reply = json.reply || getBotResponse(msg, botEvents, bookedEventIds);
+    } catch {
+      reply = getBotResponse(msg, botEvents, bookedEventIds);
+    }
+
+    setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
+    supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
+    setIsSendingSupport(false);
+  }
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -994,18 +1029,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                   onChange={(e) => setSupportInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !isSendingSupport) {
-                      const msg = supportInput.trim();
-                      if (!msg) return;
-                      setIsSendingSupport(true);
-                      setSupportInput("");
-                      setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
-                      supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
-                      setTimeout(() => {
-                        const reply = getBotResponse(msg, botEvents, bookedEventIds);
-                        setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
-                        supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
-                        setIsSendingSupport(false);
-                      }, 900);
+                      sendSupportMessage(supportInput.trim());
                     }
                   }}
                   placeholder="Message Nomaya support…"
@@ -1013,20 +1037,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                 />
                 <button
                   disabled={isSendingSupport || !supportInput.trim()}
-                  onClick={() => {
-                    const msg = supportInput.trim();
-                    if (!msg) return;
-                    setIsSendingSupport(true);
-                    setSupportInput("");
-                    setSupportMessages(prev => [...prev, { role: 'user', content: msg }]);
-                    supabase.from('support_messages').insert({ user_id: user?.id, content: msg, role: 'user' });
-                    setTimeout(() => {
-                      const reply = getBotResponse(msg);
-                      setSupportMessages(prev => [...prev, { role: 'bot', content: reply }]);
-                      supabase.from('support_messages').insert({ user_id: user?.id, content: reply, role: 'bot' });
-                      setIsSendingSupport(false);
-                    }, 900);
-                  }}
+                  onClick={() => sendSupportMessage(supportInput.trim())}
                   className="w-10 h-10 rounded-xl gradient-cta flex items-center justify-center disabled:opacity-40"
                 >
                   <MessageCircle size={16} className="text-white" />
