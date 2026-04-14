@@ -4,6 +4,7 @@ import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUpdateProfile } from "@/hooks/useProfile";
+import { useLang } from "@/contexts/LanguageContext";
 
 type VerifyStep = "verify_intro" | "verify_id" | "verify_selfie";
 
@@ -21,7 +22,7 @@ async function uploadVerificationPhoto(
   for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
   const blob = new Blob([bytes], { type: "image/jpeg" });
   const { error } = await supabase.storage
-    .from("Events")
+    .from("verification")
     .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
   if (error) throw error;
 }
@@ -37,22 +38,21 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
 
   const { user } = useAuth();
   const { mutate: updateProfile } = useUpdateProfile();
+  const { t } = useLang();
 
   /* ── VERIFY INTRO ── */
   if (step === "verify_intro") {
     return (
       <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 3 of 3</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.step_3")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}
           >
-            Verify you're a woman
+            {t("verify.title")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Nomaya is a women-only space. We verify members to keep the community safe.
-          </p>
+          <p className="text-sm text-muted-foreground mt-2">{t("verify.subtitle")}</p>
         </div>
 
         <div className="flex-1 space-y-4">
@@ -62,14 +62,14 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
                 <Shield size={18} className="text-foreground" />
               </div>
               <div>
-                <h3 className="font-serif text-base font-medium text-foreground">We'll ask for</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Two quick photos — takes under a minute</p>
+                <h3 className="font-serif text-base font-medium text-foreground">{t("verify.ask_for")}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("verify.two_photos")}</p>
               </div>
             </div>
             <div className="space-y-2.5 mt-3">
               {[
-                { icon: "🪪", label: "A photo of your ID", note: "Passport, DNI, NIE, or any national ID — gender field (F) must be visible" },
-                { icon: "🤳", label: "A selfie", note: "So we can match your face to your ID" },
+                { icon: "🪪", label: t("verify.id_label"), note: t("verify.id_note") },
+                { icon: "🤳", label: t("verify.selfie_label"), note: t("verify.selfie_note") },
               ].map(({ icon, label, note }) => (
                 <div key={label} className="flex items-center gap-3 py-2 border-t border-border">
                   <span className="text-xl">{icon}</span>
@@ -82,10 +82,9 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl p-4 shadow-soft">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              🔒 Your photos are used only for verification and are deleted after review. We never store your ID long-term.
-            </p>
+          <div className="bg-card rounded-2xl p-4 shadow-soft space-y-2">
+            <p className="text-xs text-muted-foreground leading-relaxed">{t("verify.privacy_1")}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t("verify.privacy_2")}</p>
           </div>
         </div>
 
@@ -95,7 +94,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 gradient-cta text-white"
           >
             <Camera size={16} />
-            Start verification
+            {t("verify.start")}
           </button>
           <button
             onClick={() => {
@@ -104,7 +103,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             className="w-full py-3 text-muted-foreground text-sm flex items-center justify-center gap-1"
           >
             <SkipForward size={14} />
-            Skip for now
+            {t("verify.skip")}
           </button>
         </div>
       </div>
@@ -131,26 +130,26 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
     return (
       <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
         <div className="px-6 pt-14 pb-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">ID verification · 1/2</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.id_step")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "1.75rem", letterSpacing: "-0.042em" }}
           >
-            Scan your ID
+            {t("verify.scan_title")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Passport, DNI, NIE, or driver's licence.
-          </p>
-          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-            Make sure the <span className="text-foreground font-medium">gender field is visible</span> — it should show <span className="text-foreground font-medium">F</span> (female), which is the standard across Spanish DNI/NIE, EU and international passports (ICAO standard), and most national IDs worldwide.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("verify.scan_sub")}</p>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t("verify.gender_note")}</p>
         </div>
 
         <div className="mx-6 rounded-2xl overflow-hidden relative bg-muted flex-1" style={{ minHeight: 260 }}>
           {idPhotoPreview ? (
             <img src={idPhotoPreview} alt="ID preview" className="w-full h-full object-cover" style={{ minHeight: 260 }} />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center" style={{ minHeight: 260 }}>
+            <button
+              onClick={captureId}
+              className="w-full h-full flex flex-col items-center justify-center"
+              style={{ minHeight: 260 }}
+            >
               {["top-3 left-3 border-t-2 border-l-2 rounded-tl-lg",
                 "top-3 right-3 border-t-2 border-r-2 rounded-tr-lg",
                 "bottom-3 left-3 border-b-2 border-l-2 rounded-bl-lg",
@@ -158,8 +157,8 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               ].map((cls, i) => (
                 <div key={i} className={`absolute ${cls} w-8 h-8 border-white/70`} />
               ))}
-              <p className="text-xs text-muted-foreground">Tap to scan ID</p>
-            </div>
+              <p className="text-xs text-muted-foreground">{t("verify.tap_id")}</p>
+            </button>
           )}
         </div>
 
@@ -170,13 +169,13 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
                 onClick={() => setStep("verify_selfie")}
                 className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
               >
-                Looks good → Continue
+                {t("verify.looks_good")}
               </button>
               <button
                 onClick={() => { setIdPhotoBase64(null); setIdPhotoPreview(null); }}
                 className="w-full py-2 text-muted-foreground text-sm"
               >
-                Retake photo
+                {t("verify.retake")}
               </button>
             </>
           ) : (
@@ -185,11 +184,11 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 gradient-cta text-white"
             >
               <Camera size={16} />
-              Take photo
+              {t("verify.take_photo")}
             </button>
           )}
           <button onClick={() => setStep("verify_intro")} className="w-full py-2 text-muted-foreground text-sm">
-            ← Back
+            {t("verify.back")}
           </button>
         </div>
       </div>
@@ -220,18 +219,18 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
       try {
         await uploadVerificationPhoto(
           idPhotoBase64,
-          `verification/${user.id}_id.jpg`
+          `${user.id}_id.jpg`
         );
         await uploadVerificationPhoto(
           selfieBase64,
-          `verification/${user.id}_selfie.jpg`
+          `${user.id}_selfie.jpg`
         );
         updateProfile(
           { verification_status: "pending" },
           { onSuccess: onComplete, onError: onComplete }
         );
       } catch (err) {
-        setUploadError("Upload failed. Please try again.");
+        setUploadError(t("verify.upload_error"));
         setIsSubmitting(false);
       }
     }
@@ -239,16 +238,14 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
     return (
       <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
         <div className="px-6 pt-14 pb-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">ID verification · 2/2</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.selfie_step")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
             style={{ fontSize: "1.75rem", letterSpacing: "-0.042em" }}
           >
-            Take a selfie
+            {t("verify.selfie_title")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Look at the camera and take a clear photo of your face.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("verify.selfie_sub")}</p>
         </div>
 
         <div className="mx-auto mt-4 rounded-full overflow-hidden relative bg-muted" style={{ width: 220, height: 220 }}>
@@ -257,7 +254,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center">
               <span className="text-4xl">🤳</span>
-              <p className="text-xs text-muted-foreground mt-2">Tap to take selfie</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("verify.tap_selfie")}</p>
             </div>
           )}
         </div>
@@ -274,14 +271,14 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
                 disabled={isSubmitting}
                 className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white disabled:opacity-60"
               >
-                {isSubmitting ? "Uploading…" : "Submit for review ✦"}
+                {isSubmitting ? t("verify.uploading") : t("verify.submit")}
               </button>
               <button
                 onClick={() => { setSelfieBase64(null); setSelfiePreview(null); }}
                 disabled={isSubmitting}
                 className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40"
               >
-                Retake photo
+                {t("verify.retake")}
               </button>
             </>
           ) : (
@@ -290,7 +287,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 gradient-cta text-white"
             >
               <Camera size={16} />
-              Take selfie
+              {t("verify.take_selfie")}
             </button>
           )}
           <button
@@ -298,7 +295,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             disabled={isSubmitting}
             className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40"
           >
-            ← Back
+            {t("verify.back")}
           </button>
         </div>
       </div>

@@ -19,5 +19,7 @@ export function useEventAttendees(eventId: string | null) {
       return (data ?? []) as EventAttendee[]
     },
     enabled: !!eventId,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 }

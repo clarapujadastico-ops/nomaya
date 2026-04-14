@@ -112,6 +112,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests ?? []);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarCacheKey, setAvatarCacheKey] = useState(0);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const [notifSettings, setNotifSettings] = useState({
     newEvents: true,
@@ -147,8 +148,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     : t("profile.recently");
 
-  const memberId = profile?.id
-    ? `NM-MAD-${String(parseInt(profile.id.replace(/-/g, '').substring(0, 6), 16) % 9000 + 1000).padStart(4, '0')}`
+  const memberId = (profile as any)?.member_number != null
+    ? `NM-MAD-${String((profile as any).member_number).padStart(4, '0')}`
     : 'NM-MAD-????';
 
   // Treat "Member" or empty as no name set — they're onboarding artifacts
@@ -164,16 +165,20 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pass`,
         { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token}` } }
       );
+      if (!res.ok) {
+        alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+        return;
+      }
       const json = await res.json();
-      if (res.status === 503 || json.error === 'not_configured') {
+      if (json.error === 'not_configured') {
         alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
       } else if (json.url) {
         window.location.href = json.url;
       } else {
-        alert(lang === 'es' ? "Error al generar el pase. Inténtalo de nuevo." : "Failed to generate pass. Please try again.");
+        alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
       }
     } catch {
-      alert(lang === 'es' ? "Error de red. Inténtalo de nuevo." : "Network error. Please try again.");
+      alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
     } finally {
       setWalletLoading(false);
     }
@@ -192,6 +197,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       setIsUploadingAvatar(true);
       const url = await uploadAvatar(photo.base64String, profile.id);
       updateProfile({ avatar_url: url });
+      setAvatarCacheKey(k => k + 1);
     } catch {
       // Capacitor camera unavailable (simulator/web) — fall back to file input
       avatarFileInputRef.current?.click();
@@ -211,6 +217,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         const base64 = dataUrl.split(",")[1];
         const url = await uploadAvatar(base64, profile.id!);
         updateProfile({ avatar_url: url });
+        setAvatarCacheKey(k => k + 1);
         setIsUploadingAvatar(false);
       };
       reader.readAsDataURL(file);
@@ -1034,7 +1041,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           className="w-full h-full block disabled:opacity-70 active:opacity-80 transition-opacity"
         >
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
+            <img src={`${profile.avatar_url}?v=${avatarCacheKey}`} alt={profile?.name ?? ""} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-2">
               <span className="text-8xl opacity-40">🌸</span>

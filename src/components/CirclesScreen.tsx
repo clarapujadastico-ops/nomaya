@@ -26,6 +26,7 @@ import { useCircleSpots, useAddCircleSpot, useVoteCircleSpot, useConfirmCircleSp
 import { useCircleProposals, useProposeCircle, useToggleProposalInterest, ACTIVATION_THRESHOLD } from "@/hooks/useCircleProposals";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleCover } from "@/hooks/useCircles";
+import { useCircleMembers } from "@/hooks/useCircleMembers";
 import { useProfile } from "@/hooks/useProfile";
 import { VerificationFlow } from "./VerificationFlow";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages"
@@ -758,6 +759,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const [showVerifyFlow, setShowVerifyFlow] = useState(false);
 
   const { data: profile } = useProfile();
+  const { data: circleMembers = [] } = useCircleMembers(circle.id);
   const isUnverified = profile?.verification_status !== 'verified';
   const isMember = circle.isMember || circle.isAdmin;
 
@@ -894,21 +896,34 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-base font-medium text-foreground mb-3">Members</h3>
-              <div className="flex -space-x-2">
-                {Array.from({ length: Math.min(circle.memberCount, 8) }).map((_, i) => (
-                  <div key={i} className="w-9 h-9 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm">
-                    {EMOJIS[i % EMOJIS.length]}
-                  </div>
-                ))}
-                {circle.memberCount > 8 && (
-                  <div className="w-9 h-9 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[10px] text-muted-foreground">
-                    +{circle.memberCount - 8}
-                  </div>
-                )}
-                {circle.memberCount === 0 && (
-                  <p className="text-sm text-muted-foreground">Be the first to join.</p>
-                )}
-              </div>
+              {circleMembers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Be the first to join.</p>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {circleMembers.map((m) => (
+                    <div key={m.user_id} className="flex flex-col items-center gap-1" style={{ width: 52 }}>
+                      {m.profile?.avatar_url ? (
+                        <img src={m.profile.avatar_url} alt={m.profile.name} className="w-10 h-10 rounded-full object-cover border-2 border-card" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-sm font-medium text-foreground">
+                          {m.profile?.name?.[0] ?? "?"}
+                        </div>
+                      )}
+                      <p className="text-[10px] text-muted-foreground text-center leading-tight truncate w-full">
+                        {m.profile?.name?.split(' ')[0] ?? "—"}
+                      </p>
+                    </div>
+                  ))}
+                  {circle.memberCount > 12 && (
+                    <div className="flex flex-col items-center gap-1" style={{ width: 52 }}>
+                      <div className="w-10 h-10 rounded-full bg-muted border-2 border-card flex items-center justify-center text-[10px] text-muted-foreground">
+                        +{circle.memberCount - 12}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">more</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
 

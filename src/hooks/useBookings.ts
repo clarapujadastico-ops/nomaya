@@ -71,6 +71,7 @@ export function useBookEvent() {
       queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['event_interest_count', eventId] })
+      queryClient.invalidateQueries({ queryKey: ['event_attendees', eventId] })
     },
   })
 }
