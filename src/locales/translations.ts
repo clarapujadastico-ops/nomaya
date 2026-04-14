@@ -341,6 +341,24 @@ export const translations: TranslationMap = {
   "settings.invite_friend":{ en: "Invite a friend", es: "Invita a una amiga" },
   "settings.invite_desc":  { en: "Invite a woman you'd love to see at your table. She gets 15% off her first event, you get 10€ Nomaya credit.", es: "Invita a una mujer a la que te encantaría ver en tu mesa. Ella recibe 15% de descuento en su primer evento, tú recibes 10€ de crédito Nomaya." },
 
+  // Onboarding — about you step (previously hardcoded)
+  "onboarding.about_title":   { en: "A bit about you",                              es: "Un poco sobre ti" },
+  "onboarding.about_sub":     { en: "Helps us suggest the right events. Never shown publicly.", es: "Nos ayuda a sugerirte los eventos correctos. No se muestra públicamente." },
+  "onboarding.age_range":     { en: "Your age range",                               es: "Tu rango de edad" },
+  "onboarding.life_stage":    { en: "Your life stage",                              es: "Tu etapa vital" },
+  "onboarding.ls_student":    { en: "Student",                                      es: "Estudiante" },
+  "onboarding.ls_working":    { en: "Working professional",                         es: "Profesional en activo" },
+  "onboarding.ls_founder":    { en: "Founder / entrepreneur",                       es: "Fundadora / emprendedora" },
+  "onboarding.ls_freelancer": { en: "Freelancer / creative",                        es: "Freelancer / creativa" },
+  "onboarding.ls_new_city":   { en: "New in the city",                              es: "Nueva en la ciudad" },
+  "onboarding.ls_parent":     { en: "Parent",                                       es: "Madre" },
+  "onboarding.full_name":     { en: "Full name (first & last)",                     es: "Nombre completo (nombre y apellido)" },
+  "onboarding.social_media":  { en: "Social media",                                 es: "Redes sociales" },
+  "onboarding.more_about":    { en: "A little more about you",                      es: "Un poco más sobre ti" },
+  "onboarding.fav_song":      { en: "Favourite song right now…",                    es: "Canción favorita ahora mismo…" },
+  "onboarding.fav_food":      { en: "Favourite food or restaurant…",                es: "Comida o restaurante favorito…" },
+  "onboarding.slide_of":      { en: "of",                                           es: "de" },
+
   // Identity verification
   "verify.step_3":         { en: "Step 3 of 3",    es: "Paso 3 de 3" },
   "verify.title":          { en: "Verify you're a woman", es: "Verifica que eres mujer" },

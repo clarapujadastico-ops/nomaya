@@ -98,7 +98,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
     updateProfile(
       {
-        name: profile.name || "Member",
+        name: profile.name.trim() || "",
         city: profile.city || "",
         bio: profile.bio || null,
         language,
@@ -234,7 +234,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
               className="inline-block px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-5 self-start"
               style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.2)" }}
             >
-              {welcomeIndex + 1} of 3
+              {welcomeIndex + 1} {t("onboarding.slide_of")} 3
             </div>
 
             <h2
@@ -355,28 +355,28 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   if (step === "about_you") {
     const AGE_RANGES = ["18–25", "26–35", "36–45", "46+"];
     const LIFE_STAGES = [
-      { id: "student",              label: "Student",               emoji: "🎓" },
-      { id: "working_professional", label: "Working professional",  emoji: "💼" },
-      { id: "founder",              label: "Founder / entrepreneur", emoji: "🚀" },
-      { id: "freelancer",           label: "Freelancer / creative",  emoji: "✨" },
-      { id: "new_in_city",          label: "New in the city",        emoji: "📍" },
-      { id: "parent",               label: "Parent",                 emoji: "🌸" },
+      { id: "student",              label: t("onboarding.ls_student"),    emoji: "🎓" },
+      { id: "working_professional", label: t("onboarding.ls_working"),    emoji: "💼" },
+      { id: "founder",              label: t("onboarding.ls_founder"),    emoji: "🚀" },
+      { id: "freelancer",           label: t("onboarding.ls_freelancer"), emoji: "✨" },
+      { id: "new_in_city",          label: t("onboarding.ls_new_city"),   emoji: "📍" },
+      { id: "parent",               label: t("onboarding.ls_parent"),     emoji: "🌸" },
     ];
 
     return (
       <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
         <div className="px-6 pt-14 pb-4 flex-shrink-0">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Step 2 of 3</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("onboarding.step2")}</p>
           <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "2rem", letterSpacing: "-0.042em" }}>
-            A bit about you
+            {t("onboarding.about_title")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Helps us suggest the right events. Never shown publicly.</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("onboarding.about_sub")}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 space-y-6 pb-4">
           {/* Age range */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Your age range</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">{t("onboarding.age_range")}</p>
             <div className="grid grid-cols-4 gap-2">
               {AGE_RANGES.map((r) => (
                 <button
@@ -397,7 +397,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           {/* Life stage */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Your life stage</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">{t("onboarding.life_stage")}</p>
             <div className="space-y-2">
               {LIFE_STAGES.map((s) => (
                 <button
@@ -477,7 +477,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           {/* Name & City */}
           {[
-            { key: "name", label: "Full name (first & last)", placeholder: "Sofia García" },
+            { key: "name", label: t("onboarding.full_name"), placeholder: "Sofia García" },
             { key: "city", label: t("onboarding.city"), placeholder: "Madrid" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
@@ -508,7 +508,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           {/* Social media */}
           <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">Social media</label>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">{t("onboarding.social_media")}</label>
             <div className="space-y-2">
               {[
                 { key: "instagram_url", icon: Instagram, placeholder: "instagram.com/yourhandle" },
@@ -531,11 +531,11 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
           {/* Favourites */}
           <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">A little more about you</label>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">{t("onboarding.more_about")}</label>
             <div className="space-y-2">
               {[
-                { key: "favourite_song", placeholder: "Favourite song right now…", prefix: "🎵" },
-                { key: "favourite_food", placeholder: "Favourite food or restaurant…", prefix: "🍽️" },
+                { key: "favourite_song", placeholder: t("onboarding.fav_song"), prefix: "🎵" },
+                { key: "favourite_food", placeholder: t("onboarding.fav_food"), prefix: "🍽️" },
               ].map(({ key, placeholder, prefix }) => (
                 <div key={key} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
                   <span className="text-base flex-shrink-0">{prefix}</span>

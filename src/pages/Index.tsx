@@ -78,7 +78,7 @@ function AppShell() {
             onSeeAllBookings={() => setShowAllBookings(true)}
           />
         )}
-        {activeTab === "community" && <GrowScreen />}
+        {activeTab === "community" && <GrowScreen onOpenCircle={handleOpenCircle} />}
         {activeTab === "rewards" && <RewardsScreen />}
         {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
         {activeTab === "profile" && (

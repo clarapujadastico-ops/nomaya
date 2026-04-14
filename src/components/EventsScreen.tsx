@@ -340,7 +340,7 @@ interface EventsScreenProps {
 export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: EventsScreenProps = {}) {
   const { t } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
-  const [view, setView] = useState<"suggested" | "all" | "week">("suggested");
+  const [view, setView] = useState<"suggested" | "all" | "daytrips" | "retreats" | "week">("suggested");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -422,13 +422,20 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
     let list: AppEvent[];
     if (view === "week") {
       list = upcomingEvents.filter((e) => !e.isTbc && isThisWeek(e.rawDate));
+    } else if (view === "daytrips") {
+      list = upcomingEvents.filter((e) => e.category === "Trips" &&
+        !e.title.toLowerCase().includes("weekend") && !e.title.toLowerCase().includes("retreat"));
+    } else if (view === "retreats") {
+      list = upcomingEvents.filter((e) => e.category === "Trips" &&
+        (e.title.toLowerCase().includes("weekend") || e.title.toLowerCase().includes("retreat")));
     } else if (view === "suggested") {
       list = [...upcomingEvents].sort((a, b) =>
         scoreEvent(b, userInterests, bookedCategories) - scoreEvent(a, userInterests, bookedCategories)
       );
     } else {
+      // "all" = Events tab — exclude Trips (handled by dedicated tabs)
       list = activeFilter === "All"
-        ? upcomingEvents
+        ? upcomingEvents.filter((e) => e.category !== "Trips")
         : upcomingEvents.filter((e) => e.category === activeFilter);
     }
 
@@ -1025,11 +1032,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       </div>
 
       {/* View tabs */}
-      <div className="flex gap-2 px-5 mb-3">
+      <div className="flex gap-2 px-5 mb-3 overflow-x-auto scrollbar-hide">
         {([
-          { id: "suggested", label: "Suggested" },
-          { id: "all",       label: "All events" },
-          { id: "week",      label: "This week" },
+          { id: "suggested", label: t("events.tab_suggested") },
+          { id: "week",      label: t("events.tab_week") },
+          { id: "all",       label: t("events.tab_events") },
+          { id: "daytrips",  label: t("events.tab_daytrips") },
+          { id: "retreats",  label: t("events.tab_getaways") },
         ] as const).map((tab) => (
           <button
             key={tab.id}
@@ -1074,7 +1083,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           {view === "suggested" && !hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
-                <h2 className="font-serif text-lg font-medium text-foreground">Nomaya Only</h2>
+                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.nomaya_only")}</h2>
               </div>
               {(() => {
                 const ev = featured[0];
@@ -1104,13 +1113,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
-          {/* My Events — attended events with chat CTA */}
+          {/* My Bookings — attended events with chat CTA */}
           {bookings.filter(b => b.status === 'confirmed').length > 0 && !searchQuery && view === "suggested" && !hasFilters && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
-                <h2 className="font-serif text-lg font-medium text-foreground">My Events</h2>
+                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.my_bookings")}</h2>
                 <button onClick={() => onSeeAllBookings?.()} className="text-xs text-primary">
-                  See all →
+                  {t("events.see_all_arrow")}
                 </button>
               </div>
               <div className="flex gap-3 px-5 overflow-x-auto pb-2 scrollbar-hide">
@@ -1139,7 +1148,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       </div>
                       <div className="bg-card px-2.5 py-2">
                         <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
-                        <p className="text-[10px] text-primary mt-0.5">Open chat →</p>
+                        <p className="text-[10px] text-primary mt-0.5">{t("events.open_chat")}</p>
                       </div>
                     </button>
                   );
@@ -1152,7 +1161,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           {view === "suggested" && !hasFilters && !searchQuery ? (
             <>
               <div className="px-5 mb-6">
-                <h2 className="font-serif text-lg font-medium text-foreground mb-3">Suggested for you</h2>
+                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.suggested_for_you")}</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {filtered.slice(0, 4).map((event) => (
                     <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
@@ -1176,7 +1185,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="px-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">
-                  {view === "week" ? "This week" : activeFilter === "All" ? t("events.upcoming") : activeFilter}
+                  {view === "week" ? t("events.tab_week") : activeFilter === "All" ? t("events.upcoming") : activeFilter}
                 </h2>
                 {hasFilters && (
                   <button onClick={() => setAppliedFilters(defaultFilters)} className="flex items-center gap-1 text-xs text-primary">
