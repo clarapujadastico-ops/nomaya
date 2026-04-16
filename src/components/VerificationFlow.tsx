@@ -22,7 +22,7 @@ async function uploadVerificationPhoto(
   for (let i = 0; i < chars.length; i++) bytes[i] = chars.charCodeAt(i);
   const blob = new Blob([bytes], { type: "image/jpeg" });
   const { error } = await supabase.storage
-    .from("verification")
+    .from("Verification")
     .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
   if (error) throw error;
 }

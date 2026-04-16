@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
   // Upload to Supabase Storage and return a signed URL (iOS opens it natively)
   const adminClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
   const filePath = `passes/${user.id}.pkpass`

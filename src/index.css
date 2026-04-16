@@ -145,7 +145,24 @@
 
 @layer utilities {
   .mobile-container {
-    @apply w-full min-h-screen relative overflow-x-hidden;
+    @apply w-full relative overflow-x-hidden;
+    min-height: 100dvh;
+  }
+
+  /* iOS safe area utilities */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Screen header: at least 56px, grows with Dynamic Island/notch */
+  .pt-screen-top {
+    padding-top: max(3.5rem, calc(0.75rem + env(safe-area-inset-top, 0px)));
+  }
+  /* Screen bottom: nav bar height (64px) + home indicator safe area */
+  .pb-screen-bottom {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }

@@ -74,7 +74,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
   return (
     <div className="fixed inset-0 z-[200] bg-background flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-12 pb-3">
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-screen-top pb-3">
         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-card">
           <ArrowLeft size={18} className="text-foreground" />
         </button>
@@ -517,7 +517,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
     const event: AppEvent | undefined = events.find((e) => e.id === selectedEvent);
     if (!event) {
       return (
-        <div className="mobile-container flex flex-col bg-background pb-24 items-center justify-center">
+        <div className="mobile-container flex flex-col bg-background pb-screen-bottom items-center justify-center">
           <p className="text-muted-foreground text-sm">Loading event…</p>
         </div>
       );
@@ -525,7 +525,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
     return (
       <>
-      <div className="mobile-container flex flex-col bg-background pb-24">
+      <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
         {/* Event hero */}
         <div className="relative h-72">
           {event.image ? (
@@ -1054,9 +1054,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
   // ── Main list view ─────────────────────────────────────────────────────────
   return (
-    <div className="mobile-container flex flex-col bg-background pb-24">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
       {/* Header */}
-      <div className="px-5 pt-14 pb-4 text-center">
+      <div className="px-5 pt-screen-top pb-4 text-center">
         <Logo />
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("events.city")}</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("events.heading")}</h1>

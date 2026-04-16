@@ -443,8 +443,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     ];
 
     return (
-      <div className="mobile-container flex flex-col bg-background pb-24">
-        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+      <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
+        <div className="px-5 pt-screen-top pb-4 flex items-center gap-3">
           <button onClick={() => setShowSettings(false)} className="w-9 h-9 rounded-full bg-card flex items-center justify-center">
             <ArrowLeft size={18} className="text-foreground" />
           </button>
@@ -928,7 +928,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           const doc = docs[legalDoc][lang] ?? docs[legalDoc]['en'];
           return (
             <div className="fixed inset-0 z-[300] flex flex-col" style={{ background: '#fff' }}>
-              <div className="px-5 pt-14 pb-4 flex items-center gap-3 flex-shrink-0 border-b border-gray-100">
+              <div className="px-5 pt-screen-top pb-4 flex items-center gap-3 flex-shrink-0 border-b border-gray-100">
                 <button onClick={() => setLegalDoc(null)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
                   <ArrowLeft size={18} className="text-gray-700" />
                 </button>
@@ -1124,7 +1124,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
   // ── Main profile view ────────────────────────────────────────────────────────
   return (
-    <div className="mobile-container flex flex-col bg-background pb-24">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
 
       {/* Hidden file input — fallback for simulator/web */}
       <input

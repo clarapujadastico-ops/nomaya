@@ -790,7 +790,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   }
 
   return (
-    <div className="mobile-container flex flex-col bg-background pb-24">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
       {/* Hero */}
       <div className="relative h-56">
         <img src={coverImage} alt={circle.name} className="w-full h-full object-cover" />
@@ -2149,8 +2149,8 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
     categoryFiltered;
 
   return (
-    <div className="mobile-container flex flex-col bg-background pb-24">
-      <div className="px-5 pt-14 pb-4">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
+      <div className="px-5 pt-screen-top pb-4">
         <div className="flex justify-end mb-1">
           <button onClick={() => { if (isUnverified) { setShowVerifyGate(true); return; } setShowCreate(true); }} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
             <Plus size={18} className="text-primary-foreground" />

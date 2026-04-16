@@ -20,7 +20,8 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border flex items-center justify-around px-2 pb-safe z-[200]"
+      className="fixed bottom-0 left-0 right-0 w-full bg-card border-t border-border flex items-center justify-around px-2 z-[200]"
+      style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
       style={{ boxShadow: "0 -4px 20px hsl(252 30% 30% / 0.15)" }}
     >
       {tabs.map(({ id, labelKey, icon: Icon }) => {

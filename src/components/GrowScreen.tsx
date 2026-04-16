@@ -225,9 +225,9 @@ export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => vo
   }
 
   return (
-    <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-28">
+    <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-screen-bottom">
       {/* Header */}
-      <div className="px-5 pt-14 pb-2 text-center">
+      <div className="px-5 pt-screen-top pb-2 text-center">
         <Logo />
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Madrid · 2026</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("grow.community")}</h1>
