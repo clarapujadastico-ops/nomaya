@@ -283,7 +283,7 @@ export const translations: TranslationMap = {
   "grow.invite_heading":   { en: "Invite a woman you'd love\nto see at your table.", es: "Invita a una mujer a la que\nte encantaría ver en tu mesa." },
   "grow.she_gets":         { en: "She gets",       es: "Ella recibe" },
   "grow.you_get":          { en: "You get",        es: "Tú recibes" },
-  "grow.perk_friend_credit":{ en: "€7.50 Nomaya credit on signup", es: "€7,50 de crédito Nomaya al registrarse" },
+  "grow.perk_friend_credit":{ en: "15% off her first event", es: "15% de descuento en su primer evento" },
   "grow.perk_credit":      { en: "€10 Nomaya credit", es: "€10 de crédito Nomaya" },
   "grow.your_code":        { en: "Your code",      es: "Tu código" },
   "grow.copy":             { en: "Copy",           es: "Copiar" },

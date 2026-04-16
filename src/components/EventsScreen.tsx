@@ -722,10 +722,14 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     return;
                   }
 
-                  // Credits covered the full price — no card needed
+                  // Credits + referral discount covered the full price — no card needed
                   if (data?.free === true) {
-                    const discountEur = Math.round((data.discountApplied ?? 0) / 100);
-                    setBookingInfo(`✨ Your €${discountEur} credits covered this event — no payment needed!`);
+                    const referralEur = ((data.referralDiscountCents ?? 0) / 100).toFixed(0);
+                    const creditsEur = ((data.discountApplied ?? 0) / 100).toFixed(0);
+                    const msg = data.referralDiscountCents > 0
+                      ? `🎉 15% referral discount (−€${referralEur})${Number(creditsEur) > 0 ? ` + €${creditsEur} credits` : ''} — no payment needed!`
+                      : `✨ Your €${creditsEur} credits covered this event — no payment needed!`;
+                    setBookingInfo(msg);
                     bookEvent(
                       { eventId: selectedEvent, amountCentsPaid: 0 },
                       { onError: (e) => { setBookingInfo(null); setBookingError(e.message); } }
@@ -733,7 +737,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     return;
                   }
 
-                  const { clientSecret, publishableKey, amountCents, discountApplied } = data;
+                  const { clientSecret, publishableKey, amountCents, discountApplied, referralDiscountCents } = data;
 
                   // Re-initialise with the key returned from the server (handles pk_live_ vs pk_test_)
                   if (publishableKey) {
@@ -750,9 +754,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   const listener = await Stripe.addListener(
                     PaymentSheetEventsEnum.Completed,
                     () => {
-                      // Zero out credits if a discount was applied
+                      // Deduct credits if applied
                       if (discountApplied > 0) {
                         updateProfile({ credits_cents: Math.max(0, (profile?.credits_cents ?? 0) - discountApplied) });
+                      }
+                      // Mark referral discount used (server already charged correctly, just update UI state)
+                      if (referralDiscountCents > 0) {
+                        supabase.from('profiles').update({ referral_discount_used: true }).eq('id', user?.id ?? '').then(() => {});
                       }
                       bookEvent(
                         {

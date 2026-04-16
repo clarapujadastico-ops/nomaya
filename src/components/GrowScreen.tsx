@@ -129,7 +129,7 @@ function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: st
   }
 
   function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜\n\nJoin Nomaya — a curated community for women in Madrid.\n\n👉 Download the app: https://apps.apple.com/app/nomaya/id6743720892\n\nUse my code *${referralCode}* when you sign up to get €7.50 welcome credit. I'll get €10 credit too 💜`;
+    const text = `I'd love to see you at my table 💜\n\nJoin Nomaya — a curated community for women in Madrid.\n\n👉 Download the app: https://apps.apple.com/app/nomaya/id6743720892\n\nUse my code *${referralCode}* when you sign up and get 15% off your first event 🎉`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
