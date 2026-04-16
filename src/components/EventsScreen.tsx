@@ -8,7 +8,7 @@ import { useEvents } from "@/hooks/useEvents";
 import { useBookings, useBookEvent, useCancelBooking, useCancelWaitlist } from "@/hooks/useBookings";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
-import { useEnsureEventCircle } from "@/hooks/useCircles";
+import { useEnsureEventCircle, useCircles } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { resolveEventImage } from "@/assets/eventImages";
 import { useMyRatingsForEvent, useRateAttendee } from "@/hooks/useAttendeeRatings";
@@ -373,6 +373,86 @@ function scoreEvent(event: AppEvent, userInterests: string[], bookedCategories: 
   return score;
 }
 
+// ── Category → emoji mapping ──────────────────────────────────────────────────
+const CAT_EMOJI: Record<string, string> = {
+  Creative:     "🎨",
+  Wellness:     "🌿",
+  Foodie:       "🍝",
+  Cultural:     "🎭",
+  Social:       "☕",
+  Professional: "💼",
+  Trips:        "🗺️",
+};
+
+function relativeDay(rawDate: string): string {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(rawDate + 'T00:00:00'); d.setHours(0,0,0,0);
+  const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff <= 6) return `This ${d.toLocaleDateString('en-US', { weekday: 'long' })}`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function groupVibe(totalSpots: number, spotsLeft: number): string {
+  const taken = totalSpots - spotsLeft;
+  if (totalSpots <= 6)  return "very relaxed";
+  if (totalSpots <= 10) return "small group";
+  if (totalSpots <= 15) return "cozy";
+  return taken > totalSpots * 0.7 ? "filling up" : "open";
+}
+
+interface NextCard {
+  event: AppEvent;
+  context: string;   // e.g. "easy first plan" / "connected to Yogis" / "new for you"
+}
+
+function pickNextForYou(
+  events: AppEvent[],
+  userInterests: string[],
+  bookedCategories: string[],
+  circleCategories: string[],
+): NextCard[] {
+  const pool = events.filter(e => !e.isTbc && e.spotsLeft > 0);
+  const result: NextCard[] = [];
+  const usedIds = new Set<string>();
+
+  // Rule 1 — Easy/low-pressure: smallest group available
+  const easy = [...pool]
+    .sort((a, b) => a.totalSpots - b.totalSpots)
+    .find(e => !usedIds.has(e.id));
+  if (easy) { result.push({ event: easy, context: "easy first plan" }); usedIds.add(easy.id); }
+
+  // Rule 2 — Circle-connected: category matches one of user's circles
+  if (circleCategories.length > 0) {
+    const circleEvent = pool.find(e => circleCategories.includes(e.category) && !usedIds.has(e.id));
+    if (circleEvent) {
+      const matchedCircleCat = circleCategories.find(c => c === circleEvent.category) ?? "";
+      result.push({ event: circleEvent, context: `from your ${matchedCircleCat} circle` });
+      usedIds.add(circleEvent.id);
+    }
+  }
+
+  // Rule 3 — Exploratory: category NOT in user's usual interests or bookings
+  const knownCats = new Set([
+    ...bookedCategories,
+    ...userInterests.flatMap(i => INTEREST_CATEGORY_MAP[i] ?? []),
+  ]);
+  const exploratory = pool.find(e => !knownCats.has(e.category) && !usedIds.has(e.id));
+  if (exploratory && result.length < 3) {
+    result.push({ event: exploratory, context: "new for you" });
+    usedIds.add(exploratory.id);
+  }
+
+  // Fill to 2 if we only got 1
+  if (result.length < 2) {
+    const filler = pool.find(e => !usedIds.has(e.id));
+    if (filler) result.push({ event: filler, context: "" });
+  }
+
+  return result.slice(0, 3);
+}
+
 interface EventsScreenProps {
   onOpenCircle?: (id: string, tab?: 'chat' | 'about') => void;
   onOpenMap?: () => void;
@@ -456,6 +536,19 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const bookedCategories = useMemo(
     () => [...new Set(bookings.filter(b => b.event).map(b => b.event!.category?.name ?? ""))],
     [bookings]
+  );
+
+  // Categories from circles user is in (for Rule 2)
+  const { data: allCircles = [] } = useCircles();
+  const circleCategories = useMemo(
+    () => [...new Set(allCircles.filter(c => c.isMember || c.isAdmin).map(c => c.category).filter(Boolean))],
+    [allCircles]
+  );
+
+  // "What's next for you" — 2-3 curated picks
+  const nextForYou = useMemo(
+    () => pickNextForYou(upcomingEvents, userInterests, bookedCategories, circleCategories),
+    [upcomingEvents, userInterests, bookedCategories, circleCategories]
   );
 
   // Fixed category order — only show if events exist in that category
@@ -1236,29 +1329,51 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
-          {/* All events — 2-column grid */}
+          {/* What's next for you — 2–3 curated picks */}
           {view === "suggested" && !hasFilters && !searchQuery ? (
             <>
-              <div className="px-5 mb-6">
-                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.suggested_for_you")}</h2>
+              {nextForYou.length > 0 && (
+                <div className="px-5 mb-6">
+                  <h2 className="font-serif text-lg font-medium text-foreground mb-3">What's next for you</h2>
+                  <div className="space-y-2.5">
+                    {nextForYou.map(({ event, context }) => {
+                      const emoji = CAT_EMOJI[event.category] ?? "✦";
+                      const attendees = event.totalSpots - event.spotsLeft;
+                      const vibe = groupVibe(event.totalSpots, event.spotsLeft);
+                      const timing = event.rawDate ? relativeDay(event.rawDate) : event.date;
+                      return (
+                        <button
+                          key={event.id}
+                          onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
+                          className="w-full bg-card rounded-2xl px-4 py-3.5 text-left flex items-center gap-4 shadow-soft active:opacity-80 transition-opacity"
+                        >
+                          <span className="text-2xl flex-shrink-0">{emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground leading-snug truncate">{event.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {attendees > 0 ? `${attendees} women · ` : ''}{vibe}
+                            </p>
+                            <p className="text-xs text-primary mt-0.5 font-medium">
+                              {timing}{context ? ` · ${context}` : ''}
+                            </p>
+                          </div>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: event.categoryColor }} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* All upcoming below */}
+              <div className="px-5">
+                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.upcoming")}</h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {filtered.slice(0, 4).map((event) => (
+                  {filtered.map((event) => (
                     <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
                       onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
                   ))}
                 </div>
               </div>
-              {filtered.length > 4 && (
-                <div className="px-5">
-                  <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.upcoming")}</h2>
-                  <div className="grid grid-cols-2 gap-3">
-                    {filtered.slice(4).map((event) => (
-                      <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
-                        onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           ) : (
             <div className="px-5">
