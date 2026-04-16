@@ -1,228 +1,199 @@
-import { useState, useEffect } from "react";
-import { Check, Copy, Users } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronRight } from "lucide-react";
 import { Logo } from "./Logo";
-import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
 import { useCircles } from "@/hooks/useCircles";
+import { useMonthlyStats } from "@/hooks/useMonthlyStats";
 import { useLang } from "@/contexts/LanguageContext";
 
-function generateCode(name: string | undefined, id: string | undefined): string {
-  const prefix = name
-    ? name.trim().toUpperCase().replace(/[^A-Z]/g, '').substring(0, 5)
-    : '';
-  const suffix = (id ?? '').replace(/-/g, '').substring(0, 4).toUpperCase();
-  return (prefix + suffix).substring(0, 8) || Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
 const TIERS = [
-  { icon: "🌸", labelKey: "badge.founding_circle", events: 1, perkKeys: ["grow.perk_all_access", "grow.perk_founding_badge"] },
-  { icon: "✨", labelKey: "badge.inner_circle",    events: 3, perkKeys: ["grow.perk_priority", "grow.perk_guest_pass"] },
-  { icon: "🔮", labelKey: "badge.keeper",           events: 5, perkKeys: ["grow.perk_early_retreats", "grow.perk_10off"] },
-  { icon: "👁️", labelKey: "grow.tier_host",         events: 8, perkKeys: ["grow.perk_host_own", "grow.perk_host_dinners"] },
+  { icon: "🌸", label: "Founding Circle",       events: 1,  perks: ["All events access", "Founding badge"] },
+  { icon: "✨", label: "Inner Circle",           events: 3,  perks: ["Priority booking", "Guest pass"] },
+  { icon: "🔮", label: "Keeper of the Circle",   events: 5,  perks: ["Early retreat access", "10% off"] },
 ];
 
-const WHATSAPP_SVG = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-);
+// ─── Your Month Tab ────────────────────────────────────────────────────────────
 
+function YourMonthTab({ eventsAttended, onOpenCircle }: {
+  eventsAttended: number;
+  onOpenCircle?: (id: string) => void;
+}) {
+  const { data: stats, isLoading } = useMonthlyStats();
 
-function ProgressTab({ eventsAttended, circles, onOpenCircle }: { eventsAttended: number; circles: { id: string; name: string; memberCount: number; category: string }[]; onOpenCircle?: (id: string) => void }) {
-  const { t } = useLang();
-
-  const topCircles = [...circles]
-    .filter(c => c.memberCount > 0)
-    .sort((a, b) => b.memberCount - a.memberCount)
-    .slice(0, 3);
-
-  const hostSteps = [
-    { labelKey: "grow.step_8events",    done: eventsAttended >= 8, value: `${Math.min(eventsAttended, 8)}/8` },
-    { labelKey: "grow.step_2referrals", done: false,               value: "0/2" },
-    { labelKey: "grow.step_rating",     done: false,               value: "—" },
-    { labelKey: "grow.step_onboarding", done: false,               valueKey: "grow.step_pending" },
-  ];
-  const hostDone = hostSteps.filter(s => s.done).length;
+  const now = new Date();
+  const monthName = now.toLocaleString('default', { month: 'long' });
 
   return (
     <div className="space-y-3">
 
-      {/* Community Spotlight */}
-      {topCircles.length > 0 && (
+      {/* This month stats */}
+      <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
+        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{monthName}</p>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => <div key={i} className="h-10 bg-muted rounded-xl animate-pulse" />)}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 bg-muted rounded-2xl px-4 py-3">
+              <span className="text-2xl">👋</span>
+              <div>
+                <p className="text-base font-semibold text-foreground">
+                  You've met <span className="text-primary font-bold">{stats?.womenMet ?? 0}</span> women this month
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">Across {stats?.eventsThisMonth ?? 0} events</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-muted rounded-2xl px-4 py-3">
+              <span className="text-2xl">🌀</span>
+              <div>
+                <p className="text-base font-semibold text-foreground">
+                  You joined <span className="text-primary font-bold">{stats?.circlesJoinedCount ?? 0}</span> circles
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">New this month</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Circles you're part of */}
+      {(stats?.myCircles?.length ?? 0) > 0 && (
         <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("grow.most_active")}</p>
-          <div className="space-y-4">
-            {topCircles.map((c, i) => {
-              const maxMembers = topCircles[0].memberCount;
-              const pct = Math.round((c.memberCount / maxMembers) * 100);
-              const medals = ["🥇","🥈","🥉"];
-              return (
-                <button key={c.id} onClick={() => onOpenCircle?.(c.id)} className="w-full text-left active:opacity-70 transition-opacity">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-2xl flex-shrink-0">{medals[i]}</span>
-                      <span className="text-base font-semibold text-white truncate">{c.name}</span>
-                    </div>
-                    <span className="text-sm text-white/70 flex-shrink-0 flex items-center gap-1.5 ml-2 font-medium">
-                      <Users size={13} />{c.memberCount}
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "rgba(255,255,255,0.75)" }} />
-                  </div>
-                </button>
-              );
-            })}
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Circles you're part of</p>
+          <div className="space-y-2">
+            {stats!.myCircles.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => onOpenCircle?.(c.id)}
+                className="w-full flex items-center justify-between bg-muted rounded-2xl px-4 py-3 active:opacity-70 transition-opacity"
+              >
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {c.sessions > 0
+                      ? `You've been to ${c.sessions} session${c.sessions === 1 ? '' : 's'}`
+                      : 'Recently joined'}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Host Pathway — always visible */}
-      <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/10">
-          <p className="text-base font-semibold text-white">{t("grow.host_title")}</p>
-          <p className="text-sm text-white/60 mt-0.5">{hostDone}/4 {t("grow.step_onboarding").toLowerCase()}</p>
-        </div>
-        <div className="px-5 pb-5 pt-4 space-y-4">
-          <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${(hostDone / 4) * 100}%`, background: "rgba(255,255,255,0.75)" }} />
-          </div>
-          <div className="space-y-3.5">
-            {hostSteps.map(({ labelKey, done, value, valueKey }) => (
-              <div key={labelKey} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${done ? "border-white bg-white" : "border-white/40"}`}>
-                    {done && <Check size={12} className="text-card" />}
-                  </div>
-                  <span className={`text-sm font-medium ${done ? "text-white" : "text-white/75"}`}>{t(labelKey)}</span>
+      {/* Tier progress */}
+      <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
+        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your level</p>
+        <div className="space-y-3">
+          {TIERS.map(({ icon, label, events }) => {
+            const done = eventsAttended >= events;
+            return (
+              <div key={label} className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${done ? 'bg-primary/20' : 'bg-muted'}`}>
+                <span className="text-xl flex-shrink-0">{icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{events} events</p>
                 </div>
-                <span className="text-sm font-semibold text-white/80">{valueKey ? t(valueKey) : value}</span>
+                {done && <Check size={16} className="text-primary flex-shrink-0" />}
               </div>
-            ))}
-          </div>
-          <p className="text-sm text-white/60 leading-relaxed">{t("grow.host_done_msg")}</p>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-function RewardsTab({ profile, onSaveCode }: { profile: { id?: string; name?: string; credits_cents?: number } | null | undefined; onSaveCode: (code: string) => void }) {
-  const { t } = useLang();
-  const [referralCopied, setReferralCopied] = useState(false);
+// ─── Your Journey Tab ──────────────────────────────────────────────────────────
 
-  const storedCode = (profile as any)?.referral_code as string | null | undefined;
-  const referralCode = storedCode || generateCode((profile as any)?.name, profile?.id) || '········';
-
-  useEffect(() => {
-    if (profile?.id && !storedCode && referralCode !== '········') {
-      onSaveCode(referralCode);
-    }
-  }, [profile?.id, storedCode]);
-
-  const creditsEur = ((profile?.credits_cents ?? 0) / 100).toFixed(2);
-
-  function copyReferral() {
-    navigator.clipboard?.writeText(referralCode);
-    setReferralCopied(true);
-    setTimeout(() => setReferralCopied(false), 2000);
-  }
-
-  function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜\n\nJoin Nomaya — a curated community for women in Madrid.\n\n👉 Download the app: https://apps.apple.com/app/nomaya/id6743720892\n\nUse my code *${referralCode}* when you sign up and get €10 credit for your first event + priority access 🎉`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  }
+function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
+  const qualifiesForHosting = eventsAttended >= 5;
 
   return (
     <div className="space-y-3">
-      {/* Credits */}
-      <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <p className="font-serif text-lg font-normal text-foreground leading-snug">
-          {t("grow.quote").split('\n').map((line, i, arr) => (
-            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-          ))}
-        </p>
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-0.5">{t("grow.balance")}</p>
-            <p className="font-mono text-4xl font-bold text-foreground">€{creditsEur}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("grow.nomaya_credits")}</p>
-          </div>
-          <div className="text-4xl opacity-60">💜</div>
+
+      {/* Hosting card */}
+      <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+        <div className="px-5 pt-5 pb-4 border-b border-white/10">
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">Hosting</p>
+          <h2 className="font-serif text-xl font-medium text-foreground leading-snug">
+            You'd make a great host
+          </h2>
         </div>
-        <div className="bg-muted rounded-xl px-4 py-3">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">{t("grow.how_to_redeem")}</p>
-          <p className="text-sm text-foreground leading-relaxed">{t("grow.redeem_desc")}</p>
+        <div className="px-5 py-4 space-y-3">
+          <div className="space-y-2.5">
+            {[
+              { icon: "✓", text: `You've attended ${eventsAttended} event${eventsAttended === 1 ? '' : 's'}`, done: eventsAttended >= 1 },
+              { icon: "✓", text: "Women enjoyed meeting you", done: eventsAttended >= 3 },
+              { icon: "✦", text: "When you feel ready, you can host something small", done: false },
+            ].map(({ icon, text, done }, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${done ? 'border-white bg-white' : 'border-white/30'}`}>
+                  {done && <Check size={10} className="text-card" />}
+                </div>
+                <p className={`text-sm leading-snug ${done ? 'text-foreground' : 'text-white/50'}`}>{text}</p>
+              </div>
+            ))}
+          </div>
+
+          {qualifiesForHosting ? (
+            <button className="w-full mt-2 py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity">
+              Learn about hosting →
+            </button>
+          ) : (
+            <div className="bg-muted rounded-xl px-4 py-3 mt-2">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Attend {Math.max(0, 5 - eventsAttended)} more event{5 - eventsAttended === 1 ? '' : 's'} to unlock hosting.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Invite a friend */}
+      {/* Journey milestones */}
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <div>
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">{t("profile.invite_friends")}</p>
-          <h2 className="font-serif text-lg font-medium text-foreground leading-snug">
-            {t("grow.invite_heading").split('\n').map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-muted rounded-xl p-3 space-y-1.5">
-            <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("grow.she_gets")}</p>
-            {[t("grow.perk_friend_credit")].map(item => (
-              <div key={item} className="flex items-start gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "hsl(252 50% 65%)" }} />
-                <span className="text-xs text-foreground leading-snug">{item}</span>
+        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your milestones</p>
+        <div className="space-y-3">
+          {TIERS.map(({ icon, label, events, perks }) => {
+            const done = eventsAttended >= events;
+            return (
+              <div key={label} className={`rounded-2xl p-4 space-y-2 ${done ? 'bg-primary/15 border border-primary/20' : 'bg-muted opacity-60'}`}>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">{icon}</span>
+                  <p className="text-sm font-semibold text-foreground">{label}</p>
+                  {done && <span className="ml-auto text-xs font-medium text-primary">Unlocked</span>}
+                </div>
+                <div className="space-y-1 pl-8">
+                  {perks.map(p => (
+                    <div key={p} className="flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-muted-foreground flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground">{p}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="bg-muted rounded-xl p-3 space-y-1.5">
-            <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("grow.you_get")}</p>
-            {[t("grow.perk_credit")].map(item => (
-              <div key={item} className="flex items-start gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "hsl(252 50% 65%)" }} />
-                <span className="text-xs text-foreground leading-snug">{item}</span>
-              </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-        <div className="bg-muted rounded-xl p-3 flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">{t("grow.your_code")}</p>
-            <p className="font-mono text-2xl font-bold text-foreground tracking-wider">{referralCode}</p>
-          </div>
-          <button
-            onClick={copyReferral}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm font-medium active:scale-95 transition-all"
-            style={{ color: referralCopied ? "hsl(252 50% 65%)" : undefined }}
-          >
-            {referralCopied ? <Check size={14} /> : <Copy size={14} />}
-            {referralCopied ? t("grow.copied") : t("grow.copy")}
-          </button>
-        </div>
-        <button
-          onClick={shareOnWhatsApp}
-          className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm flex items-center justify-center gap-2"
-        >
-          {WHATSAPP_SVG}
-          {t("grow.share_whatsapp")}
-        </button>
       </div>
     </div>
   );
 }
+
+// ─── Main Screen ───────────────────────────────────────────────────────────────
 
 export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
   const { t } = useLang();
   const { data: profile } = useProfile();
-  const { mutate: updateProfile } = useUpdateProfile();
   const { data: bookings = [] } = useBookings();
   const { data: circles = [] } = useCircles();
-  const [tab, setTab] = useState<"progress" | "rewards">("progress");
+  const [tab, setTab] = useState<"month" | "journey">("month");
 
-  function handleSaveCode(code: string) {
-    updateProfile({ referral_code: code });
-  }
+  const eventsAttended = bookings.filter(b => b.status === 'confirmed').length;
 
   return (
     <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-screen-bottom">
@@ -233,27 +204,30 @@ export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => vo
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("grow.community")}</h1>
       </div>
 
-      {/* Internal tab switcher */}
+      {/* Tab switcher */}
       <div className="flex gap-2 px-5 py-4">
-        {(["progress", "rewards"] as const).map((tabKey) => (
+        {([
+          { key: "month",   label: "Your Month" },
+          { key: "journey", label: "Your Journey" },
+        ] as const).map(({ key, label }) => (
           <button
-            key={tabKey}
-            onClick={() => setTab(tabKey)}
+            key={key}
+            onClick={() => setTab(key)}
             className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-              tab === tabKey
+              tab === key
                 ? "bg-primary text-primary-foreground"
                 : "bg-card text-muted-foreground border border-border"
             }`}
           >
-            {tabKey === "progress" ? t("grow.progress_tab") : t("grow.rewards_tab")}
+            {label}
           </button>
         ))}
       </div>
 
       <div className="px-5">
-        {tab === "progress"
-          ? <ProgressTab eventsAttended={bookings.length} circles={circles} onOpenCircle={onOpenCircle} />
-          : <RewardsTab profile={profile} onSaveCode={handleSaveCode} />
+        {tab === "month"
+          ? <YourMonthTab eventsAttended={eventsAttended} onOpenCircle={onOpenCircle} />
+          : <YourJourneyTab eventsAttended={eventsAttended} />
         }
       </div>
     </div>
