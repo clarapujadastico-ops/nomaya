@@ -21,7 +21,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIDeviceFamily</key>
@@ -55,5 +55,16 @@
 	<string>Nomaya needs camera access to take photos for your profile and circles.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Nomaya uses your location to show events and circles near you.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nomaya</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.nomaya.app</string>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -741,6 +741,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   await Stripe.createPaymentSheet({
                     paymentIntentClientSecret: clientSecret,
                     merchantDisplayName: 'Nomaya',
+                    returnURL: 'nomaya://stripe-redirect',
                   });
 
                   // Listen for completion before presenting
