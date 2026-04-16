@@ -337,31 +337,35 @@ const CAT_KEYS: Record<string, string> = {
 const INTEREST_CATEGORY_MAP: Record<string, string[]> = {
   arts:             ["Creative"],
   wellness:         ["Wellness"],
-  food:             ["Social"],
-  culture:          ["Social"],
+  food:             ["Foodie"],
+  culture:          ["Cultural", "Social"],
   entrepreneurship: ["Professional"],
-  outdoors:         ["Wellness"],
-  reading:          ["Creative", "Social"],
-  music:            ["Social"],
-  travel:           ["Social"],
+  outdoors:         ["Wellness", "Trips"],
+  reading:          ["Creative", "Cultural"],
+  music:            ["Cultural", "Social"],
+  travel:           ["Trips"],
   photography:      ["Creative"],
-  cooking:          ["Social"],
+  cooking:          ["Foodie"],
   sustainability:   ["Wellness"],
   ceramics:         ["Creative"],
-  fashion:          ["Creative"],
+  fashion:          ["Creative", "Social"],
   mindfulness:      ["Wellness"],
-  wine:             ["Social"],
+  wine:             ["Foodie", "Social"],
 };
 
 function scoreEvent(event: AppEvent, userInterests: string[], bookedCategories: string[]): number {
   let score = 0;
-  // Interest match: +3 per matching interest
+  // Interest match: +3 per matching interest keyword
   for (const interest of userInterests) {
     const cats = INTEREST_CATEGORY_MAP[interest] ?? [];
     if (cats.includes(event.category)) score += 3;
+    // Also match interest keyword in title/description
+    const titleLower = event.title.toLowerCase();
+    const descLower = (event.description ?? '').toLowerCase();
+    if (titleLower.includes(interest) || descLower.includes(interest)) score += 2;
   }
-  // Past attendance in same category: +2
-  if (bookedCategories.includes(event.category)) score += 2;
+  // Past bookings in same category: +4 (strongest signal)
+  if (bookedCategories.includes(event.category)) score += 4;
   // Popularity (spots taken): +1
   if (event.totalSpots - event.spotsLeft > 0) score += 1;
   // Featured: +1
@@ -722,14 +726,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     return;
                   }
 
-                  // Credits + referral discount covered the full price — no card needed
+                  // Credits covered the full price — no card needed
                   if (data?.free === true) {
-                    const referralEur = ((data.referralDiscountCents ?? 0) / 100).toFixed(0);
-                    const creditsEur = ((data.discountApplied ?? 0) / 100).toFixed(0);
-                    const msg = data.referralDiscountCents > 0
-                      ? `🎉 15% referral discount (−€${referralEur})${Number(creditsEur) > 0 ? ` + €${creditsEur} credits` : ''} — no payment needed!`
-                      : `✨ Your €${creditsEur} credits covered this event — no payment needed!`;
-                    setBookingInfo(msg);
+                    const creditsEur = Math.round((data.discountApplied ?? 0) / 100);
+                    setBookingInfo(`✨ Your €${creditsEur} credits covered this event — no payment needed!`);
                     bookEvent(
                       { eventId: selectedEvent, amountCentsPaid: 0 },
                       { onError: (e) => { setBookingInfo(null); setBookingError(e.message); } }
@@ -737,7 +737,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     return;
                   }
 
-                  const { clientSecret, publishableKey, amountCents, discountApplied, referralDiscountCents } = data;
+                  const { clientSecret, publishableKey, amountCents, discountApplied } = data;
 
                   // Re-initialise with the key returned from the server (handles pk_live_ vs pk_test_)
                   if (publishableKey) {
@@ -757,10 +757,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       // Deduct credits if applied
                       if (discountApplied > 0) {
                         updateProfile({ credits_cents: Math.max(0, (profile?.credits_cents ?? 0) - discountApplied) });
-                      }
-                      // Mark referral discount used (server already charged correctly, just update UI state)
-                      if (referralDiscountCents > 0) {
-                        supabase.from('profiles').update({ referral_discount_used: true }).eq('id', user?.id ?? '').then(() => {});
                       }
                       bookEvent(
                         {

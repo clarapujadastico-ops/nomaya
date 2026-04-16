@@ -15,37 +15,33 @@ export function useApplyReferral() {
       // Find the referrer by their referral_code
       const { data: referrer, error: findError } = await supabase
         .from('profiles')
-        .select('id, credits_cents')
+        .select('id')
         .eq('referral_code', trimmed)
         .neq('id', user.id)
         .maybeSingle()
 
       if (findError || !referrer) throw new Error('Code not found')
 
-      // Mark current user as referred
-      const { error: e1 } = await supabase
-        .from('profiles')
-        .update({ referred_by: referrer.id })
-        .eq('id', user.id)
-      if (e1) throw e1
-
-      // Award €10 (1000 cents) to referrer
-      const { error: e2 } = await supabase
-        .from('profiles')
-        .update({ credits_cents: (referrer.credits_cents ?? 0) + 1000 })
-        .eq('id', referrer.id)
-      if (e2) throw e2
-
-      // Give referred user €7.50 welcome credit (~15% of avg event)
+      // Check not already referred
       const { data: me } = await supabase
         .from('profiles')
-        .select('credits_cents')
+        .select('credits_cents, referred_by')
         .eq('id', user.id)
         .single()
-      await supabase
+
+      if (me?.referred_by) throw new Error('Already applied')
+
+      // Mark current user as referred + give €10 credit (valid 14 days) + priority verification flag
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      const { error: e1 } = await supabase
         .from('profiles')
-        .update({ credits_cents: (me?.credits_cents ?? 0) + 750 })
+        .update({
+          referred_by: referrer.id,
+          credits_cents: (me?.credits_cents ?? 0) + 1000,
+          referral_credit_expires_at: expiresAt,
+        })
         .eq('id', user.id)
+      if (e1) throw e1
 
       return { referrerId: referrer.id }
     },

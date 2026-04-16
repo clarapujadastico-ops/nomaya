@@ -37,10 +37,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const [{ data: event, error: eventError }, { data: userProfile }, { count: bookingCount }] = await Promise.all([
+    const [{ data: event, error: eventError }, { data: userProfile }] = await Promise.all([
       supabase.from('events').select('title, price_cents, currency').eq('id', eventId).single(),
-      supabase.from('profiles').select('credits_cents, referred_by, referral_discount_used').eq('id', userId).single(),
-      supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'confirmed'),
+      supabase.from('profiles').select('credits_cents').eq('id', userId).single(),
     ])
 
     if (eventError || !event) {
@@ -57,41 +56,18 @@ Deno.serve(async (req) => {
       )
     }
 
-    // ── Referral 15% discount (first booking of a referred user, one-time) ──
-    const profile = userProfile as any
-    const userCredits: number = profile?.credits_cents ?? 0
-    const isReferred = !!profile?.referred_by
-    const referralDiscountUsed: boolean = profile?.referral_discount_used ?? false
-    const isFirstBooking = (bookingCount ?? 0) === 0
+    // Apply credits (read from DB — never trust client)
+    const userCredits: number = (userProfile as any)?.credits_cents ?? 0
+    const discountCents = Math.min(userCredits, event.price_cents)
+    const chargeAmount = event.price_cents - discountCents
 
-    let referralDiscountCents = 0
-    if (isReferred && !referralDiscountUsed && isFirstBooking) {
-      referralDiscountCents = Math.floor(event.price_cents * 0.15)
-    }
-
-    // Apply credits on top of referral discount
-    const priceAfterReferral = event.price_cents - referralDiscountCents
-    const creditDiscount = Math.min(userCredits, priceAfterReferral)
-    const chargeAmount = priceAfterReferral - creditDiscount
-    const totalDiscount = referralDiscountCents + creditDiscount
-
-    // Credits (+ referral) cover the full price — no Stripe needed
+    // Credits cover the full price — no Stripe needed
     if (chargeAmount === 0) {
-      const updates: Record<string, unknown> = { credits_cents: userCredits - creditDiscount }
-      if (referralDiscountCents > 0) updates.referral_discount_used = true
-      await supabase.from('profiles').update(updates).eq('id', userId)
-
-      // Reward referrer with €10 credits if referral discount was applied
-      if (referralDiscountCents > 0 && profile.referred_by) {
-        await supabase.rpc('increment_credits', { user_id: profile.referred_by, amount: 1000 })
-          .catch(() => {}) // non-fatal
-      }
-
+      await supabase.from('profiles').update({ credits_cents: userCredits - discountCents }).eq('id', userId)
       return new Response(
         JSON.stringify({
           free: true,
-          discountApplied: totalDiscount,
-          referralDiscountCents,
+          discountApplied: discountCents,
           amountCents: 0,
           currency: event.currency,
         }),
@@ -108,9 +84,7 @@ Deno.serve(async (req) => {
         event_id: eventId,
         user_id: userId,
         event_title: event.title,
-        referral_discount_cents: String(referralDiscountCents),
-        credit_discount_cents: String(creditDiscount),
-        referred_by: profile?.referred_by ?? '',
+        discount_cents: String(discountCents),
       },
     })
 
@@ -120,8 +94,7 @@ Deno.serve(async (req) => {
         publishableKey: stripePublishableKey,
         amountCents: chargeAmount,
         originalAmountCents: event.price_cents,
-        discountApplied: creditDiscount,
-        referralDiscountCents,
+        discountApplied: discountCents,
         currency: event.currency,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

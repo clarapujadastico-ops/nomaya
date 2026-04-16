@@ -619,10 +619,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
-              {language === 'es' ? "Tú recibes €7,50 · Tu amiga recibe €10" : "You get €7.50 · Your friend gets €10"}
+              {language === 'es' ? "Tú recibes €10 · Tu amiga recibe €5 cuando asistas" : "You get €10 credit · Your friend gets €5 when you attend"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {language === 'es' ? "Créditos Nomaya aplicados automáticamente" : "Nomaya credits applied automatically"}
+              {language === 'es' ? "Tu crédito es válido 14 días · Acceso prioritario a la verificación" : "Your credit is valid for 14 days · Priority verification"}
             </p>
           </div>
         </div>
@@ -635,8 +635,11 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             <p className="text-base font-medium text-foreground">
               {language === 'es' ? "¡Código aplicado! 💜" : "Code applied! 💜"}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {language === 'es' ? "€7,50 de créditos añadidos a tu cuenta." : "€7.50 credits added to your account."}
+            <p className="text-base font-medium text-foreground">
+              {language === 'es' ? "Tu €10 está listo para tu primer plan 🎉" : "Your €10 is ready for your first plan 🎉"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {language === 'es' ? "Válido 14 días · Verificación prioritaria activada" : "Valid for 14 days · Priority verification activated"}
             </p>
           </div>
         ) : (
