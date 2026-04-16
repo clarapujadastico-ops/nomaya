@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import StripePaymentSheet
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -35,11 +34,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // Handle Stripe 3DS return URL
-        let stripeHandled = StripeAPI.handleURLCallback(with: url)
-        if stripeHandled {
-            return true
-        }
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
