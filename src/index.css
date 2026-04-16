@@ -164,6 +164,11 @@
   .pb-screen-bottom {
     padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   }
+  /* Bottom sheets: never overflow off-screen, always scrollable */
+  .rounded-t-3xl {
+    max-height: calc(92dvh - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-card { box-shadow: var(--shadow-card); }
