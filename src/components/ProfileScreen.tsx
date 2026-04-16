@@ -1200,6 +1200,24 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </button>
       )}
 
+      {profile?.verification_status === "pending" && (
+        <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 border border-yellow-400/30">
+          <div className="w-9 h-9 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0 text-lg">
+            ⏳
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground leading-snug">
+              {lang === 'es' ? "Verificación en revisión" : "Verification under review"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              {lang === 'es'
+                ? "Estamos revisando tu ID. Te notificaremos en menos de 24h."
+                : "We're reviewing your ID. You'll be notified within 24 hours."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── Profile card ── */}
       <div className="mx-5 mt-4 bg-card rounded-2xl p-5 shadow-card">
 

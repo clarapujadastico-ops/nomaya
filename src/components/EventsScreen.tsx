@@ -391,7 +391,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { data: profile } = useProfile();
   const { mutate: updateProfile } = useUpdateProfile();
   const { user } = useAuth();
-  const isUnverified = false; // TODO: re-enable when verification flow is ready
+  const verificationStatus = profile?.verification_status ?? 'unverified';
+  const isUnverified = verificationStatus !== 'verified';
+  const isPendingVerification = verificationStatus === 'pending';
 
   const [searchQuery, setSearchQuery] = useState("");
   const [eventChat, setEventChat] = useState<{ circleId: string; event: AppEvent } | null>(null);
@@ -1406,19 +1408,31 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto" />
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              <Shield size={28} className="text-primary" />
+              {isPendingVerification ? <span className="text-2xl">⏳</span> : <Shield size={28} className="text-primary" />}
             </div>
             <div>
-              <h2 className="font-serif text-2xl font-medium text-foreground">Verify to join events</h2>
+              <h2 className="font-serif text-2xl font-medium text-foreground">
+                {isPendingVerification ? "Verification pending" : "Verify to join events"}
+              </h2>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Nomaya is a women-only space. Complete verification to access and reserve events.
+                {isPendingVerification
+                  ? "We're reviewing your ID. You'll receive a notification as soon as you're approved — it usually takes less than 24 hours."
+                  : "Nomaya is a women-only space. Complete verification to access and reserve events."}
               </p>
             </div>
+            {!isPendingVerification && (
+              <button
+                onClick={() => setShowVerifyPrompt(false)}
+                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
+              >
+                Go to Profile → Verify
+              </button>
+            )}
             <button
               onClick={() => setShowVerifyPrompt(false)}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
+              className="w-full py-2 text-muted-foreground text-sm"
             >
-              Go to Profile → Verify
+              {isPendingVerification ? "Got it" : "Maybe later"}
             </button>
           </div>
         </div>
