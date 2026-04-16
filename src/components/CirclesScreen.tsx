@@ -38,6 +38,7 @@ import { Logo } from "./Logo";
 import { MemberProfileSheet } from "./MemberProfileSheet";
 import { supabase } from "@/lib/supabase";
 import type { AppCircle } from "@/types/database";
+import { useMyCircleInvitations, useRespondToCircleInvitation, useSearchUsers, useSendCircleInvitation } from "@/hooks/useCircleInvitations";
 
 // ─── Photo upload helpers ──────────────────────────────────────────────────────
 
@@ -258,7 +259,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
   }
 
   return (
-    <div className="bg-card rounded-2xl shadow-soft overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
+    <div className="bg-card flex-1 flex flex-col overflow-hidden">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
       {/* Toast */}
@@ -269,7 +270,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
       )}
 
       {/* Message list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 320 }}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading && <p className="text-xs text-muted-foreground text-center">Loading…</p>}
         {!isLoading && messages.length === 0 && (
           <p className="text-xs text-muted-foreground text-center">No messages yet. Say hello 👋</p>
@@ -327,7 +328,7 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-border p-3 flex items-center gap-2">
+      <div className="border-t border-border p-3 flex items-center gap-2 flex-shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
         <button
           onClick={handleImageButton}
           disabled={isUploadingImage || isSending}
@@ -754,7 +755,8 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const [showJoinRequest, setShowJoinRequest] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [showInviteSheet, setShowInviteSheet] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [inviteSentTo, setInviteSentTo] = useState<string | null>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showEditCover, setShowEditCover] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
@@ -764,6 +766,8 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { data: circleMembers = [] } = useCircleMembers(circle.id);
   const isUnverified = profile?.verification_status !== 'verified';
   const isMember = circle.isMember || circle.isAdmin;
+  const { mutate: sendInvitation, isPending: isSendingInvite } = useSendCircleInvitation();
+  const { data: searchResults = [] } = useSearchUsers(inviteSearch, circle.id);
 
   if (showVerifyFlow) {
     return (
@@ -856,7 +860,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
         ))}
       </div>
 
-      <div className="px-5 py-4 space-y-4">
+      <div className={activeTab === "chat" ? "flex-1 flex flex-col overflow-hidden" : "px-5 py-4 space-y-4"}>
         {activeTab === "about" ? (
           <>
             <div className="bg-card rounded-2xl p-4 shadow-soft">
@@ -1077,75 +1081,70 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
       {/* Invite sheet */}
       {showInviteSheet && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowInviteSheet(false); setInviteEmail(""); }} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowInviteSheet(false); setInviteSearch(""); setInviteSentTo(null); }} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-            <h2 className="font-serif text-xl font-medium text-foreground">Invite to circle</h2>
+            <h2 className="font-serif text-xl font-medium text-foreground">Invite a member</h2>
+            <p className="text-xs text-muted-foreground -mt-2">Search by name to invite someone from the Nomaya community</p>
 
-            {/* Email invite */}
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Invite by email</p>
-              <div className="flex gap-2">
-                <div className="flex-1 flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
-                  <Mail size={14} className="text-muted-foreground flex-shrink-0" />
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="friend@email.com"
-                    inputMode="email"
-                    autoCapitalize="none"
-                    className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground flex-1 focus:outline-none"
-                  />
-                </div>
-                <button
-                  disabled={!inviteEmail.trim() || !inviteEmail.includes("@")}
-                  onClick={() => {
-                    const url = `https://nomaya.app/circles/${circle.id}`;
-                    const subject = encodeURIComponent(`Join me in the ${circle.name} circle on Nomaya`);
-                    const body = encodeURIComponent(
-                      `Hi!\n\nI'd love for you to join the ${circle.name} circle on Nomaya — a curated community for women.\n\nJoin here: ${url}\n\nSee you there!`
-                    );
-                    window.location.href = `mailto:${inviteEmail.trim()}?subject=${subject}&body=${body}`;
-                    setInviteEmail("");
-                    setShowInviteSheet(false);
-                  }}
-                  className="w-12 h-12 rounded-xl gradient-cta flex items-center justify-center flex-shrink-0 disabled:opacity-40"
-                >
-                  <Send size={16} className="text-white" />
+            {/* Search input */}
+            <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
+              <UserPlus size={14} className="text-muted-foreground flex-shrink-0" />
+              <input
+                autoFocus
+                value={inviteSearch}
+                onChange={(e) => { setInviteSearch(e.target.value); setInviteSentTo(null); }}
+                placeholder="Search by name…"
+                className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground flex-1 focus:outline-none"
+              />
+              {inviteSearch && (
+                <button onClick={() => { setInviteSearch(""); setInviteSentTo(null); }}>
+                  <X size={14} className="text-muted-foreground" />
                 </button>
-              </div>
+              )}
             </div>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">or</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            {/* Link share */}
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Share link</p>
-              <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
-                <p className="text-sm text-foreground flex-1 truncate">nomaya.app/circles/{circle.id}</p>
-                <button onClick={() => navigator.clipboard?.writeText(`https://nomaya.app/circles/${circle.id}`)} className="text-xs font-medium text-primary flex-shrink-0">
-                  Copy
-                </button>
+            {/* Results */}
+            {inviteSearch.trim().length >= 2 && (
+              <div className="space-y-2">
+                {searchResults.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-3">No members found</p>
+                ) : (
+                  searchResults.map((u: { id: string; name: string; avatar_url: string | null; city: string }) => (
+                    <div key={u.id} className="flex items-center gap-3 bg-muted rounded-2xl px-4 py-3">
+                      <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {u.avatar_url
+                          ? <img src={u.avatar_url} alt={u.name} className="w-full h-full object-cover" />
+                          : <span className="text-sm font-medium text-foreground">{u.name[0]}</span>
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{u.name}</p>
+                        <p className="text-xs text-muted-foreground">{u.city}</p>
+                      </div>
+                      {inviteSentTo === u.id ? (
+                        <span className="text-xs text-green-400 font-medium flex items-center gap-1">
+                          <Check size={12} /> Sent
+                        </span>
+                      ) : (
+                        <button
+                          disabled={isSendingInvite}
+                          onClick={() => {
+                            sendInvitation(
+                              { circleId: circle.id, invitedUserId: u.id, circleName: circle.name },
+                              { onSuccess: () => setInviteSentTo(u.id) }
+                            );
+                          }}
+                          className="text-xs font-medium text-primary active:opacity-60 disabled:opacity-40"
+                        >
+                          Invite
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
-              <button
-                onClick={() => {
-                  const url = `https://nomaya.app/circles/${circle.id}`;
-                  const text = `Join me in the ${circle.name} circle on Nomaya!`;
-                  if (navigator.share) { navigator.share({ title: circle.name, text, url }); }
-                  else { navigator.clipboard?.writeText(`${text}\n${url}`); }
-                  setShowInviteSheet(false);
-                }}
-                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
-              >
-                Share invite link
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -2116,6 +2115,8 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
   const { data: circles = [], isLoading } = useCircles();
   const { data: profile } = useProfile();
   const isUnverified = profile?.verification_status !== 'verified';
+  const { data: pendingInvitations = [] } = useMyCircleInvitations();
+  const { mutate: respondToInvitation } = useRespondToCircleInvitation();
 
   const circleFromList = selectedId ? circles.find((c) => c.id === selectedId) : undefined;
   const { data: circleById, isLoading: circleByIdLoading } = useCircleById(
@@ -2189,6 +2190,41 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
           </button>
         ))}
       </div>
+
+      {/* Pending invitations */}
+      {pendingInvitations.length > 0 && (
+        <div className="mx-5 mb-4 space-y-2">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{pendingInvitations.length}</span>
+            Pending invitations
+          </p>
+          {pendingInvitations.map((inv) => (
+            <div key={inv.id} className="bg-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-soft border border-primary/20">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{(inv.circle as any)?.name ?? 'A circle'}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Invited by {(inv.inviter as any)?.name ?? 'someone'}</p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => respondToInvitation({ invitationId: inv.id, accept: false, circleId: inv.circle_id })}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:opacity-60"
+                >
+                  <X size={14} className="text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => respondToInvitation(
+                    { invitationId: inv.id, accept: true, circleId: inv.circle_id },
+                    { onSuccess: () => setSelectedId(inv.circle_id) }
+                  )}
+                  className="w-8 h-8 rounded-full bg-primary flex items-center justify-center active:opacity-60"
+                >
+                  <Check size={14} className="text-primary-foreground" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Category sub-filter — only in Categories view */}
       {circleView === "categories" && !isLoading && circleCategories.length > 1 && (
