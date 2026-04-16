@@ -397,6 +397,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const [eventChat, setEventChat] = useState<{ circleId: string; event: AppEvent } | null>(null);
 
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingInfo, setBookingInfo] = useState<string | null>(null);
   const [showMapSheet, setShowMapSheet] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showCancelSheet, setShowCancelSheet] = useState(false);
@@ -426,6 +427,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
     setCancelOutcome(null);
     setShowCancelSheet(false);
     setBookingError(null);
+    setBookingInfo(null);
     setShowMapSheet(false);
   }, [selectedEvent]);
 
@@ -642,6 +644,12 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
+          {bookingInfo && (
+            <div className="bg-primary/20 border border-primary/40 rounded-xl px-4 py-3 text-xs text-foreground">
+              {bookingInfo}
+            </div>
+          )}
+
           {isUnverified ? (
             <button
               onClick={() => setShowVerifyPrompt(true)}
@@ -714,9 +722,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
                   // Credits covered the full price — no card needed
                   if (data?.free === true) {
+                    const discountEur = Math.round((data.discountApplied ?? 0) / 100);
+                    setBookingInfo(`✨ Your €${discountEur} credits covered this event — no payment needed!`);
                     bookEvent(
                       { eventId: selectedEvent, amountCentsPaid: 0 },
-                      { onError: (e) => setBookingError(e.message) }
+                      { onError: (e) => { setBookingInfo(null); setBookingError(e.message); } }
                     );
                     return;
                   }
