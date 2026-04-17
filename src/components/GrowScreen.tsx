@@ -230,7 +230,7 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center">
+    <div className="fixed inset-0 z-[300] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-sm bg-background rounded-t-3xl overflow-y-auto" style={{ maxHeight: 'calc(92dvh - env(safe-area-inset-bottom, 0px))' }}>
         {/* Handle */}
@@ -365,7 +365,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
 
       {/* Women enjoyed meeting you — info sheet */}
       {showWomenInfo && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWomenInfo(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
