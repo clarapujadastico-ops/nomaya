@@ -17,7 +17,7 @@ const NOMAYA_MOMENTS = [
     emoji: "🌸",
     title: "Your first gathering",
     desc: "You joined your first Nomaya experience",
-    lockedDesc: "A moment that happens when you attend your first Nomaya gathering",
+    lockedDesc: "You joined your first experience — that's how it begins",
     reward: "Your Founding Circle sticker",
     events: 1,
   },
@@ -25,7 +25,7 @@ const NOMAYA_MOMENTS = [
     emoji: "🌿",
     title: "You came back",
     desc: "You returned for a second experience",
-    lockedDesc: "A moment that happens when you return for another experience",
+    lockedDesc: "You returned for another experience → That's how connections begin",
     reward: "Nomaya the movement sticker",
     events: 2,
   },
@@ -33,7 +33,7 @@ const NOMAYA_MOMENTS = [
     emoji: "🕯",
     title: "A moment of connection",
     desc: "You've started building deeper connections",
-    lockedDesc: "A moment that happens when you've spent more time here",
+    lockedDesc: "You've started building deeper connections",
     reward: "A purple candle",
     events: 3,
   },
@@ -41,7 +41,7 @@ const NOMAYA_MOMENTS = [
     emoji: "💌",
     title: "A meaningful step",
     desc: "You've been part of something special",
-    lockedDesc: "A moment that happens when you've truly become part of this community",
+    lockedDesc: "You've been part of something that matters",
     reward: "A handwritten letter",
     events: 4,
   },
@@ -65,7 +65,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
       {!hasAnything ? (
         // Current month, nothing yet — show soft message
         <p className="text-xs text-muted-foreground italic leading-relaxed">
-          Your next experience is waiting for you 🌸
+          A small gathering might feel right soon 🌸
         </p>
       ) : (
         <div className="space-y-2.5">
@@ -113,6 +113,9 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
 
 function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
   const { data: stats, isLoading, error } = useMonthlyStats();
+  const completedTotal = stats?.completedTotal ?? 0;
+  const unlockedMoments = NOMAYA_MOMENTS.filter(m => completedTotal >= m.events);
+  const nextMoment = NOMAYA_MOMENTS.find(m => completedTotal < m.events);
 
   if (error) {
     return (
@@ -132,19 +135,51 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
 
   const monthStats = stats?.monthStats ?? [];
 
-  if (monthStats.length === 0) {
-    return (
-      <div className="bg-card rounded-2xl p-5 shadow-card text-center">
-        <p className="text-sm text-muted-foreground">Your journey starts with your first event 🌸</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-3">
-      {monthStats.map(m => (
-        <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
-      ))}
+      {/* Monthly history */}
+      {monthStats.length === 0 ? (
+        <div className="bg-card rounded-2xl p-5 shadow-card text-center">
+          <p className="text-sm text-muted-foreground">Your journey starts with your first event 🌸</p>
+        </div>
+      ) : (
+        monthStats.map(m => (
+          <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
+        ))
+      )}
+
+      {/* Nomaya Moments — identity + reflection */}
+      {(unlockedMoments.length > 0 || nextMoment) && (
+        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3">
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
+          <div className="space-y-2">
+            {unlockedMoments.map(({ emoji, title, desc, reward }) => (
+              <div key={title} className="rounded-2xl p-4 bg-primary/15 border border-primary/20 space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">{emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground leading-snug">{title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{desc}</p>
+                    <p className="text-xs text-primary/80 mt-1 leading-snug">→ {reward}</p>
+                    <p className="text-xs font-medium text-primary mt-1.5">You received this ✓</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {nextMoment && (
+              <div className="rounded-2xl p-4 bg-muted space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0 opacity-40">{nextMoment.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-muted-foreground leading-snug">{nextMoment.title}</p>
+                    <p className="text-xs text-muted-foreground/70 mt-0.5 leading-snug">{nextMoment.lockedDesc}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -342,9 +377,17 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
         </div>
         <div className="px-5 py-4 space-y-4">
           {stage === 'early' ? (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              You've started experiencing Nomaya. As you get a feel for the gatherings, hosting will open up naturally.
-            </p>
+            <>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                You've started experiencing Nomaya. As you get a feel for the gatherings, hosting will open up naturally.
+              </p>
+              <button
+                onClick={() => setShowHostingSheet(true)}
+                className="w-full py-3.5 rounded-2xl bg-muted text-muted-foreground font-medium text-sm active:opacity-70 transition-opacity"
+              >
+                Learn how hosting works
+              </button>
+            </>
           ) : (
             <>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -369,32 +412,6 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
         </div>
       </div>
 
-      {/* Your Nomaya Moments */}
-      <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
-        <div className="space-y-3">
-          {NOMAYA_MOMENTS.map(({ emoji, title, desc, reward, events }) => {
-            const done = n >= events;
-            return (
-              <div key={title} className={`rounded-2xl p-4 space-y-1.5 transition-all ${done ? 'bg-primary/15 border border-primary/20' : 'bg-muted'}`}>
-                <div className="flex items-start gap-3">
-                  <span className={`text-xl flex-shrink-0 ${!done ? 'opacity-40' : ''}`}>{emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className={`text-sm font-semibold leading-snug ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{title}</p>
-                      {done && <span className="text-xs font-medium text-primary flex-shrink-0">You received this ✓</span>}
-                    </div>
-                    <p className={`text-xs mt-0.5 leading-snug ${done ? 'text-muted-foreground' : 'text-muted-foreground/60'}`}>
-                      {done ? desc : NOMAYA_MOMENTS.find(m => m.title === title)?.lockedDesc ?? desc}
-                    </p>
-                    {done && <p className="text-xs mt-1.5 text-primary/80 leading-snug">→ {reward}</p>}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -420,7 +437,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
       <div className="flex gap-2 px-5 py-4">
         {([
           { key: "journey", label: "Your Journey" },
-          { key: "hosting", label: "Hosting" },
+          { key: "hosting", label: "Host" },
         ] as const).map(({ key, label }) => (
           <button
             key={key}

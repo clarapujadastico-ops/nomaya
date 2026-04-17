@@ -72,7 +72,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
   const chatMessages = messages.filter(m => !m.content.startsWith(IMG_PREFIX));
 
   return (
-    <div className="fixed inset-0 z-[200] bg-background flex flex-col">
+    <div className="fixed inset-0 z-[300] bg-background flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-screen-top pb-3">
         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-card">
@@ -129,7 +129,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
               ))}
             </div>
           </div>
-          <div className="flex-shrink-0 border-t border-border px-4 py-3 pb-8 bg-background">
+          <div className="flex-shrink-0 border-t border-border px-4 py-3 bg-background" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
             <input
               ref={fileInputRef}
               type="file"
@@ -186,7 +186,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
             })}
             <div ref={bottomRef} />
           </div>
-          <div className="flex-shrink-0 border-t border-border px-4 py-3 pb-8 flex items-center gap-2 bg-background">
+          <div className="flex-shrink-0 border-t border-border px-4 py-3 flex items-center gap-2 bg-background" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
