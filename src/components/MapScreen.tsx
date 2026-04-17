@@ -357,7 +357,7 @@ export function MapScreen() {
       </div>
 
       {/* List below map */}
-      <div className="px-5 mt-5 pb-24">
+      <div className="px-5 mt-5 pb-screen-bottom">
         <h2 className="font-serif text-lg font-medium text-foreground mb-3">
           {view === "reservations" ? t("map.my_reservations") : view === "circles" ? "My Circles" : "Shared Lists"}
         </h2>

@@ -72,7 +72,7 @@ export function EventGroupScreen({ event, onBack }: { event: EventGroupEvent; on
   }
 
   return (
-    <div className="mobile-container flex flex-col bg-background pb-24">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
       {/* Hero */}
       <div className="relative h-52">
         {event.image ? (

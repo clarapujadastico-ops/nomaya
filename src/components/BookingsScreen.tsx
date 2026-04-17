@@ -93,7 +93,7 @@ export function BookingsScreen({ onBack }: BookingsScreenProps) {
   }
 
   return (
-    <div className="mobile-container flex flex-col bg-background pb-8">
+    <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
       {/* Header */}
       <div className="px-5 pt-screen-top pb-4 flex items-center gap-3">
         <button
