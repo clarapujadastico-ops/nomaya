@@ -540,7 +540,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Notifications sheet */}
         {showNotificationsSheet && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowNotificationsSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -589,7 +589,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
           }
           return (
-            <div className="fixed inset-0 z-[200] flex items-end justify-center">
+            <div className="fixed inset-0 z-[300] flex items-end justify-center">
               <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReferralSheet(false)} />
               <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -623,7 +623,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Delete account sheet */}
         {showDeleteSheet && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -674,7 +674,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Contact sheet */}
         {showContactSheet && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowContactSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -696,7 +696,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Report sheet */}
         {showReportSheet && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReportSheet(null)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 flex flex-col gap-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)", maxHeight: '88vh' }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto" />
@@ -950,7 +950,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Subscription sheet */}
         {showSubscriptionSheet && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSubscriptionSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -985,7 +985,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Support chat sheet */}
         {showSupportChat && (
-          <div className="fixed inset-0 z-[200] flex flex-col">
+          <div className="fixed inset-0 z-[300] flex flex-col">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSupportChat(false)} />
             <div className="relative flex flex-col bg-card rounded-t-3xl mt-auto w-full max-w-sm mx-auto" style={{ height: "80vh", paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}>
               {/* Header */}
@@ -1049,7 +1049,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
         {/* Feedback form sheet */}
         {showFeedbackForm && (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFeedbackForm(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto" />
@@ -1260,11 +1260,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <div className="flex-1 text-center">
             <p className="font-serif text-2xl font-medium text-foreground">{myCircles.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t("profile.circles")}</p>
-          </div>
-          <div className="w-px bg-border" />
-          <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">0</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("profile.connections")}</p>
           </div>
         </div>
 

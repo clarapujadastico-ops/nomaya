@@ -160,9 +160,9 @@
   .pt-screen-top {
     padding-top: max(3.5rem, calc(0.75rem + env(safe-area-inset-top, 0px)));
   }
-  /* Screen bottom: nav bar height (64px) + home indicator safe area */
+  /* Screen bottom: nav bar height (~68px) + home indicator safe area + extra clearance */
   .pb-screen-bottom {
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
   /* Bottom sheets: never overflow off-screen, always scrollable */
   .rounded-t-3xl {

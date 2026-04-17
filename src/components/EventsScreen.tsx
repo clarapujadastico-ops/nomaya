@@ -923,7 +923,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const creditsEur = (Math.round((booking.amount_cents_paid ?? 0) * 1.1) / 100).toFixed(2);
 
         return (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCancelSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto" />
@@ -1080,7 +1080,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         }
 
         return (
-          <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMapSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-1" />
