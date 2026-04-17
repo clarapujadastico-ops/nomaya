@@ -595,7 +595,7 @@ function CreateCircleEventSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+    <div className="fixed inset-0 z-[300] flex items-end justify-center">
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
@@ -684,7 +684,7 @@ function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () =>
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+    <div className="fixed inset-0 z-[300] flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
@@ -1086,7 +1086,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
       {/* Invite sheet */}
       {showInviteSheet && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowInviteSheet(false); setInviteSearch(""); setInviteSentTo(null); }} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 2rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1157,7 +1157,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
       {/* Verification gate */}
       {showVerifyGate && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyGate(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
@@ -1191,7 +1191,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
 
       {/* Join request sheet */}
       {showJoinRequest && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowJoinRequest(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1508,7 +1508,7 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
       </button>
 
       {showForm && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1830,7 +1830,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
 
       {/* ── Propose a plan sheet ── */}
       {showPlanForm && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowPlanForm(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "85vh", paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1888,7 +1888,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
 
       {/* ── Add a spot sheet ── */}
       {showSpotForm && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowSpotForm(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1959,7 +1959,7 @@ function ProposeCircleSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+    <div className="fixed inset-0 z-[300] flex items-end justify-center">
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto"
@@ -2306,7 +2306,7 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
 
       {/* Verification gate for creating circles */}
       {showVerifyGate && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyGate(false)} />
           <div
             className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
