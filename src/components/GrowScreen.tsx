@@ -108,19 +108,39 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
 }
 
 function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
-  const { data: stats, isLoading } = useMonthlyStats();
+  const { data: stats, isLoading, error } = useMonthlyStats();
+
+  if (error) {
+    return (
+      <div className="bg-card rounded-2xl p-5 shadow-card">
+        <p className="text-sm text-muted-foreground text-center">Could not load your journey. Pull to refresh.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2].map(i => <div key={i} className="h-24 bg-card rounded-2xl animate-pulse" />)}
+      </div>
+    );
+  }
+
+  const monthStats = stats?.monthStats ?? [];
+
+  if (monthStats.length === 0) {
+    return (
+      <div className="bg-card rounded-2xl p-5 shadow-card text-center">
+        <p className="text-sm text-muted-foreground">Your journey starts with your first event 🌸</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
-      {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2].map(i => <div key={i} className="h-24 bg-card rounded-2xl animate-pulse" />)}
-        </div>
-      ) : (
-        (stats?.monthStats ?? []).map(m => (
-          <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
-        ))
-      )}
+      {monthStats.map(m => (
+        <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
+      ))}
     </div>
   );
 }
