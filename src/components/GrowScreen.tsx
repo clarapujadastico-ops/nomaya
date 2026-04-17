@@ -10,9 +10,40 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 const TIERS = [
-  { icon: "🌸", label: "Founding Circle",       events: 1,  perks: ["All events access", "Founding badge"] },
-  { icon: "✨", label: "Inner Circle",           events: 3,  perks: ["Priority booking", "Guest pass"] },
-  { icon: "🔮", label: "Keeper of the Circle",   events: 5,  perks: ["Early retreat access", "10% off"] },
+  { icon: "🌸", label: "Founding Circle",       events: 1 },
+  { icon: "✨", label: "Inner Circle",           events: 3 },
+  { icon: "🔮", label: "Keeper of the Circle",   events: 5 },
+];
+
+const NOMAYA_MOMENTS = [
+  {
+    emoji: "🌸",
+    title: "Your first gathering",
+    desc: "You joined your first Nomaya experience",
+    reward: "You received your Founding Circle sticker",
+    events: 1,
+  },
+  {
+    emoji: "🌿",
+    title: "You came back",
+    desc: "You returned for a second experience",
+    reward: "Nomaya the movement sticker",
+    events: 2,
+  },
+  {
+    emoji: "🕯",
+    title: "A moment of connection",
+    desc: "You've started building deeper connections",
+    reward: "A purple candle",
+    events: 3,
+  },
+  {
+    emoji: "💌",
+    title: "A meaningful step",
+    desc: "You've been part of something special",
+    reward: "A handwritten letter",
+    events: 5,
+  },
 ];
 
 // ─── Your Month Tab ────────────────────────────────────────────────────────────
@@ -87,25 +118,36 @@ function YourMonthTab({ eventsAttended, onOpenCircle }: {
         </div>
       )}
 
-      {/* Tier progress */}
-      <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your level</p>
-        <div className="space-y-3">
-          {TIERS.map(({ icon, label, events }) => {
-            const done = eventsAttended >= events;
-            return (
-              <div key={label} className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${done ? 'bg-primary/20' : 'bg-muted'}`}>
-                <span className="text-xl flex-shrink-0">{icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{events} events</p>
+      {/* Next moment teaser */}
+      {(() => {
+        const next = NOMAYA_MOMENTS.find(m => eventsAttended < m.events);
+        const last = NOMAYA_MOMENTS.filter(m => eventsAttended >= m.events).pop();
+        if (!next && !last) return null;
+        return (
+          <div className="bg-card rounded-2xl p-5 shadow-card space-y-2">
+            {last && (
+              <div className="flex items-center gap-2.5 pb-3 border-b border-border">
+                <span className="text-xl">{last.emoji}</span>
+                <div>
+                  <p className="text-xs text-primary font-medium">Latest moment</p>
+                  <p className="text-sm font-semibold text-foreground">{last.title}</p>
                 </div>
-                {done && <Check size={16} className="text-primary flex-shrink-0" />}
+                <Check size={16} className="text-primary ml-auto flex-shrink-0" />
               </div>
-            );
-          })}
-        </div>
-      </div>
+            )}
+            {next && (
+              <div className="flex items-center gap-2.5 pt-1">
+                <span className="text-xl opacity-40">{next.emoji}</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Next moment</p>
+                  <p className="text-sm font-semibold text-muted-foreground">{next.title}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5">{next.events - eventsAttended} more event{next.events - eventsAttended === 1 ? '' : 's'} away</p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -261,7 +303,6 @@ function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
             {[
               { text: `You've attended ${eventsAttended} event${eventsAttended === 1 ? '' : 's'}`, done: eventsAttended >= 1 },
               { text: "Women enjoyed meeting you", done: eventsAttended >= 3 },
-              { text: "When you feel ready, you can host something small", done: false },
             ].map(({ text, done }, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${done ? 'border-white bg-white' : 'border-white/30'}`}>
@@ -271,6 +312,9 @@ function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
               </div>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground leading-relaxed italic">
+            When you feel ready, you can host something small ✦
+          </p>
 
           {qualifiesForHosting ? (
             <button
@@ -289,26 +333,29 @@ function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
         </div>
       </div>
 
-      {/* Journey milestones */}
+      {/* Your Nomaya Moments */}
       <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your milestones</p>
+        <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
         <div className="space-y-3">
-          {TIERS.map(({ icon, label, events, perks }) => {
+          {NOMAYA_MOMENTS.map(({ emoji, title, desc, reward, events }) => {
             const done = eventsAttended >= events;
             return (
-              <div key={label} className={`rounded-2xl p-4 space-y-2 ${done ? 'bg-primary/15 border border-primary/20' : 'bg-muted opacity-60'}`}>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">{icon}</span>
-                  <p className="text-sm font-semibold text-foreground">{label}</p>
-                  {done && <span className="ml-auto text-xs font-medium text-primary">Unlocked</span>}
-                </div>
-                <div className="space-y-1 pl-8">
-                  {perks.map(p => (
-                    <div key={p} className="flex items-center gap-1.5">
-                      <div className="w-1 h-1 rounded-full bg-muted-foreground flex-shrink-0" />
-                      <p className="text-xs text-muted-foreground">{p}</p>
+              <div key={title} className={`rounded-2xl p-4 space-y-1.5 transition-all ${done ? 'bg-primary/15 border border-primary/20' : 'bg-muted'}`}>
+                <div className="flex items-start gap-3">
+                  <span className={`text-xl flex-shrink-0 ${!done ? 'opacity-40' : ''}`}>{emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`text-sm font-semibold leading-snug ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{title}</p>
+                      {done && <span className="text-xs font-medium text-primary flex-shrink-0">Earned</span>}
                     </div>
-                  ))}
+                    <p className={`text-xs mt-0.5 leading-snug ${done ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>{desc}</p>
+                    {done && (
+                      <p className="text-xs mt-1.5 text-primary/80 leading-snug">→ {reward}</p>
+                    )}
+                    {!done && (
+                      <p className="text-xs mt-1 text-muted-foreground/40">After {events} event{events === 1 ? '' : 's'}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             );
