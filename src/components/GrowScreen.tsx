@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
 import { Logo } from "./Logo";
-import { useProfile } from "@/hooks/useProfile";
-import { useBookings } from "@/hooks/useBookings";
-import { useCircles } from "@/hooks/useCircles";
 import { useMonthlyStats } from "@/hooks/useMonthlyStats";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
@@ -20,7 +17,7 @@ const NOMAYA_MOMENTS = [
     emoji: "🌸",
     title: "Your first gathering",
     desc: "You joined your first Nomaya experience",
-    reward: "You received your Founding Circle sticker",
+    reward: "Your Founding Circle sticker",
     events: 1,
   },
   {
@@ -42,20 +39,25 @@ const NOMAYA_MOMENTS = [
     title: "A meaningful step",
     desc: "You've been part of something special",
     reward: "A handwritten letter",
-    events: 5,
+    events: 4,
   },
 ];
 
 // ─── Your Month Tab ────────────────────────────────────────────────────────────
 
-function YourMonthTab({ eventsAttended, onOpenCircle }: {
-  eventsAttended: number;
+function YourMonthTab({ onOpenCircle, onGoToCircles }: {
   onOpenCircle?: (id: string) => void;
+  onGoToCircles?: () => void;
 }) {
   const { data: stats, isLoading } = useMonthlyStats();
+  const completedTotal = stats?.completedTotal ?? 0;
 
   const now = new Date();
   const monthName = now.toLocaleString('default', { month: 'long' });
+
+  // Only show moments the user has actually reached (one by one as they complete events)
+  const unlockedMoments = NOMAYA_MOMENTS.filter(m => completedTotal >= m.events);
+  const nextMoment = NOMAYA_MOMENTS.find(m => completedTotal < m.events);
 
   return (
     <div className="space-y-3">
@@ -76,28 +78,30 @@ function YourMonthTab({ eventsAttended, onOpenCircle }: {
                 <p className="text-base font-semibold text-foreground">
                   You've met <span className="text-primary font-bold">{stats?.womenMet ?? 0}</span> women this month
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">Across {stats?.eventsThisMonth ?? 0} events</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Across {stats?.eventsThisMonth ?? 0} completed event{stats?.eventsThisMonth === 1 ? '' : 's'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-muted rounded-2xl px-4 py-3">
               <span className="text-2xl">🌀</span>
               <div>
                 <p className="text-base font-semibold text-foreground">
-                  You joined <span className="text-primary font-bold">{stats?.circlesJoinedCount ?? 0}</span> circles
+                  You're part of <span className="text-primary font-bold">{stats?.totalCircles ?? 0}</span> circle{stats?.totalCircles === 1 ? '' : 's'}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">New this month</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Your community</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Circles you're part of */}
-      {(stats?.myCircles?.length ?? 0) > 0 && (
-        <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
+      {/* Circles you're part of — top 3 + see all */}
+      {(stats?.top3Circles?.length ?? 0) > 0 && (
+        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3">
           <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Circles you're part of</p>
           <div className="space-y-2">
-            {stats!.myCircles.map((c) => (
+            {stats!.top3Circles.map((c) => (
               <button
                 key={c.id}
                 onClick={() => onOpenCircle?.(c.id)}
@@ -108,46 +112,55 @@ function YourMonthTab({ eventsAttended, onOpenCircle }: {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {c.sessions > 0
                       ? `You've been to ${c.sessions} session${c.sessions === 1 ? '' : 's'}`
-                      : 'Recently joined'}
+                      : 'Member'}
                   </p>
                 </div>
                 <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
               </button>
             ))}
+            {(stats?.totalCircles ?? 0) > 3 && (
+              <button
+                onClick={() => onGoToCircles?.()}
+                className="w-full flex items-center justify-between px-4 py-2 active:opacity-70"
+              >
+                <p className="text-sm text-primary font-medium">See all {stats!.totalCircles} circles</p>
+                <ChevronRight size={16} className="text-primary flex-shrink-0" />
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {/* Next moment teaser */}
-      {(() => {
-        const next = NOMAYA_MOMENTS.find(m => eventsAttended < m.events);
-        const last = NOMAYA_MOMENTS.filter(m => eventsAttended >= m.events).pop();
-        if (!next && !last) return null;
-        return (
-          <div className="bg-card rounded-2xl p-5 shadow-card space-y-2">
-            {last && (
-              <div className="flex items-center gap-2.5 pb-3 border-b border-border">
-                <span className="text-xl">{last.emoji}</span>
-                <div>
-                  <p className="text-xs text-primary font-medium">Latest moment</p>
-                  <p className="text-sm font-semibold text-foreground">{last.title}</p>
+      {/* Nomaya Moments — one by one as they unlock */}
+      {(unlockedMoments.length > 0 || nextMoment) && (
+        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3">
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
+          <div className="space-y-2">
+            {unlockedMoments.map(({ emoji, title, desc, reward }) => (
+              <div key={title} className="rounded-2xl p-4 bg-primary/15 border border-primary/20 space-y-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">{emoji}</span>
+                  <p className="text-sm font-semibold text-foreground flex-1">{title}</p>
+                  <span className="text-xs font-medium text-primary">Earned</span>
                 </div>
-                <Check size={16} className="text-primary ml-auto flex-shrink-0" />
+                <p className="text-xs text-muted-foreground pl-8">{desc}</p>
+                <p className="text-xs text-primary/80 pl-8">→ {reward}</p>
               </div>
-            )}
-            {next && (
-              <div className="flex items-center gap-2.5 pt-1">
-                <span className="text-xl opacity-40">{next.emoji}</span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Next moment</p>
-                  <p className="text-sm font-semibold text-muted-foreground">{next.title}</p>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">{next.events - eventsAttended} more event{next.events - eventsAttended === 1 ? '' : 's'} away</p>
+            ))}
+            {nextMoment && (
+              <div className="rounded-2xl p-4 bg-muted space-y-1 opacity-60">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl opacity-50">{nextMoment.emoji}</span>
+                  <p className="text-sm font-semibold text-muted-foreground flex-1">{nextMoment.title}</p>
                 </div>
+                <p className="text-xs text-muted-foreground/60 pl-8">
+                  {nextMoment.events - completedTotal} more event{nextMoment.events - completedTotal === 1 ? '' : 's'} to unlock
+                </p>
               </div>
             )}
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 }
@@ -280,8 +293,9 @@ function HostingSheet({ onClose, eventsAttended }: { onClose: () => void; events
 
 // ─── Your Journey Tab ──────────────────────────────────────────────────────────
 
-function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
-  const qualifiesForHosting = eventsAttended >= 5;
+function YourJourneyTab({ completedEvents }: { completedEvents: number }) {
+  const eventsAttended = completedEvents;
+  const qualifiesForHosting = completedEvents >= 4;
   const [showHostingSheet, setShowHostingSheet] = useState(false);
 
   return (
@@ -324,9 +338,10 @@ function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
               Learn about hosting →
             </button>
           ) : (
-            <div className="bg-muted rounded-xl px-4 py-3 mt-2">
+            <div className="bg-muted rounded-xl px-4 py-3 mt-2 flex items-center gap-2">
+              <span className="text-base">🔒</span>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Attend {Math.max(0, 5 - eventsAttended)} more event{5 - eventsAttended === 1 ? '' : 's'} to unlock hosting.
+                Complete {Math.max(0, 4 - completedEvents)} more event{4 - completedEvents === 1 ? '' : 's'} to unlock hosting.
               </p>
             </div>
           )}
@@ -368,14 +383,11 @@ function YourJourneyTab({ eventsAttended }: { eventsAttended: number }) {
 
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
-export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
+export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id: string) => void; onGoToCircles?: () => void }) {
   const { t } = useLang();
-  const { data: profile } = useProfile();
-  const { data: bookings = [] } = useBookings();
-  const { data: circles = [] } = useCircles();
   const [tab, setTab] = useState<"month" | "journey">("month");
-
-  const eventsAttended = bookings.filter(b => b.status === 'confirmed').length;
+  const { data: stats } = useMonthlyStats();
+  const completedEvents = stats?.completedTotal ?? 0;
 
   return (
     <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-screen-bottom">
@@ -408,8 +420,8 @@ export function GrowScreen({ onOpenCircle }: { onOpenCircle?: (id: string) => vo
 
       <div className="px-5">
         {tab === "month"
-          ? <YourMonthTab eventsAttended={eventsAttended} onOpenCircle={onOpenCircle} />
-          : <YourJourneyTab eventsAttended={eventsAttended} />
+          ? <YourMonthTab onOpenCircle={onOpenCircle} onGoToCircles={onGoToCircles} />
+          : <YourJourneyTab completedEvents={completedEvents} />
         }
       </div>
     </div>

@@ -4,63 +4,77 @@ import { useAuth } from '@/contexts/AuthContext';
 
 function startOfMonth(): string {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 export function useMonthlyStats() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['monthly_stats', user?.id, new Date().getMonth()],
+    queryKey: ['monthly_stats', user?.id, new Date().toISOString().slice(0, 7)],
     enabled: !!user,
     queryFn: async () => {
       const monthStart = startOfMonth();
+      const todayStr = today();
 
-      // Bookings this month (confirmed, event date in current month)
+      // ── Confirmed bookings with event dates ────────────────────────────────
       const { data: allBookings } = await supabase
         .from('bookings')
-        .select('event_id, status, events_with_spots(date, category_name, total_spots, spots_left)')
+        .select('event_id, status, created_at, events_with_spots(id, date, category_name, total_spots, spots_left)')
         .eq('user_id', user!.id)
         .eq('status', 'confirmed');
 
-      const thisMonthBookings = (allBookings ?? []).filter((b: any) => {
+      // "Completed" = confirmed booking AND event date has passed
+      const completed = (allBookings ?? []).filter((b: any) => {
         const date = b.events_with_spots?.date;
-        return date && date >= monthStart.slice(0, 10);
+        return date && date < todayStr;
       });
 
-      // Women met this month: sum of attendees (total_spots - spots_left) for each event
-      const womenMet = thisMonthBookings.reduce((sum: number, b: any) => {
-        const ev = b.events_with_spots;
-        if (!ev) return sum;
-        const others = Math.max(0, (ev.total_spots - ev.spots_left) - 1);
-        return sum + others;
-      }, 0);
+      // Completed events this month
+      const completedThisMonth = completed.filter((b: any) => {
+        const date = b.events_with_spots?.date;
+        return date && date >= monthStart;
+      });
 
-      // Circles joined this month
-      const { data: memberships } = await supabase
-        .from('circle_memberships')
-        .select('circle_id, role, joined_at, circles(name, category_id, categories(name))')
-        .eq('user_id', user!.id)
-        .gte('joined_at', monthStart);
+      // ── Women met this month ───────────────────────────────────────────────
+      // For each completed event this month, count total confirmed bookings for that event
+      let womenMet = 0;
+      if (completedThisMonth.length > 0) {
+        const eventIds = completedThisMonth.map((b: any) => b.event_id);
+        const { data: coAttendees } = await supabase
+          .from('bookings')
+          .select('event_id')
+          .in('event_id', eventIds)
+          .eq('status', 'confirmed')
+          .neq('user_id', user!.id);
 
-      const circlesJoinedCount = (memberships ?? []).length;
+        // Count per event, sum all
+        const countByEvent: Record<string, number> = {};
+        (coAttendees ?? []).forEach((b: any) => {
+          countByEvent[b.event_id] = (countByEvent[b.event_id] ?? 0) + 1;
+        });
+        womenMet = Object.values(countByEvent).reduce((s, n) => s + n, 0);
+      }
 
-      // All my circles with session count (bookings per category)
+      // ── All circles ────────────────────────────────────────────────────────
       const { data: allMemberships } = await supabase
         .from('circle_memberships')
         .select('circle_id, joined_at, circles(id, name, category_id, categories(name))')
-        .eq('user_id', user!.id);
+        .eq('user_id', user!.id)
+        .order('joined_at', { ascending: false });
 
-      // Count confirmed bookings per category
+      // Count confirmed bookings per category for "sessions" approximation
       const bookingsByCategory: Record<string, number> = {};
-      (allBookings ?? [])
-        .filter((b: any) => b.status === 'confirmed' && b.events_with_spots?.category_name)
-        .forEach((b: any) => {
-          const cat = b.events_with_spots.category_name;
-          bookingsByCategory[cat] = (bookingsByCategory[cat] ?? 0) + 1;
-        });
+      completed.forEach((b: any) => {
+        const cat = b.events_with_spots?.category_name;
+        if (cat) bookingsByCategory[cat] = (bookingsByCategory[cat] ?? 0) + 1;
+      });
 
-      const myCircles = (allMemberships ?? []).map((m: any) => {
+      const allCircles = (allMemberships ?? []).map((m: any) => {
         const circle = m.circles;
         const categoryName = circle?.categories?.name ?? '';
         return {
@@ -68,16 +82,21 @@ export function useMonthlyStats() {
           name: circle?.name ?? 'Circle',
           categoryName,
           sessions: bookingsByCategory[categoryName] ?? 0,
-          joinedAt: m.joined_at,
+          joinedAt: m.joined_at as string,
         };
       });
 
+      // Top 3: prioritise circles where user has sessions, then most recently joined
+      const top3Circles = [...allCircles]
+        .sort((a, b) => b.sessions - a.sessions || new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime())
+        .slice(0, 3);
+
       return {
         womenMet,
-        circlesJoinedCount,
-        myCircles,
-        eventsThisMonth: thisMonthBookings.length,
-        totalEvents: (allBookings ?? []).filter((b: any) => b.status === 'confirmed').length,
+        totalCircles: allCircles.length,
+        top3Circles,
+        eventsThisMonth: completedThisMonth.length,
+        completedTotal: completed.length,   // used for unlocking moments/hosting
       };
     },
   });
