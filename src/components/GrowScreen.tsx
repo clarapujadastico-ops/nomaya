@@ -51,6 +51,10 @@ const NOMAYA_MOMENTS = [
 
 function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
   const monthOnly = new Date(m.year, m.month, 1).toLocaleString('default', { month: 'long' });
+  const hasAnything = m.eventsAttended > 0 || m.circlesJoined > 0 || m.womenMet > 0;
+
+  // Only show months where something happened (or current month)
+  if (!isCurrent && !hasAnything) return null;
 
   return (
     <div className={`rounded-2xl p-4 space-y-3 ${isCurrent ? 'bg-card shadow-card border border-primary/20' : 'bg-muted'}`}>
@@ -58,48 +62,48 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
         {isCurrent ? `This month · ${monthOnly}` : monthOnly}
       </p>
 
-      {m.eventsAttended === 0 && m.womenMet === 0 && m.circlesJoined === 0 ? (
-        <p className="text-xs text-muted-foreground italic">
-          {isCurrent ? "You haven't attended any events yet this month" : "A quieter month"}
+      {!hasAnything ? (
+        // Current month, nothing yet — show soft message
+        <p className="text-xs text-muted-foreground italic leading-relaxed">
+          Your next experience is waiting for you 🌸
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {m.eventsAttended > 0 && (
-            <div className="flex items-center gap-2.5">
-              <span className="text-base flex-shrink-0">✦</span>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base flex-shrink-0 mt-0.5">✦</span>
               <p className="text-sm text-foreground leading-snug">
-                Attended <span className="font-semibold text-primary">{m.eventsAttended}</span> event{m.eventsAttended === 1 ? '' : 's'}
+                {m.eventsAttended === 1
+                  ? "You showed up for a gathering"
+                  : `You showed up for ${m.eventsAttended} gatherings`}
               </p>
             </div>
           )}
-          {m.womenMet > 0 ? (
-            <div className="flex items-center gap-2.5">
-              <span className="text-base flex-shrink-0">👋</span>
+          {m.womenMet > 0 && (
+            <div className="flex items-start gap-2.5">
+              <span className="text-base flex-shrink-0 mt-0.5">👋</span>
               <p className="text-sm text-foreground leading-snug">
-                Met <span className="font-semibold text-primary">{m.womenMet}</span> women
+                {m.womenMet === 1
+                  ? "You met someone new"
+                  : `You were in the room with ${m.womenMet} other women`}
               </p>
             </div>
-          ) : m.eventsAttended > 0 ? (
-            <div className="flex items-center gap-2.5">
-              <span className="text-base flex-shrink-0">👋</span>
-              <p className="text-sm text-muted-foreground leading-snug">
-                {isCurrent ? "You haven't met anyone new this month yet" : "No new connections recorded"}
-              </p>
-            </div>
-          ) : null}
+          )}
           {m.circlesJoined > 0 && (
-            <div className="flex items-center gap-2.5">
-              <span className="text-base flex-shrink-0">🌀</span>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base flex-shrink-0 mt-0.5">🌀</span>
               <p className="text-sm text-foreground leading-snug">
-                Joined <span className="font-semibold text-primary">{m.circlesJoined}</span> new circle{m.circlesJoined === 1 ? '' : 's'}
+                {m.circlesJoined === 1
+                  ? "You found a new circle to belong to"
+                  : "You explored different circles"}
               </p>
             </div>
           )}
         </div>
       )}
 
-      {isCurrent && (
-        <p className="text-xs text-muted-foreground italic pt-1">
+      {isCurrent && hasAnything && (
+        <p className="text-xs text-muted-foreground italic">
           You're slowly finding your people here
         </p>
       )}
@@ -288,24 +292,9 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
   const [showHostingSheet, setShowHostingSheet] = useState(false);
   const [showWomenInfo, setShowWomenInfo] = useState(false);
 
-  // Invisible stages — no thresholds shown to the user
+  // Invisible stages — no thresholds or lock language ever shown
   const stage: 'early' | 'mid' | 'ready' =
     n >= 5 ? 'ready' : n >= 3 ? 'mid' : 'early';
-
-  const cardTitle =
-    stage === 'ready' ? "You're ready to host" :
-    stage === 'mid'   ? "You'd make a great host" :
-                        "Hosting is something you can explore";
-
-  const cardBody =
-    stage === 'ready' ? "You've attended a few gatherings, women have enjoyed meeting you, and you can now host a gathering of your own." :
-    stage === 'mid'   ? "You've attended a few gatherings · Women have enjoyed meeting you · You can now host a small gathering" :
-                        "Once you've been to a few Nomaya gatherings, hosting opens up naturally. It's not a requirement — just something that tends to happen when you start to feel at home here.";
-
-  const ctaLabel =
-    stage === 'ready' ? "Host a gathering" :
-    stage === 'mid'   ? "Host something small" :
-                        "Learn how hosting works";
 
   return (
     <div className="space-y-3">
@@ -343,35 +332,40 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
         </div>
       )}
 
-      {/* Hosting card — content changes invisibly by stage */}
+      {/* Hosting card */}
       <div className="bg-card rounded-2xl shadow-card overflow-hidden">
         <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">Hosting</p>
-          <h2 className="font-serif text-xl font-medium text-foreground leading-snug">{cardTitle}</h2>
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">🌱 Hosting</p>
+          <h2 className="font-serif text-xl font-medium text-foreground leading-snug">
+            You'd make a great host
+          </h2>
         </div>
         <div className="px-5 py-4 space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">{cardBody}</p>
-
-          {/* "Women enjoyed meeting you" — tappable on mid/ready */}
-          {stage !== 'early' && (
-            <button
-              onClick={() => setShowWomenInfo(true)}
-              className="w-full flex items-center gap-2 text-left active:opacity-70"
-            >
-              <p className="text-xs text-primary font-medium">What does "women enjoyed meeting you" mean? →</p>
-            </button>
+          {stage === 'early' ? (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              You've started experiencing Nomaya. As you get a feel for the gatherings, hosting will open up naturally.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {stage === 'ready'
+                  ? "You've attended a few gatherings, women have enjoyed meeting you. You can now host a gathering of your own."
+                  : "You've attended a few gatherings and women have enjoyed meeting you. You can now host a small gathering."}
+              </p>
+              <button
+                onClick={() => setShowWomenInfo(true)}
+                className="w-full flex items-center gap-2 text-left active:opacity-70"
+              >
+                <p className="text-xs text-primary font-medium">What does "women enjoyed meeting you" mean? →</p>
+              </button>
+              <button
+                onClick={() => setShowHostingSheet(true)}
+                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity"
+              >
+                {stage === 'ready' ? "Host a gathering" : "Host a small gathering"}
+              </button>
+            </>
           )}
-
-          <button
-            onClick={() => setShowHostingSheet(true)}
-            className={`w-full py-3.5 rounded-2xl font-medium text-sm active:opacity-80 transition-opacity ${
-              stage === 'early'
-                ? 'bg-muted text-muted-foreground'
-                : 'gradient-cta text-white'
-            }`}
-          >
-            {ctaLabel}
-          </button>
         </div>
       </div>
 
@@ -390,7 +384,9 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
                       <p className={`text-sm font-semibold leading-snug ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{title}</p>
                       {done && <span className="text-xs font-medium text-primary flex-shrink-0">You received this ✓</span>}
                     </div>
-                    <p className={`text-xs mt-0.5 leading-snug ${done ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>{desc}</p>
+                    <p className={`text-xs mt-0.5 leading-snug ${done ? 'text-muted-foreground' : 'text-muted-foreground/60'}`}>
+                      {done ? desc : NOMAYA_MOMENTS.find(m => m.title === title)?.lockedDesc ?? desc}
+                    </p>
                     {done && <p className="text-xs mt-1.5 text-primary/80 leading-snug">→ {reward}</p>}
                   </div>
                 </div>
@@ -403,7 +399,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
   );
 }
 
-// ─── Main Screen ───────────────────────────────────────────────────────────────
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id: string) => void; onGoToCircles?: () => void }) {
   const { t } = useLang();
@@ -440,7 +436,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
         ))}
       </div>
 
-      <div className="px-5">
+      <div className="px-5 pb-6">
         {tab === "journey"
           ? <YourJourneyTab onOpenCircle={onOpenCircle} />
           : <HostingTab completedEvents={completedEvents} />
