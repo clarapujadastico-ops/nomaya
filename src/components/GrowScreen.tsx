@@ -25,7 +25,7 @@ const NOMAYA_MOMENTS = [
     emoji: "🌿",
     title: "You came back",
     desc: "You returned for a second experience",
-    lockedDesc: "You returned for another experience → That's how connections begin",
+    lockedDesc: "You returned for another experience — that's how connections begin",
     reward: "Nomaya the movement sticker",
     events: 2,
   },
@@ -94,7 +94,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
               <span className="text-base flex-shrink-0 mt-0.5">🌀</span>
               <p className="text-sm text-foreground leading-snug">
                 {m.circlesJoined === 1
-                  ? "You found a new circle to belong to"
+                  ? "You explored a new circle"
                   : "You explored different circles"}
               </p>
             </div>
@@ -157,7 +157,7 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
             className="w-full flex items-center justify-between px-1 py-1 active:opacity-60 transition-opacity"
           >
             <p className="text-xs text-muted-foreground font-medium">
-              {showHistory ? "Hide past months" : `See past months (${pastMonths.length})`}
+              {showHistory ? "Hide past months" : `See your past months (${pastMonths.length})`}
             </p>
             <ChevronRight
               size={14}
@@ -172,7 +172,7 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
 
       {/* Nomaya Moments — identity + reflection */}
       {(unlockedMoments.length > 0 || nextMoment) && (
-        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3">
+        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3 mt-2">
           <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
           <div className="space-y-2">
             {unlockedMoments.map(({ emoji, title, desc, reward }) => (
@@ -407,7 +407,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
                 onClick={() => setShowHostingSheet(true)}
                 className="w-full py-3.5 rounded-2xl bg-muted text-muted-foreground font-medium text-sm active:opacity-70 transition-opacity"
               >
-                Learn how hosting works
+                Learn about hosting
               </button>
             </>
           ) : (
@@ -427,7 +427,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
                 onClick={() => setShowHostingSheet(true)}
                 className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity"
               >
-                {stage === 'ready' ? "Host a gathering" : "Host a small gathering"}
+                {stage === 'ready' ? "Host your first gathering" : "Host a small gathering"}
               </button>
             </>
           )}
