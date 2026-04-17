@@ -113,6 +113,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
 
 function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
   const { data: stats, isLoading, error } = useMonthlyStats();
+  const [showHistory, setShowHistory] = useState(false);
   const completedTotal = stats?.completedTotal ?? 0;
   const unlockedMoments = NOMAYA_MOMENTS.filter(m => completedTotal >= m.events);
   const nextMoment = NOMAYA_MOMENTS.find(m => completedTotal < m.events);
@@ -134,18 +135,39 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
   }
 
   const monthStats = stats?.monthStats ?? [];
+  const currentMonth = monthStats.find(m => m.isCurrent);
+  const pastMonths = monthStats.filter(m => !m.isCurrent);
 
   return (
     <div className="space-y-3">
-      {/* Monthly history */}
-      {monthStats.length === 0 ? (
+      {/* This month — always shown */}
+      {currentMonth ? (
+        <MonthCard m={currentMonth} isCurrent={true} />
+      ) : (
         <div className="bg-card rounded-2xl p-5 shadow-card text-center">
           <p className="text-sm text-muted-foreground">Your journey starts with your first event 🌸</p>
         </div>
-      ) : (
-        monthStats.map(m => (
-          <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
-        ))
+      )}
+
+      {/* Past months — collapsed by default */}
+      {pastMonths.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowHistory(v => !v)}
+            className="w-full flex items-center justify-between px-1 py-1 active:opacity-60 transition-opacity"
+          >
+            <p className="text-xs text-muted-foreground font-medium">
+              {showHistory ? "Hide past months" : `See past months (${pastMonths.length})`}
+            </p>
+            <ChevronRight
+              size={14}
+              className={`text-muted-foreground transition-transform duration-200 ${showHistory ? 'rotate-90' : ''}`}
+            />
+          </button>
+          {showHistory && pastMonths.map(m => (
+            <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={false} />
+          ))}
+        </>
       )}
 
       {/* Nomaya Moments — identity + reflection */}
@@ -437,7 +459,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
       <div className="flex gap-2 px-5 py-4">
         {([
           { key: "journey", label: "Your Journey" },
-          { key: "hosting", label: "Host" },
+          { key: "hosting", label: "Become a host" },
         ] as const).map(({ key, label }) => (
           <button
             key={key}
