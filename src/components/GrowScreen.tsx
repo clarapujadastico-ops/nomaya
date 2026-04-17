@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
 import { Logo } from "./Logo";
-import { useMonthlyStats } from "@/hooks/useMonthlyStats";
+import { useMonthlyStats, type MonthStats } from "@/hooks/useMonthlyStats";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,7 +49,7 @@ const NOMAYA_MOMENTS = [
 
 // ─── Your Journey Tab ─────────────────────────────────────────────────────────
 
-function MonthCard({ m, isCurrent }: { m: import('@/hooks/useMonthlyStats').MonthStats; isCurrent: boolean }) {
+function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
   const monthOnly = new Date(m.year, m.month, 1).toLocaleString('default', { month: 'long' });
 
   return (
@@ -109,15 +109,9 @@ function MonthCard({ m, isCurrent }: { m: import('@/hooks/useMonthlyStats').Mont
 
 function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
   const { data: stats, isLoading } = useMonthlyStats();
-  const completedTotal = stats?.completedTotal ?? 0;
-
-  const unlockedMoments = NOMAYA_MOMENTS.filter(m => completedTotal >= m.events);
-  const nextMoment = NOMAYA_MOMENTS.find(m => completedTotal < m.events);
 
   return (
     <div className="space-y-3">
-
-      {/* Monthly history — current month first, scroll back */}
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map(i => <div key={i} className="h-24 bg-card rounded-2xl animate-pulse" />)}
@@ -126,42 +120,6 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
         (stats?.monthStats ?? []).map(m => (
           <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={m.isCurrent} />
         ))
-      )}
-
-      {/* Nomaya Moments timeline */}
-      {(unlockedMoments.length > 0 || nextMoment) && (
-        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
-          <div className="relative">
-            <div className="absolute left-[14px] top-0 bottom-0 w-px bg-border" />
-            <div className="space-y-1">
-              {unlockedMoments.map(({ emoji, title, desc, reward }) => (
-                <div key={title} className="flex items-start gap-3 pb-4">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center flex-shrink-0 z-10 relative text-sm">
-                    {emoji}
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-semibold text-foreground leading-snug">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{desc}</p>
-                    <p className="text-xs text-primary/80 mt-1 leading-snug">→ {reward}</p>
-                    <p className="text-xs font-medium text-primary mt-1">You received this ✓</p>
-                  </div>
-                </div>
-              ))}
-              {nextMoment && (
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0 z-10 relative text-sm opacity-40">
-                    {nextMoment.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-semibold text-muted-foreground leading-snug">{nextMoment.title}</p>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5 leading-snug">{nextMoment.lockedDesc}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
