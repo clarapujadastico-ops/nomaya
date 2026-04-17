@@ -380,7 +380,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
         <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
         <div className="space-y-3">
           {NOMAYA_MOMENTS.map(({ emoji, title, desc, reward, events }) => {
-            const done = eventsAttended >= events;
+            const done = n >= events;
             return (
               <div key={title} className={`rounded-2xl p-4 space-y-1.5 transition-all ${done ? 'bg-primary/15 border border-primary/20' : 'bg-muted'}`}>
                 <div className="flex items-start gap-3">
@@ -391,12 +391,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
                       {done && <span className="text-xs font-medium text-primary flex-shrink-0">You received this ✓</span>}
                     </div>
                     <p className={`text-xs mt-0.5 leading-snug ${done ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>{desc}</p>
-                    {done && (
-                      <p className="text-xs mt-1.5 text-primary/80 leading-snug">→ {reward}</p>
-                    )}
-                    {!done && (
-                      <p className="text-xs mt-1 text-muted-foreground/40">After {events} event{events === 1 ? '' : 's'}</p>
-                    )}
+                    {done && <p className="text-xs mt-1.5 text-primary/80 leading-snug">→ {reward}</p>}
                   </div>
                 </div>
               </div>
