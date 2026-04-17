@@ -49,11 +49,29 @@ const NOMAYA_MOMENTS = [
 
 // ─── Your Journey Tab ─────────────────────────────────────────────────────────
 
+// Varied phrasing so no two months feel the same
+const EVENT_PHRASES = [
+  (n: number) => n === 1 ? "You showed up for a gathering" : `You came back for ${n} more experiences`,
+  (n: number) => n === 1 ? "You came back for another experience" : `You attended ${n} gatherings`,
+  (n: number) => n === 1 ? "You made time for a Nomaya experience" : `You showed up ${n} times`,
+];
+const WOMEN_PHRASES = [
+  (n: number) => n === 1 ? "You met a new woman" : `You met ${n} new women`,
+  (n: number) => n === 1 ? "You were in the room with someone new" : `You were in the room with ${n} other women`,
+  (n: number) => n === 1 ? "A new connection was made" : `${n} women were part of the same experience`,
+];
+const CIRCLE_PHRASES = [
+  (n: number) => n === 1 ? "You found a circle you liked" : "You explored different circles",
+  (n: number) => n === 1 ? "You joined a new circle" : "You tried out new circles",
+  (n: number) => n === 1 ? "You found a circle that felt right" : "You explored what circles were out there",
+];
+
 function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
   const monthOnly = new Date(m.year, m.month, 1).toLocaleString('default', { month: 'long' });
   const hasAnything = m.eventsAttended > 0 || m.circlesJoined > 0 || m.womenMet > 0;
+  // Use month index to pick a phrase variant — consistent per month, varied across months
+  const variant = m.month % 3;
 
-  // Only show months where something happened (or current month)
   if (!isCurrent && !hasAnything) return null;
 
   return (
@@ -63,7 +81,6 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
       </p>
 
       {!hasAnything ? (
-        // Current month, nothing yet — show soft message
         <p className="text-xs text-muted-foreground italic leading-relaxed">
           A small gathering might feel right soon 🌸
         </p>
@@ -73,9 +90,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
             <div className="flex items-start gap-2.5">
               <span className="text-base flex-shrink-0 mt-0.5">✦</span>
               <p className="text-sm text-foreground leading-snug">
-                {m.eventsAttended === 1
-                  ? "You showed up for a gathering"
-                  : `You showed up for ${m.eventsAttended} gatherings`}
+                {EVENT_PHRASES[variant](m.eventsAttended)}
               </p>
             </div>
           )}
@@ -83,9 +98,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
             <div className="flex items-start gap-2.5">
               <span className="text-base flex-shrink-0 mt-0.5">👋</span>
               <p className="text-sm text-foreground leading-snug">
-                {m.womenMet === 1
-                  ? "You met someone new"
-                  : `You were in the room with ${m.womenMet} other women`}
+                {WOMEN_PHRASES[variant](m.womenMet)}
               </p>
             </div>
           )}
@@ -93,9 +106,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
             <div className="flex items-start gap-2.5">
               <span className="text-base flex-shrink-0 mt-0.5">🌀</span>
               <p className="text-sm text-foreground leading-snug">
-                {m.circlesJoined === 1
-                  ? "You explored a new circle"
-                  : "You explored different circles"}
+                {CIRCLE_PHRASES[variant](m.circlesJoined)}
               </p>
             </div>
           )}
@@ -154,7 +165,7 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
         <>
           <button
             onClick={() => setShowHistory(v => !v)}
-            className="w-full flex items-center justify-between px-1 py-1 active:opacity-60 transition-opacity"
+            className="w-full flex items-center justify-between px-4 py-2 active:opacity-60 transition-opacity"
           >
             <p className="text-xs text-muted-foreground font-medium">
               {showHistory ? "Hide past months" : `See your past months (${pastMonths.length})`}

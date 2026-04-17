@@ -205,7 +205,12 @@ function ChatPanel({ circleId, isMember }: { circleId: string; isMember: boolean
     setIsUploadingImage(true);
     try {
       const url = await uploadChatImage(circleId);
-      if (url) send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
+      if (url) {
+        send({ circleId, content: `${IMG_PREFIX}${url}`, senderName: profile?.name ?? undefined });
+      } else {
+        // Native picker returned nothing — fall back to web file input
+        fileInputRef.current?.click();
+      }
     } catch {
       fileInputRef.current?.click();
     } finally {
