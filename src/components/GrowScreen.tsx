@@ -13,38 +13,10 @@ const TIERS = [
 ];
 
 const NOMAYA_MOMENTS = [
-  {
-    emoji: "🌸",
-    title: "Your first gathering",
-    desc: "You joined your first Nomaya experience",
-    lockedDesc: "You joined your first experience — that's how it begins",
-    reward: "Your Founding Circle sticker",
-    events: 1,
-  },
-  {
-    emoji: "🌿",
-    title: "You came back",
-    desc: "You returned for a second experience",
-    lockedDesc: "You returned for another experience — that's how connections begin",
-    reward: "Nomaya the movement sticker",
-    events: 2,
-  },
-  {
-    emoji: "🕯",
-    title: "A moment of connection",
-    desc: "You've started building deeper connections",
-    lockedDesc: "You've started building deeper connections",
-    reward: "A purple candle",
-    events: 3,
-  },
-  {
-    emoji: "💌",
-    title: "A meaningful step",
-    desc: "You've been part of something special",
-    lockedDesc: "You've been part of something that matters",
-    reward: "A handwritten letter",
-    events: 4,
-  },
+  { emoji: "🌸", titleKey: "moment.1.title", descKey: "moment.1.desc", lockedKey: "moment.1.locked", rewardKey: "moment.1.reward", events: 1 },
+  { emoji: "🌿", titleKey: "moment.2.title", descKey: "moment.2.desc", lockedKey: "moment.2.locked", rewardKey: "moment.2.reward", events: 2 },
+  { emoji: "🕯",  titleKey: "moment.3.title", descKey: "moment.3.desc", lockedKey: "moment.3.locked", rewardKey: "moment.3.reward", events: 3 },
+  { emoji: "💌", titleKey: "moment.4.title", descKey: "moment.4.desc", lockedKey: "moment.4.locked", rewardKey: "moment.4.reward", events: 4 },
 ];
 
 // ─── Your Journey Tab ─────────────────────────────────────────────────────────
@@ -67,6 +39,7 @@ const CIRCLE_PHRASES = [
 ];
 
 function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
+  const { t } = useLang();
   const monthOnly = new Date(m.year, m.month, 1).toLocaleString('default', { month: 'long' });
   const hasAnything = m.eventsAttended > 0 || m.circlesJoined > 0 || m.womenMet > 0;
   // Use month index to pick a phrase variant — consistent per month, varied across months
@@ -81,9 +54,7 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
       </p>
 
       {!hasAnything ? (
-        <p className="text-xs text-muted-foreground italic leading-relaxed">
-          A small gathering might feel right soon 🌸
-        </p>
+        <p className="text-xs text-muted-foreground italic leading-relaxed">{t("community.no_events_yet")}</p>
       ) : (
         <div className="space-y-2.5">
           {m.eventsAttended > 0 && (
@@ -114,15 +85,14 @@ function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
       )}
 
       {isCurrent && hasAnything && (
-        <p className="text-xs text-muted-foreground italic">
-          You're slowly finding your people here
-        </p>
+        <p className="text-xs text-muted-foreground italic">{t("community.finding_people")}</p>
       )}
     </div>
   );
 }
 
 function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
+  const { t } = useLang();
   const { data: stats, isLoading, error } = useMonthlyStats();
   const [showHistory, setShowHistory] = useState(false);
   const completedTotal = stats?.completedTotal ?? 0;
@@ -132,7 +102,7 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
   if (error) {
     return (
       <div className="bg-card rounded-2xl p-5 shadow-card">
-        <p className="text-sm text-muted-foreground text-center">Could not load your journey. Pull to refresh.</p>
+        <p className="text-sm text-muted-foreground text-center">{t("common.loading")}</p>
       </div>
     );
   }
@@ -151,16 +121,14 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
 
   return (
     <div className="space-y-3">
-      {/* This month — always shown */}
       {currentMonth ? (
         <MonthCard m={currentMonth} isCurrent={true} />
       ) : (
         <div className="bg-card rounded-2xl p-5 shadow-card text-center">
-          <p className="text-sm text-muted-foreground">Your journey starts with your first event 🌸</p>
+          <p className="text-sm text-muted-foreground">{t("community.no_events_yet")}</p>
         </div>
       )}
 
-      {/* Past months — collapsed by default */}
       {pastMonths.length > 0 && (
         <>
           <button
@@ -168,12 +136,9 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
             className="w-full flex items-center justify-between px-4 py-2 active:opacity-60 transition-opacity"
           >
             <p className="text-xs text-muted-foreground font-medium">
-              {showHistory ? "Hide past months" : `See your past months (${pastMonths.length})`}
+              {showHistory ? t("community.hide_past") : `${t("community.see_past")} (${pastMonths.length})`}
             </p>
-            <ChevronRight
-              size={14}
-              className={`text-muted-foreground transition-transform duration-200 ${showHistory ? 'rotate-90' : ''}`}
-            />
+            <ChevronRight size={14} className={`text-muted-foreground transition-transform duration-200 ${showHistory ? 'rotate-90' : ''}`} />
           </button>
           {showHistory && pastMonths.map(m => (
             <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={false} />
@@ -181,20 +146,19 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
         </>
       )}
 
-      {/* Nomaya Moments — identity + reflection */}
       {(unlockedMoments.length > 0 || nextMoment) && (
         <div className="bg-card rounded-2xl p-5 shadow-card space-y-3 mt-2">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">Your Nomaya moments</p>
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("community.moments_title")}</p>
           <div className="space-y-2">
-            {unlockedMoments.map(({ emoji, title, desc, reward }) => (
-              <div key={title} className="rounded-2xl p-4 bg-primary/15 border border-primary/20 space-y-1.5">
+            {unlockedMoments.map((m) => (
+              <div key={m.titleKey} className="rounded-2xl p-4 bg-primary/15 border border-primary/20 space-y-1.5">
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{emoji}</span>
+                  <span className="text-xl flex-shrink-0">{m.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground leading-snug">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{desc}</p>
-                    <p className="text-xs text-primary/80 mt-1 leading-snug">→ {reward}</p>
-                    <p className="text-xs font-medium text-primary mt-1.5">You received this ✓</p>
+                    <p className="text-sm font-semibold text-foreground leading-snug">{t(m.titleKey)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{t(m.descKey)}</p>
+                    <p className="text-xs text-primary/80 mt-1 leading-snug">→ {t(m.rewardKey)}</p>
+                    <p className="text-xs font-medium text-primary mt-1.5">{t("community.received_this")}</p>
                   </div>
                 </div>
               </div>
@@ -204,8 +168,8 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
                 <div className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0 opacity-40">{nextMoment.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-muted-foreground leading-snug">{nextMoment.title}</p>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5 leading-snug">{nextMoment.lockedDesc}</p>
+                    <p className="text-sm font-semibold text-muted-foreground leading-snug">{t(nextMoment.titleKey)}</p>
+                    <p className="text-xs text-muted-foreground/70 mt-0.5 leading-snug">{t(nextMoment.lockedKey)}</p>
                   </div>
                 </div>
               </div>
@@ -219,14 +183,16 @@ function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void 
 
 // ─── Hosting Sheet ────────────────────────────────────────────────────────────
 
-const HOSTING_TYPES = [
-  { emoji: "🍝", label: "Small dinner", desc: "6–8 women · your place or a restaurant" },
-  { emoji: "☕", label: "Coffee morning", desc: "4–6 women · low pressure, easy start" },
-  { emoji: "🎨", label: "Workshop or skill share", desc: "Ceramics, painting, cooking, anything you love" },
-  { emoji: "🌿", label: "Walk or outdoor plan", desc: "Retiro, a hike, a neighbourhood stroll" },
+// HOSTING_TYPES: labelKey/descKey resolved via t() at render time
+const HOSTING_TYPE_KEYS = [
+  { emoji: "🍝", labelKey: "host.types.dinner",   descKey: "host.types.dinner_desc" },
+  { emoji: "☕", labelKey: "host.types.coffee",   descKey: "host.types.coffee_desc" },
+  { emoji: "🎨", labelKey: "host.types.workshop", descKey: "host.types.workshop_desc" },
+  { emoji: "🌿", labelKey: "host.types.walk",     descKey: "host.types.walk_desc" },
 ];
 
 function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose: () => void; eventsAttended: number; canExpress?: boolean }) {
+  const { t } = useLang();
   const { user } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -257,29 +223,23 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
           {sent ? (
             <div className="flex flex-col items-center text-center py-8 gap-4">
               <span className="text-5xl">💜</span>
-              <h2 className="font-serif text-2xl font-medium text-foreground">You're on the list</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                We'll reach out when there's a good moment to plan your first gathering. No pressure — we'll do it together.
-              </p>
+              <h2 className="font-serif text-2xl font-medium text-foreground">{t("host.sheet.listed")}</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t("host.sheet.listed_body")}</p>
               <button onClick={onClose} className="mt-2 w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm">
-                Back to community
+                {t("host.sheet.back")}
               </button>
             </div>
           ) : (
             <>
               <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Hosting at Nomaya</p>
-                <h2 className="font-serif text-2xl font-medium text-foreground leading-snug">
-                  Your table,<br />your vibe
-                </h2>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                  Hosting at Nomaya means proposing a small gathering and showing up as yourself. We handle everything else — bookings, promotion, and making sure the right women find their way to your table.
-                </p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("host.sheet.at_nomaya")}</p>
+                <h2 className="font-serif text-2xl font-medium text-foreground leading-snug">{t("host.sheet.title")}</h2>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{t("host.sheet.intro")}</p>
               </div>
 
               {/* What Nomaya does */}
               <div className="bg-card rounded-2xl p-4 space-y-2.5">
-                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">What we handle</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("host.sheet.we_handle")}</p>
                 {[
                   "📣  Promoting your event to the community",
                   "🎟️  Bookings, payments and confirmations",
@@ -292,7 +252,7 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
 
               {/* What you do */}
               <div className="bg-card rounded-2xl p-4 space-y-2.5">
-                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">What you bring</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("host.sheet.you_bring")}</p>
                 {[
                   "💡  An idea — a dinner, a walk, a skill",
                   "🌸  Your energy and presence",
@@ -306,23 +266,23 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
                 <>
                   {/* Pick a type */}
                   <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">What feels right for you?</p>
-                    {HOSTING_TYPES.map(({ emoji, label, desc }) => (
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("host.sheet.type")}</p>
+                    {HOSTING_TYPE_KEYS.map(({ emoji, labelKey, descKey }) => (
                       <button
-                        key={label}
-                        onClick={() => setSelected(label)}
+                        key={labelKey}
+                        onClick={() => setSelected(labelKey)}
                         className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
-                          selected === label
+                          selected === labelKey
                             ? 'bg-primary/20 border border-primary/40'
                             : 'bg-card border border-transparent'
                         }`}
                       >
                         <span className="text-xl flex-shrink-0">{emoji}</span>
                         <div>
-                          <p className="text-sm font-semibold text-foreground">{label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                          <p className="text-sm font-semibold text-foreground">{t(labelKey)}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t(descKey)}</p>
                         </div>
-                        {selected === label && <Check size={16} className="text-primary ml-auto flex-shrink-0" />}
+                        {selected === labelKey && <Check size={16} className="text-primary ml-auto flex-shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -331,11 +291,9 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
                     disabled={!selected || loading}
                     className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm disabled:opacity-40 transition-opacity active:opacity-80"
                   >
-                    {loading ? "Sending…" : "I'm interested →"}
+                    {loading ? t("host.sheet.sending") : t("host.sheet.interested")}
                   </button>
-                  <p className="text-xs text-muted-foreground text-center -mt-2">
-                    No commitment — we'll have a conversation first
-                  </p>
+                  <p className="text-xs text-muted-foreground text-center -mt-2">{t("host.sheet.no_commitment")}</p>
                 </>
               ) : (
                 <div className="bg-muted rounded-2xl px-4 py-4 text-center space-y-2">
@@ -356,6 +314,7 @@ function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose:
 // ─── Hosting Tab ──────────────────────────────────────────────────────────────
 
 function HostingTab({ completedEvents }: { completedEvents: number }) {
+  const { t } = useLang();
   const n = completedEvents;
   const [showHostingSheet, setShowHostingSheet] = useState(false);
   const [showWomenInfo, setShowWomenInfo] = useState(false);
@@ -380,21 +339,12 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWomenInfo(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-            <h3 className="font-serif text-xl font-medium text-foreground">Women enjoyed meeting you</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              After each Nomaya gathering, women can share how the experience felt.
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              When conversations flow naturally and people leave feeling good, it often means you helped create that space — just by being there.
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              You don't have to do anything for this. It's simply a reflection of showing up 💜
-            </p>
-            <button
-              onClick={() => setShowWomenInfo(false)}
-              className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm"
-            >
-              Got it
+            <h3 className="font-serif text-xl font-medium text-foreground">{t("host.women.title")}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p1")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p2")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p3")}</p>
+            <button onClick={() => setShowWomenInfo(false)} className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm">
+              {t("host.women.cta")}
             </button>
           </div>
         </div>
@@ -403,42 +353,29 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
       {/* Hosting card */}
       <div className="bg-card rounded-2xl shadow-card overflow-hidden">
         <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">🌱 Hosting</p>
+          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">{t("host.section")}</p>
           <h2 className="font-serif text-xl font-medium text-foreground leading-snug">
-            You'd make a great host
+            {t("host.great_host")}
           </h2>
         </div>
         <div className="px-5 py-4 space-y-4">
           {stage === 'early' ? (
             <>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                You've started experiencing Nomaya. As you get a feel for the gatherings, hosting will open up naturally.
-              </p>
-              <button
-                onClick={() => setShowHostingSheet(true)}
-                className="w-full py-3.5 rounded-2xl bg-muted text-muted-foreground font-medium text-sm active:opacity-70 transition-opacity"
-              >
-                Learn about hosting
+              <p className="text-sm text-muted-foreground leading-relaxed">{t("host.early_body")}</p>
+              <button onClick={() => setShowHostingSheet(true)} className="w-full py-3.5 rounded-2xl bg-muted text-muted-foreground font-medium text-sm active:opacity-70 transition-opacity">
+                {t("host.learn")}
               </button>
             </>
           ) : (
             <>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {stage === 'ready'
-                  ? "You've attended a few gatherings, women have enjoyed meeting you. You can now host a gathering of your own."
-                  : "You've attended a few gatherings and women have enjoyed meeting you. You can now host a small gathering."}
+                {stage === 'ready' ? t("host.ready_body") : t("host.mid_body")}
               </p>
-              <button
-                onClick={() => setShowWomenInfo(true)}
-                className="w-full flex items-center gap-2 text-left active:opacity-70"
-              >
-                <p className="text-xs text-primary font-medium">What does "women enjoyed meeting you" mean? →</p>
+              <button onClick={() => setShowWomenInfo(true)} className="w-full flex items-center gap-2 text-left active:opacity-70">
+                <p className="text-xs text-primary font-medium">{t("host.women_link")}</p>
               </button>
-              <button
-                onClick={() => setShowHostingSheet(true)}
-                className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity"
-              >
-                {stage === 'ready' ? "Host your first gathering" : "Host a small gathering"}
+              <button onClick={() => setShowHostingSheet(true)} className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity">
+                {stage === 'ready' ? t("host.first") : t("host.small")}
               </button>
             </>
           )}
@@ -469,8 +406,8 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
       {/* Tab switcher */}
       <div className="flex gap-2 px-5 py-4">
         {([
-          { key: "journey", label: "Your Journey" },
-          { key: "hosting", label: "Become a host" },
+          { key: "journey", label: t("community.your_journey") },
+          { key: "hosting", label: t("community.become_host") },
         ] as const).map(({ key, label }) => (
           <button
             key={key}

@@ -39,6 +39,7 @@ import { MemberProfileSheet } from "./MemberProfileSheet";
 import { supabase } from "@/lib/supabase";
 import type { AppCircle } from "@/types/database";
 import { useMyCircleInvitations, useRespondToCircleInvitation, useSearchUsers, useSendCircleInvitation } from "@/hooks/useCircleInvitations";
+import { useCityPreference } from "@/hooks/useCityPreference";
 
 // ─── Photo upload helpers ──────────────────────────────────────────────────────
 
@@ -2122,6 +2123,7 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
   const isUnverified = profile?.verification_status !== 'verified';
   const { data: pendingInvitations = [] } = useMyCircleInvitations();
   const { mutate: respondToInvitation } = useRespondToCircleInvitation();
+  const { city: selectedCity, selectCity, cities } = useCityPreference(profile?.city);
 
   const circleFromList = selectedId ? circles.find((c) => c.id === selectedId) : undefined;
   const { data: circleById, isLoading: circleByIdLoading } = useCircleById(
@@ -2143,15 +2145,18 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
     return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} initialTab={initialTab} />;
   }
 
+  // Filter by selected city
+  const cityCircles = circles.filter(c => !c.city || c.city === selectedCity);
+
   const circleCategories = ["All", ...Array.from(new Set(
-    circles.map((c) => c.category).filter((cat) => cat && cat !== "General")
+    cityCircles.map((c) => c.category).filter((cat) => cat && cat !== "General")
   )).sort()];
   const categoryFiltered = activeCategory === "All"
-    ? circles
-    : circles.filter((c) => c.category === activeCategory);
+    ? cityCircles
+    : cityCircles.filter((c) => c.category === activeCategory);
   const displayedCircles =
-    circleView === "mine"       ? circles.filter((c) => c.isMember || c.isAdmin) :
-    circleView === "discover"   ? circles.filter((c) => !c.isMember && !c.isAdmin) :
+    circleView === "mine"       ? cityCircles.filter((c) => c.isMember || c.isAdmin) :
+    circleView === "discover"   ? cityCircles.filter((c) => !c.isMember && !c.isAdmin) :
     categoryFiltered;
 
   return (
@@ -2166,6 +2171,21 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
           <Logo />
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Your community</p>
           <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Circles</h1>
+          <div className="flex items-center justify-center gap-1.5 mt-2">
+            {cities.map(c => (
+              <button
+                key={c}
+                onClick={() => selectCity(c)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedCity === c
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground border border-border'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

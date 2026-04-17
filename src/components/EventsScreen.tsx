@@ -18,6 +18,7 @@ import type { AppEvent } from "@/types/database";
 import { useEventAttendees } from "@/hooks/useEventAttendees";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
+import { useCityPreference } from "@/hooks/useCityPreference";
 
 const IMG_PREFIX = "__img__:";
 
@@ -478,6 +479,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const verificationStatus = profile?.verification_status ?? 'unverified';
   const isUnverified = verificationStatus !== 'verified';
   const isPendingVerification = verificationStatus === 'pending';
+  const { city: selectedCity, selectCity, cities } = useCityPreference(profile?.city);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [eventChat, setEventChat] = useState<{ circleId: string; event: AppEvent } | null>(null);
@@ -528,7 +530,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const upcomingEvents = events.filter((e) => e.isTbc || new Date(e.rawDate) >= today);
+  const upcomingEvents = events
+    .filter((e) => e.isTbc || new Date(e.rawDate) >= today)
+    .filter((e) => !e.city || e.city === selectedCity);
   const featured = upcomingEvents.filter((e) => e.featured);
 
   // Scoring inputs
@@ -1156,8 +1160,23 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {/* Header */}
       <div className="px-5 pt-screen-top pb-4 text-center">
         <Logo />
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("events.city")}</p>
         <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("events.heading")}</h1>
+        {/* City toggle */}
+        <div className="flex items-center justify-center gap-1.5 mt-2">
+          {cities.map(c => (
+            <button
+              key={c}
+              onClick={() => selectCity(c)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                selectedCity === c
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground border border-border'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Verification gate banner */}
