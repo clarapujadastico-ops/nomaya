@@ -1460,7 +1460,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Horoscope sheet */}
       {showHoroscopeSheet && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowHoroscopeSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
@@ -1486,7 +1486,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Interests sheet */}
       {showInterestsSheet && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInterestsSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "88vh" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
@@ -1522,7 +1522,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Language sheet */}
       {showLanguageSheet && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLanguageSheet(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
@@ -1562,7 +1562,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         const nextTier = TIERS.find((t) => bookings.length < t.events);
         const progressPct = nextTier ? Math.round((bookings.length / nextTier.events) * 100) : 100;
         return (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto" style={{ maxHeight: "90vh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mt-4" />
@@ -1620,7 +1620,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
 
       {/* Member card modal */}
       {showMemberCard && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />

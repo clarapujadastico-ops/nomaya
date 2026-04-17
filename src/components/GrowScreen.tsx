@@ -362,7 +362,7 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
 
   // Invisible stages — no thresholds or lock language ever shown
   const stage: 'early' | 'mid' | 'ready' =
-    n >= 5 ? 'ready' : n >= 3 ? 'mid' : 'early';
+    n >= 5 ? 'ready' : n >= 4 ? 'mid' : 'early';
 
   return (
     <div className="space-y-3">

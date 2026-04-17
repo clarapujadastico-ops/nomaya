@@ -832,10 +832,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
                   const { clientSecret, publishableKey, amountCents, discountApplied } = data;
 
-                  // Re-initialise with the key returned from the server (handles pk_live_ vs pk_test_)
-                  if (publishableKey) {
-                    await Stripe.initialize({ publishableKey });
-                  }
+                  // Stripe was already initialized on mount with the env key.
+                  // Do NOT re-initialize here — it causes SIGKILL on iOS simulator
+                  // when the server returns a live key but the app is built with test key.
 
                   await Stripe.createPaymentSheet({
                     paymentIntentClientSecret: clientSecret,
