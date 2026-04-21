@@ -275,25 +275,38 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   async function handleAddToWallet() {
     setWalletLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pass`,
-        { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token}` } }
-      );
-      if (!res.ok) {
-        alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+      const { data: json, error: fnError } = await supabase.functions.invoke('generate-pass', { method: 'POST' });
+      if (fnError) {
+        const body = await (fnError as any).context?.json?.().catch(() => null);
+        if (body?.error === 'not_configured') {
+          alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+          return;
+        }
+        alert(`Wallet error: ${body?.detail || body?.error || fnError.message}`);
         return;
       }
-      const json = await res.json();
-      if (json.error === 'not_configured') {
-        alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
-      } else if (json.url) {
+      if (json?.url) {
         window.location.href = json.url;
-      } else {
+      } else if (json?.error === 'not_configured') {
         alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+      } else {
+        alert(`Wallet error: ${json?.detail || json?.error || 'unknown error'}`);
       }
-    } catch {
-      alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+    } catch (err) {
+      // Supabase SDK throws FunctionsHttpError for non-2xx — extract the body
+      const ctx = (err as any).context;
+      if (ctx) {
+        try {
+          const body = await ctx.json();
+          if (body?.error === 'not_configured') {
+            alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+            return;
+          }
+          alert(`Wallet error: ${body?.detail || body?.error || (err instanceof Error ? err.message : String(err))}`);
+          return;
+        } catch { /* fall through */ }
+      }
+      alert(`Wallet error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setWalletLoading(false);
     }
