@@ -480,22 +480,38 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </button>
           </div>
 
-          {/* Name & City */}
-          {[
-            { key: "name", label: t("onboarding.full_name"), placeholder: "Sofia García" },
-            { key: "city", label: t("onboarding.city"), placeholder: "Madrid" },
-          ].map(({ key, label, placeholder }) => (
-            <div key={key}>
-              <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{label}</label>
-              <input
-                type="text"
-                placeholder={placeholder}
-                value={profile[key as keyof typeof profile]}
-                onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
-                className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
-              />
+          {/* Name */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.full_name")}</label>
+            <input
+              type="text"
+              placeholder="Sofia García"
+              value={profile.name}
+              onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
+              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
+            />
+          </div>
+
+          {/* City — two options */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.city")}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["Madrid", "Barcelona"].map((city) => (
+                <button
+                  key={city}
+                  type="button"
+                  onClick={() => setProfile((p) => ({ ...p, city }))}
+                  className={`py-3.5 rounded-xl border text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
+                    profile.city === city
+                      ? "border-primary bg-primary/20 text-foreground"
+                      : "border-input bg-card text-muted-foreground"
+                  }`}
+                >
+                  {city}
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
 
           {/* Bio */}
           <div>
