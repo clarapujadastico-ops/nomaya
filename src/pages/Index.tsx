@@ -7,13 +7,12 @@ import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { BottomNav } from "@/components/BottomNav";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GrowScreen } from "@/components/GrowScreen";
-import { RewardsScreen } from "@/components/RewardsScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { BookingsScreen } from "@/components/BookingsScreen";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 
-type Tab = "events" | "community" | "groups" | "rewards" | "profile";
+type Tab = "events" | "community" | "groups" | "profile";
 
 function LoadingScreen() {
   return (
@@ -70,27 +69,28 @@ function AppShell() {
   if (inOnboarding) return <OnboardingFlow onComplete={() => setInOnboarding(false)} />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mobile-container">
-        {activeTab === "events" && (
-          <EventsScreen
-            onOpenCircle={handleOpenCircle}
-            onSeeAllBookings={() => setShowAllBookings(true)}
-          />
-        )}
-        {activeTab === "community" && <GrowScreen onOpenCircle={handleOpenCircle} onGoToCircles={() => handleTabChange("groups")} />}
-        {activeTab === "rewards" && <RewardsScreen />}
-        {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
-        {activeTab === "profile" && (
-          <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
-        )}
-        {showAllBookings && (
-          <div className="absolute inset-0 z-50 bg-background overflow-y-auto">
-            <BookingsScreen onBack={() => setShowAllBookings(false)} />
-          </div>
-        )}
+    <div className="min-h-screen bg-background flex justify-center">
+      <div className="w-full max-w-md relative">
+        <div className="mobile-container">
+          {activeTab === "events" && (
+            <EventsScreen
+              onOpenCircle={handleOpenCircle}
+              onSeeAllBookings={() => setShowAllBookings(true)}
+            />
+          )}
+          {activeTab === "community" && <GrowScreen onOpenCircle={handleOpenCircle} onGoToCircles={() => handleTabChange("groups")} />}
+          {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
+          {activeTab === "profile" && (
+            <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
+          )}
+          {showAllBookings && (
+            <div className="absolute inset-0 z-50 bg-background overflow-y-auto">
+              <BookingsScreen onBack={() => setShowAllBookings(false)} />
+            </div>
+          )}
+        </div>
+        <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>
-      <BottomNav active={activeTab} onChange={handleTabChange} />
     </div>
   );
 }

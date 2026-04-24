@@ -639,7 +639,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <button
             onClick={() => setSelectedEvent(null)}
-            className="absolute top-12 left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+            className="absolute left-4 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-foreground"
+            style={{ top: 'max(3rem, calc(env(safe-area-inset-top, 0px) + 0.75rem))' }}
           >
             ←
           </button>
@@ -866,9 +867,18 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     }
                   );
 
-                  await Stripe.presentPaymentSheet();
+                  try {
+                    await Stripe.presentPaymentSheet();
+                  } finally {
+                    // Always remove the listener — covers user canceling or dismissing the sheet
+                    listener.remove();
+                  }
                 } catch (err) {
-                  setBookingError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+                  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+                  // Ignore user-initiated cancel/dismiss — only show error for genuine failures
+                  if (msg && !msg.includes('cancel') && !msg.includes('dismiss') && !msg.includes('closed')) {
+                    setBookingError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+                  }
                 } finally {
                   setIsProcessingPayment(false);
                 }
@@ -1423,7 +1433,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {showFilterSheet && (
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilterSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl flex flex-col" style={{ maxHeight: "85vh" }}>
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl flex flex-col" style={{ maxHeight: "85dvh" }}>
             {/* Fixed header */}
             <div className="px-6 pt-4 pb-3 flex-shrink-0">
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />

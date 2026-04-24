@@ -1832,7 +1832,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
       {showPlanForm && (
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={() => setShowPlanForm(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "85vh", paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto" style={{ maxHeight: "85dvh", paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
             <div>
               <h2 className="font-serif text-xl font-medium text-foreground">Propose a plan</h2>
@@ -1963,7 +1963,7 @@ function ProposeCircleSheet({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4 overflow-y-auto"
-        style={{ maxHeight: '85vh', paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+        style={{ maxHeight: '85dvh', paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
       >
         <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
 

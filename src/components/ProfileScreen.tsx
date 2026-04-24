@@ -275,14 +275,20 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   async function handleAddToWallet() {
     setWalletLoading(true);
     try {
-      const { data: json, error: fnError } = await supabase.functions.invoke('generate-pass', { method: 'POST' });
-      if (fnError) {
-        const body = await (fnError as any).context?.json?.().catch(() => null);
-        if (body?.error === 'not_configured') {
-          alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
-          return;
-        }
-        alert(`Wallet error: ${body?.detail || body?.error || fnError.message}`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch('https://jtoftrghfwdffrkqejlq.supabase.co/functions/v1/generate-pass', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const text = await res.text();
+      let json: any = {};
+      try { json = JSON.parse(text); } catch { /* not json */ }
+      if (!res.ok) {
+        alert(`HTTP ${res.status}: ${json?.detail || json?.error || text.slice(0, 200)}`);
         return;
       }
       if (json?.url) {
@@ -290,22 +296,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       } else if (json?.error === 'not_configured') {
         alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
       } else {
-        alert(`Wallet error: ${json?.detail || json?.error || 'unknown error'}`);
+        alert(`Wallet error: ${json?.detail || json?.error || text.slice(0, 200)}`);
       }
     } catch (err) {
-      // Supabase SDK throws FunctionsHttpError for non-2xx — extract the body
-      const ctx = (err as any).context;
-      if (ctx) {
-        try {
-          const body = await ctx.json();
-          if (body?.error === 'not_configured') {
-            alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
-            return;
-          }
-          alert(`Wallet error: ${body?.detail || body?.error || (err instanceof Error ? err.message : String(err))}`);
-          return;
-        } catch { /* fall through */ }
-      }
       alert(`Wallet error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setWalletLoading(false);
@@ -711,7 +704,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         {showReportSheet && (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowReportSheet(null)} />
-            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 flex flex-col gap-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)", maxHeight: '88vh' }}>
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 flex flex-col gap-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)", maxHeight: '88dvh' }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto" />
 
               {/* Header */}
@@ -1000,7 +993,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         {showSupportChat && (
           <div className="fixed inset-0 z-[300] flex flex-col">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSupportChat(false)} />
-            <div className="relative flex flex-col bg-card rounded-t-3xl mt-auto w-full max-w-sm mx-auto" style={{ height: "80vh", paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}>
+            <div className="relative flex flex-col bg-card rounded-t-3xl mt-auto w-full max-w-sm mx-auto" style={{ height: "80dvh", paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}>
               {/* Header */}
               <div className="px-5 pt-4 pb-3 border-b border-border flex items-center gap-3 flex-shrink-0">
                 <div className="w-9 h-9 rounded-full gradient-cta flex items-center justify-center text-white text-sm font-bold">N</div>
@@ -1501,7 +1494,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       {showInterestsSheet && (
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowInterestsSheet(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "88vh" }}>
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl pt-6 flex flex-col" style={{ maxHeight: "88dvh" }}>
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
             <h2 className="font-serif text-xl font-medium text-foreground mb-3 px-6">{t("profile.select_interests")}</h2>
             <div className="flex flex-wrap gap-2 px-6 overflow-y-auto flex-1 pb-4">
@@ -1577,7 +1570,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         return (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
-            <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto" style={{ maxHeight: "90vh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
+            <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto" style={{ maxHeight: "90dvh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto mt-4" />
               <div className="px-6 pt-4 pb-5 text-center border-b border-border">
                 <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Your Circle</p>
