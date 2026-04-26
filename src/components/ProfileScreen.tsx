@@ -14,8 +14,11 @@ import { useLang } from "@/contexts/LanguageContext";
 import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
 import { VerificationFlow } from "./VerificationFlow";
+import { AdminVerificationPanel } from "./AdminVerificationPanel";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 import { supabase } from "@/lib/supabase";
+
+const ADMIN_EMAILS = ['clarapujadastico@hotmail.com'];
 
 async function uploadAvatar(base64: string, userId: string): Promise<string> {
   const chars = atob(base64);
@@ -524,6 +527,14 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
               <ChevronRight size={14} className="text-muted-foreground" />
             </button>
           </div>
+
+          {/* Admin: verification panel */}
+          {user?.email && ADMIN_EMAILS.includes(user.email) && (
+            <div className="bg-card rounded-2xl overflow-hidden">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">Admin</p>
+              <AdminVerificationPanel />
+            </div>
+          )}
 
           {/* Log out */}
           <button

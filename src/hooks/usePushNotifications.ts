@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export type NotificationDestination =
   | { tab: 'events' }
-  | { tab: 'map' }
   | { tab: 'groups'; circleId?: string }
   | { tab: 'profile' }
 
@@ -15,7 +14,7 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
 
   switch (type) {
     case 'booking_confirmed':
-      return { tab: 'map' }
+      return { tab: 'events' }
 
     case 'circle_join_approved':
     case 'circle_join_rejected':
@@ -29,7 +28,7 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
       return circle_id ? { tab: 'groups', circleId: circle_id } : { tab: 'groups' }
 
     case 'event_message':
-      return { tab: 'map' }
+      return { tab: 'events' }
 
     default:
       return null

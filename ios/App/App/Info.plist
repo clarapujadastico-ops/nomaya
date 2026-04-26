@@ -51,8 +51,10 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Nomaya needs access to your photos to set your profile picture and circle cover images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Nomaya needs permission to save photos to your library.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Nomaya needs camera access to take photos for your profile and circles.</string>
+	<string>Nomaya needs camera access to take photos for your profile and ID verification.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Nomaya uses your location to show events and circles near you.</string>
 	<key>CFBundleURLTypes</key>
