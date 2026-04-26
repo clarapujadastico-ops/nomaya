@@ -35,6 +35,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { mutate: updateProfile } = useUpdateProfile();
@@ -43,7 +44,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   /* ── VERIFY INTRO ── */
   if (step === "verify_intro") {
     return (
-      <div className="mobile-container flex flex-col bg-background px-6 pt-14 pb-10">
+      <div className="mobile-container flex flex-col bg-background px-6 pt-screen-top pb-10">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.step_3")}</p>
           <h2
@@ -113,23 +114,35 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   /* ── VERIFY ID SCAN ── */
   if (step === "verify_id") {
     async function captureId() {
+      setCameraError(null);
       try {
+        const perms = await CapCamera.requestPermissions({ permissions: ['camera', 'photos'] });
+        if (perms.camera === 'denied' || perms.camera === 'restricted') {
+          setCameraError('Camera access is denied. Please go to Settings → Nomaya → Camera and enable it.');
+          return;
+        }
         const photo = await CapCamera.getPhoto({
           resultType: CameraResultType.Base64,
-          source: CameraSource.Camera,
+          source: CameraSource.Prompt,
           quality: 80,
+          promptLabelHeader: 'Scan your ID',
+          promptLabelPhoto: 'Choose from library',
+          promptLabelPicture: 'Take photo',
         });
         if (!photo.base64String) return;
         setIdPhotoBase64(photo.base64String);
         setIdPhotoPreview(`data:image/jpeg;base64,${photo.base64String}`);
-      } catch {
-        // user cancelled
+      } catch (err) {
+        const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+        if (!msg.includes('cancel') && !msg.includes('user cancel') && !msg.includes('no image')) {
+          setCameraError('Could not open camera. Please go to Settings → Nomaya → Camera and enable access.');
+        }
       }
     }
 
     return (
       <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
-        <div className="px-6 pt-14 pb-4">
+        <div className="px-6 pt-screen-top pb-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.id_step")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
@@ -162,11 +175,15 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
           )}
         </div>
 
+        {cameraError && (
+          <p className="mx-6 mt-3 text-xs text-red-400 text-center">{cameraError}</p>
+        )}
+
         <div className="px-6 mt-5 space-y-3">
           {idPhotoPreview ? (
             <>
               <button
-                onClick={() => setStep("verify_selfie")}
+                onClick={() => { setCameraError(null); setStep("verify_selfie"); }}
                 className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
               >
                 {t("verify.looks_good")}
@@ -187,7 +204,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               {t("verify.take_photo")}
             </button>
           )}
-          <button onClick={() => setStep("verify_intro")} className="w-full py-2 text-muted-foreground text-sm">
+          <button onClick={() => { setCameraError(null); setStep("verify_intro"); }} className="w-full py-2 text-muted-foreground text-sm">
             {t("verify.back")}
           </button>
         </div>
@@ -198,17 +215,29 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   /* ── VERIFY SELFIE ── */
   if (step === "verify_selfie") {
     async function captureSelfie() {
+      setCameraError(null);
       try {
+        const perms = await CapCamera.requestPermissions({ permissions: ['camera', 'photos'] });
+        if (perms.camera === 'denied' || perms.camera === 'restricted') {
+          setCameraError('Camera access is denied. Please go to Settings → Nomaya → Camera and enable it.');
+          return;
+        }
         const photo = await CapCamera.getPhoto({
           resultType: CameraResultType.Base64,
-          source: CameraSource.Camera,
+          source: CameraSource.Prompt,
           quality: 80,
+          promptLabelHeader: 'Take a selfie',
+          promptLabelPhoto: 'Choose from library',
+          promptLabelPicture: 'Take selfie',
         });
         if (!photo.base64String) return;
         setSelfieBase64(photo.base64String);
         setSelfiePreview(`data:image/jpeg;base64,${photo.base64String}`);
-      } catch {
-        // user cancelled
+      } catch (err) {
+        const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+        if (!msg.includes('cancel') && !msg.includes('user cancel') && !msg.includes('no image')) {
+          setCameraError('Could not open camera. Please go to Settings → Nomaya → Camera and enable access.');
+        }
       }
     }
 
@@ -237,7 +266,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
 
     return (
       <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
-        <div className="px-6 pt-14 pb-4">
+        <div className="px-6 pt-screen-top pb-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.selfie_step")}</p>
           <h2
             className="font-serif font-normal text-foreground leading-tight"
@@ -248,7 +277,11 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
           <p className="text-sm text-muted-foreground mt-1">{t("verify.selfie_sub")}</p>
         </div>
 
-        <div className="mx-auto mt-4 rounded-full overflow-hidden relative bg-muted" style={{ width: 220, height: 220 }}>
+        <button
+          onClick={captureSelfie}
+          className="mx-auto mt-4 rounded-full overflow-hidden relative bg-muted active:opacity-80"
+          style={{ width: 220, height: 220, display: 'block' }}
+        >
           {selfiePreview ? (
             <img src={selfiePreview} alt="Selfie preview" className="w-full h-full object-cover" />
           ) : (
@@ -257,8 +290,11 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               <p className="text-xs text-muted-foreground mt-2">{t("verify.tap_selfie")}</p>
             </div>
           )}
-        </div>
+        </button>
 
+        {cameraError && (
+          <p className="mx-6 mt-4 text-xs text-red-400 text-center">{cameraError}</p>
+        )}
         {uploadError && (
           <p className="mx-6 mt-4 text-xs text-red-400 text-center">{uploadError}</p>
         )}
@@ -291,7 +327,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
             </button>
           )}
           <button
-            onClick={() => setStep("verify_id")}
+            onClick={() => { setCameraError(null); setStep("verify_id"); }}
             disabled={isSubmitting}
             className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40"
           >
