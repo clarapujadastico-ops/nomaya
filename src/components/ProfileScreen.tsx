@@ -18,7 +18,6 @@ import { AdminVerificationPanel } from "./AdminVerificationPanel";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 import { supabase } from "@/lib/supabase";
 
-const ADMIN_EMAILS = ['clarapujadastico@hotmail.com'];
 
 async function uploadAvatar(base64: string, userId: string): Promise<string> {
   const chars = atob(base64);
@@ -528,8 +527,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             </button>
           </div>
 
-          {/* Admin: verification panel */}
-          {user?.email && ADMIN_EMAILS.includes(user.email) && (
+          {/* Admin: verification panel — visible to member #1 only */}
+          {(profile as any)?.member_number === 1 && (
             <div className="bg-card rounded-2xl overflow-hidden">
               <p className="text-xs uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">Admin</p>
               <AdminVerificationPanel />
