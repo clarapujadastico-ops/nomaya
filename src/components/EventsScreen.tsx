@@ -837,9 +837,15 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
                   const { clientSecret, publishableKey, amountCents, discountApplied } = data;
 
-                  // Stripe was already initialized on mount with the env key.
-                  // Do NOT re-initialize here — it causes SIGKILL on iOS simulator
-                  // when the server returns a live key but the app is built with test key.
+                  if (!clientSecret) {
+                    setBookingError(`Payment setup failed: ${JSON.stringify(data)}`);
+                    return;
+                  }
+
+                  // Re-initialize with the key returned by the server to ensure they match
+                  if (publishableKey) {
+                    await Stripe.initialize({ publishableKey });
+                  }
 
                   await Stripe.createPaymentSheet({
                     paymentIntentClientSecret: clientSecret,
@@ -851,7 +857,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   const listener = await Stripe.addListener(
                     PaymentSheetEventsEnum.Completed,
                     () => {
-                      // Deduct credits if applied
                       if (discountApplied > 0) {
                         updateProfile({ credits_cents: Math.max(0, (profile?.credits_cents ?? 0) - discountApplied) });
                       }
@@ -870,15 +875,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   try {
                     await Stripe.presentPaymentSheet();
                   } finally {
-                    // Always remove the listener — covers user canceling or dismissing the sheet
                     listener.remove();
                   }
                 } catch (err) {
-                  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-                  // Ignore user-initiated cancel/dismiss — only show error for genuine failures
-                  if (msg && !msg.includes('cancel') && !msg.includes('dismiss') && !msg.includes('closed')) {
-                    setBookingError(err instanceof Error ? err.message : "Payment failed. Please try again.");
-                  }
+                  // Show ALL errors so we can diagnose issues
+                  setBookingError(err instanceof Error ? err.message : String(err));
                 } finally {
                   setIsProcessingPayment(false);
                 }
