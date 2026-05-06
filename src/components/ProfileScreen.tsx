@@ -1461,6 +1461,16 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
+      {/* ── Admin: verification panel ── */}
+      {user && (
+        <div className="px-5 mt-5">
+          <div className="bg-card rounded-2xl overflow-hidden">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">Admin</p>
+            <AdminVerificationPanel />
+          </div>
+        </div>
+      )}
+
       {/* ── Sign out ── */}
       <div className="px-5 mt-6 mb-2">
         <button
