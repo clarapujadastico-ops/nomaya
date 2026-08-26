@@ -1151,7 +1151,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed mt-2">{t("profile.level1_pending_body")}</p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_email")}</span>
             <span className="flex items-center gap-1">⏳ {t("profile.level1_review")}</span>
           </div>
         </div>
@@ -1162,7 +1161,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("profile.level1_label")}</p>
           <p className="text-sm font-medium text-foreground leading-snug mt-0.5">{t("profile.level1_verified_title")}</p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_email")}</span>
             <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_review")}</span>
           </div>
         </div>
