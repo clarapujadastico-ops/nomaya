@@ -28,7 +28,6 @@ import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/
 import { useCircles, useCircleById, useJoinCircle, useLeaveCircle, useCreateCircle, useRequestJoinCircle, useMyJoinRequests, useCircleJoinRequests, useRespondToJoinRequest, useUpdateCircleCover } from "@/hooks/useCircles";
 import { useCircleMembers } from "@/hooks/useCircleMembers";
 import { useProfile } from "@/hooks/useProfile";
-import { VerificationFlow } from "./VerificationFlow";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages"
 import { useBlockedUsers, useReportMessage, useBlockUser } from "@/hooks/useModeration"
 import { useLang } from "@/contexts/LanguageContext";
@@ -36,6 +35,9 @@ import { useCircleEvents, useCreateCircleEvent, useUpdateCircleEventStatus } fro
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
 import { MemberProfileSheet } from "./MemberProfileSheet";
+import { CirclesComingSoon } from "./CirclesComingSoon";
+import { CreateCircleLockedSheet } from "./CreateCircleLockedSheet";
+import { ChatComingSoon } from "./ChatComingSoon";
 import { supabase } from "@/lib/supabase";
 import type { AppCircle } from "@/types/database";
 import { useMyCircleInvitations, useRespondToCircleInvitation, useSearchUsers, useSendCircleInvitation } from "@/hooks/useCircleInvitations";
@@ -733,6 +735,7 @@ function EditCoverSheet({ circle, onClose }: { circle: AppCircle; onClose: () =>
 // ─── Detail view ──────────────────────────────────────────────────────────────
 
 function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBack: () => void; initialTab?: 'chat' | 'about' }) {
+  const { t } = useLang();
   const { mutate: join, isPending: isJoining } = useJoinCircle();
   const { mutate: leave, isPending: isLeaving } = useLeaveCircle();
   const { mutate: requestJoin, isPending: isRequesting } = useRequestJoinCircle();
@@ -742,7 +745,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { data: circleEventsForBadge = [] } = useCircleEvents(circle.isAdmin ? circle.id : null);
   const pendingEventsCount = circleEventsForBadge.filter((e) => e.status === 'pending').length;
   const [activeTab, setActiveTab] = useState<"about" | "chat" | "members" | "spots" | "plans" | "events" | "requests">(initialTab ?? "about");
-  const [selectedMember, setSelectedMember] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
+  const [selectedMember, setSelectedMember] = useState<{ profile: import("@/hooks/useCircleMembers").MemberProfile; userId: string } | null>(null);
 
   // Navigate to the right tab when navigated from outside (e.g. push notification, event "Open chat")
   useEffect(() => {
@@ -766,7 +769,6 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showEditCover, setShowEditCover] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
-  const [showVerifyFlow, setShowVerifyFlow] = useState(false);
 
   const { data: profile } = useProfile();
   const { data: circleMembers = [] } = useCircleMembers(circle.id);
@@ -775,14 +777,6 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
   const { mutate: sendInvitation, isPending: isSendingInvite } = useSendCircleInvitation();
   const { data: searchResults = [] } = useSearchUsers(inviteSearch, circle.id);
 
-  if (showVerifyFlow) {
-    return (
-      <VerificationFlow
-        onComplete={() => setShowVerifyFlow(false)}
-        onSkip={() => setShowVerifyFlow(false)}
-      />
-    );
-  }
   const hasPendingRequest = myRequests.some((r) => r.circle_id === circle.id && r.status === "pending");
   const coverImage = circleCoverImage(circle.name, circle.coverUrl, circle.category);
 
@@ -990,7 +984,7 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
             ) : circleMembers.map((m) => (
               <button
                 key={m.user_id}
-                onClick={() => m.profile && setSelectedMember(m.profile)}
+                onClick={() => m.profile && setSelectedMember({ profile: m.profile, userId: m.user_id })}
                 className="w-full bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 text-left active:opacity-80 transition-opacity"
               >
                 {m.profile?.avatar_url ? (
@@ -1061,13 +1055,13 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
             ))}
           </div>
         ) : (
-          <ChatPanel circleId={circle.id} isMember={isMember} />
+          <ChatComingSoon onBack={() => setActiveTab("about")} />
         )}
       </div>
 
       {/* Member profile sheet */}
       {selectedMember && (
-        <MemberProfileSheet profile={selectedMember} onClose={() => setSelectedMember(null)} />
+        <MemberProfileSheet profile={selectedMember?.profile ?? null} userId={selectedMember?.userId} onClose={() => setSelectedMember(null)} />
       )}
 
       {/* Edit cover sheet */}
@@ -1168,22 +1162,16 @@ function CircleDetail({ circle, onBack, initialTab }: { circle: AppCircle; onBac
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                 <Shield size={28} className="text-primary-foreground" />
               </div>
-              <h2 className="font-serif text-xl font-medium text-foreground">Verification required</h2>
+              <h2 className="font-serif text-xl font-medium text-foreground">{t("circles.verification_required")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Nomaya circles are a verified community for women. Verify your identity to join, chat, and propose events.
+                {t("circles.verification_required_body")}
               </p>
             </div>
-            <button
-              onClick={() => { setShowVerifyGate(false); setShowVerifyFlow(true); }}
-              className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft"
-            >
-              Verify my identity
-            </button>
             <button
               onClick={() => setShowVerifyGate(false)}
               className="w-full py-2 text-sm text-muted-foreground text-center"
             >
-              Not now
+              {t("circles.close")}
             </button>
           </div>
         </div>
@@ -1575,6 +1563,8 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
 // ─── Plans tab (includes circle favourite spots) ───────────────────────────────
 
 function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }) {
+  const { t } = useLang();
+  const [showCreateLocked, setShowCreateLocked] = useState(false);
   const { user } = useAuth();
   const { mutate: create, isPending: isCreating } = useCreateCircleEvent();
   const { mutate: addSpot, isPending: isAddingSpot } = useAddCircleSpot();
@@ -1631,7 +1621,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
     return (
       <div className="bg-card rounded-2xl p-6 shadow-soft flex flex-col items-center gap-3 text-center">
         <Lock size={24} className="text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Join the circle to see plans and propose gatherings</p>
+        <p className="text-sm text-muted-foreground">{t("circles.join_to_see_plans")}</p>
       </div>
     );
   }
@@ -1645,20 +1635,20 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
       {/* ── Upcoming plans ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Upcoming plans</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("circles.upcoming_plans")}</p>
           <button
-            onClick={() => setShowPlanForm(true)}
+            onClick={() => setShowCreateLocked(true)}
             className="flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full"
           >
-            <Plus size={12} /> New plan
+            <Sparkles size={12} /> {t("circles.new_plan")}
           </button>
         </div>
         {eventsLoading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Loading…</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("circles.loading")}</p>
         ) : events.length === 0 ? (
           <div className="bg-card rounded-2xl p-5 shadow-soft text-center space-y-1">
             <Sparkles size={24} className="text-muted-foreground/50 mx-auto mb-1" />
-            <p className="text-sm text-muted-foreground">No plans yet — propose the first gathering!</p>
+            <p className="text-sm text-muted-foreground">{t("circles.no_plans_yet")}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -1667,7 +1657,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-foreground leading-snug">{plan.title}</p>
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${plan.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {plan.status === 'approved' ? 'Confirmed' : 'Proposed'}
+                    {plan.status === 'approved' ? t("circles.confirmed") : t("circles.proposed")}
                   </span>
                 </div>
                 {plan.location && (
@@ -1692,17 +1682,17 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
       {/* ── Circle favourite spots ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">⭐ Circle favourite spots</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">⭐ {t("circles.favourite_spots")}</p>
           <button
-            onClick={() => setShowSpotForm(true)}
+            onClick={() => setShowCreateLocked(true)}
             className="flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full"
           >
-            <Plus size={12} /> Add spot
+            <Sparkles size={12} /> {t("circles.add_spot")}
           </button>
         </div>
 
         {spotsLoading ? (
-          <p className="text-sm text-muted-foreground text-center py-2">Loading…</p>
+          <p className="text-sm text-muted-foreground text-center py-2">{t("circles.loading")}</p>
         ) : spots.length === 0 ? (
           <div className="bg-card rounded-2xl p-4 shadow-soft text-center">
             <p className="text-xs text-muted-foreground">Add favourite venues — they'll appear on the map</p>
@@ -1935,6 +1925,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
           </div>
         </div>
       )}
+      {showCreateLocked && <CreateCircleLockedSheet onClose={() => setShowCreateLocked(false)} />}
     </div>
   );
 }
@@ -2072,6 +2063,7 @@ function ProposeCircleSheet({ onClose }: { onClose: () => void }) {
 // ─── Circle card ──────────────────────────────────────────────────────────────
 
 function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; onClick: () => void; dimmed?: boolean }) {
+  const { t } = useLang();
   const image = circleCoverImage(circle.name, circle.coverUrl, circle.category);
   return (
     <button
@@ -2096,7 +2088,7 @@ function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; on
           <h3 className="font-serif text-base font-medium text-foreground">{stripEmoji(circle.name)}</h3>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             <Users size={11} />
-            {circle.memberCount} {circle.memberCount === 1 ? "member" : "members"}
+            {circle.memberCount} {circle.memberCount === 1 ? t("circles.member_count_one") : t("circles.member_count_many")}
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{circle.city}</p>
@@ -2113,11 +2105,10 @@ function CircleCard({ circle, onClick, dimmed = false }: { circle: AppCircle; on
 interface CirclesScreenProps { initialCircleId?: string; initialTab?: 'chat' | 'about'; }
 
 export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProps) {
+  const { t } = useLang();
   const [selectedId, setSelectedId] = useState<string | null>(initialCircleId ?? null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreateLocked, setShowCreateLocked] = useState(false);
   const [showVerifyGate, setShowVerifyGate] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [circleView, setCircleView] = useState<"mine" | "categories" | "discover">("mine");
   const { data: circles = [], isLoading } = useCircles();
   const { data: profile } = useProfile();
   const isUnverified = profile?.verification_status !== 'verified';
@@ -2136,7 +2127,7 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
       if (circleByIdLoading || isLoading) {
         return (
           <div className="mobile-container flex items-center justify-center bg-background">
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground">{t("circles.loading")}</p>
           </div>
         );
       }
@@ -2145,32 +2136,24 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
     return <CircleDetail circle={resolvedCircle} onBack={() => setSelectedId(null)} initialTab={initialTab} />;
   }
 
-  // Filter by selected city
+  // Filter by selected city. Discovering/joining new circles is locked for
+  // this launch (see CirclesComingSoon) — only circles the user is already
+  // in are shown here, so nothing here implies circles exist that don't.
   const cityCircles = circles.filter(c => !c.city || c.city === selectedCity);
-
-  const circleCategories = ["All", ...Array.from(new Set(
-    cityCircles.map((c) => c.category).filter((cat) => cat && cat !== "General")
-  )).sort()];
-  const categoryFiltered = activeCategory === "All"
-    ? cityCircles
-    : cityCircles.filter((c) => c.category === activeCategory);
-  const displayedCircles =
-    circleView === "mine"       ? cityCircles.filter((c) => c.isMember || c.isAdmin) :
-    circleView === "discover"   ? cityCircles.filter((c) => !c.isMember && !c.isAdmin) :
-    categoryFiltered;
+  const myCircles = cityCircles.filter((c) => c.isMember || c.isAdmin);
 
   return (
     <div className="mobile-container flex flex-col bg-background pb-screen-bottom">
       <div className="px-5 pt-screen-top pb-4">
         <div className="flex justify-end mb-1">
-          <button onClick={() => { if (isUnverified) { setShowVerifyGate(true); return; } setShowCreate(true); }} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
+          <button onClick={() => setShowCreateLocked(true)} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
             <Plus size={18} className="text-primary-foreground" />
           </button>
         </div>
         <div className="text-center">
           <Logo />
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Your community</p>
-          <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">Circles</h1>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("circles.community")}</p>
+          <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("circles.heading")}</h1>
           <div className="flex items-center justify-center gap-1.5 mt-2">
             {cities.map(c => (
               <button
@@ -2189,45 +2172,18 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
         </div>
       </div>
 
-      <div className="mx-5 mb-4 bg-secondary rounded-2xl p-4 border border-border">
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          ✦ Circles are intimate groups built around shared interests. Join one or propose a new circle.
-        </p>
-      </div>
-
-      {/* View tabs */}
-      <div className="flex gap-2 px-5 mb-3">
-        {([
-          { id: "mine",       label: "My Circles" },
-          { id: "categories", label: "Categories" },
-          { id: "discover",   label: "Discover" },
-        ] as const).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setCircleView(tab.id)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
-              circleView === tab.id
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Pending invitations */}
+      {/* Pending invitations — from a specific person, kept working */}
       {pendingInvitations.length > 0 && (
         <div className="mx-5 mb-4 space-y-2">
           <p className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{pendingInvitations.length}</span>
-            Pending invitations
+            {t("circles.pending_invitations")}
           </p>
           {pendingInvitations.map((inv) => (
             <div key={inv.id} className="bg-card rounded-2xl px-4 py-3 flex items-center gap-3 shadow-soft border border-primary/20">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{(inv.circle as any)?.name ?? 'A circle'}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Invited by {(inv.inviter as any)?.name ?? 'someone'}</p>
+                <p className="text-sm font-medium text-foreground truncate">{(inv.circle as any)?.name ?? t("circles.a_circle")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("circles.invited_by")} {(inv.inviter as any)?.name ?? t("circles.someone")}</p>
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 <button
@@ -2251,60 +2207,27 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
         </div>
       )}
 
-      {/* Category sub-filter — only in Categories view */}
-      {circleView === "categories" && !isLoading && circleCategories.length > 1 && (
-        <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-3">
-          {circleCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
-                activeCategory === cat
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Circles the user is already in — real state only, never implied */}
+      {!isLoading && myCircles.length > 0 && (
+        <div className="px-5 mb-5">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("circles.your_circles")}</p>
+          <div className="space-y-3">
+            {myCircles.map((circle) => (
+              <CircleCard
+                key={circle.id}
+                circle={circle}
+                onClick={() => { if (isUnverified) { setShowVerifyGate(true); return; } setSelectedId(circle.id); }}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Loading circles…</p>
-        </div>
-      ) : (
-        <>
-          {displayedCircles.length > 0 ? (
-            <div className="px-5">
-              <div className="space-y-3">
-                {displayedCircles.map((circle) => (
-                  <CircleCard
-                    key={circle.id}
-                    circle={circle}
-                    onClick={() => setSelectedId(circle.id)}
-                    dimmed={circleView === "discover" && circle.isPrivate}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center px-10 gap-3">
-              <Users size={36} className="text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                {circleView === "mine" ? "You haven't joined any circles yet." :
-                 circleView === "discover" ? "No circles to discover right now." :
-                 "No circles in this category."}
-              </p>
-            </div>
-          )}
-        </>
-      )}
+      <CirclesComingSoon />
 
-      {showCreate && <ProposeCircleSheet onClose={() => setShowCreate(false)} />}
+      {showCreateLocked && <CreateCircleLockedSheet onClose={() => setShowCreateLocked(false)} />}
 
-      {/* Verification gate for creating circles */}
+      {/* Verification gate for opening an existing circle */}
       {showVerifyGate && (
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVerifyGate(false)} />
@@ -2317,16 +2240,16 @@ export function CirclesScreen({ initialCircleId, initialTab }: CirclesScreenProp
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                 <Shield size={28} className="text-primary-foreground" />
               </div>
-              <h2 className="font-serif text-xl font-medium text-foreground">Verification required</h2>
+              <h2 className="font-serif text-xl font-medium text-foreground">{t("circles.verification_required")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Nomaya circles are a verified community for women. Verify your identity to create and join circles.
+                {t("circles.verification_required_body")}
               </p>
             </div>
             <button
               onClick={() => setShowVerifyGate(false)}
               className="w-full py-2 text-sm text-muted-foreground text-center"
             >
-              Close
+              {t("circles.close")}
             </button>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { Calendar, MapPin, Users, Bell, Bus } from "lucide-react";
 import type { AppEvent } from "@/types/database";
+import { localizedTitle } from "@/types/database";
+import { CATEGORY_KEYS } from "@/data/mockData";
 import { useEventInterestCount } from "@/hooks/useEventInterest";
 import { useLang } from "@/contexts/LanguageContext";
 
@@ -24,7 +26,9 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, variant = "default", onClick, locked = false }: EventCardProps) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const title = localizedTitle(event, lang);
+  const categoryLabel = t(CATEGORY_KEYS[event.category] ?? "") || event.category;
   const spotsPercent = (event.spotsLeft / event.totalSpots) * 100;
   const isAlmostFull = spotsPercent <= 30;
   const { data: interestCount = 0 } = useEventInterestCount(event.id);
@@ -37,15 +41,15 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
         style={{ height: 340 }}
       >
         {event.image
-          ? <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
+          ? <img src={event.image} alt={title} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 w-full h-full" style={{ background: event.categoryColor }} />
         }
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-white backdrop-blur-sm mb-2 inline-block">
-            {event.category}
+            {categoryLabel}
           </span>
-          <h3 className="font-serif text-xl text-white font-medium leading-tight mb-1">{event.title}</h3>
+          <h3 className="font-serif text-xl text-white font-medium leading-tight mb-1">{title}</h3>
           {event.isTbc ? (
             <span className="text-xs font-medium text-white/70 italic">{t("card.coming_soon")}</span>
           ) : (
@@ -110,7 +114,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           {event.image ? (
             <img
               src={event.image}
-              alt={event.title}
+              alt={title}
               className="w-full h-full object-cover absolute inset-0"
             />
           ) : (
@@ -160,7 +164,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
         <div className="p-2.5">
           {!event.isTbc && <p className="text-[10px] text-muted-foreground">{dateDisplay}</p>}
           <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mt-0.5">
-            {event.title}
+            {title}
           </h3>
           <p className={`text-xs mt-0.5 ${isAlmostFull ? "text-primary font-medium" : "text-muted-foreground"}`}>
             {subtext}
@@ -178,14 +182,14 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
     >
       <div className="w-28 flex-shrink-0">
         {event.image
-          ? <img src={event.image} alt={event.title} className="w-full h-full object-cover" style={{ minHeight: 112 }} />
+          ? <img src={event.image} alt={title} className="w-full h-full object-cover" style={{ minHeight: 112 }} />
           : <div className="w-full h-full" style={{ minHeight: 112, background: event.categoryColor }} />
         }
       </div>
       <div className="flex-1 p-3.5 flex flex-col justify-between">
         <div>
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{event.category}</span>
-          <h3 className="font-serif text-base font-medium text-foreground leading-snug mt-0.5">{event.title}</h3>
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{categoryLabel}</span>
+          <h3 className="font-serif text-base font-medium text-foreground leading-snug mt-0.5">{title}</h3>
         </div>
         {event.isTbc ? (
           <p className="text-xs text-muted-foreground italic mt-2">{t("card.coming_soon")}</p>

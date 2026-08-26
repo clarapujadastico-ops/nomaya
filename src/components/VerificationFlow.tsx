@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Shield, Camera, SkipForward, ZapOff, Zap } from "lucide-react";
 import { CameraPreview } from "@capacitor-community/camera-preview";
 import { supabase } from "@/lib/supabase";
@@ -6,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
 
-type VerifyStep = "verify_intro" | "verify_id" | "verify_selfie";
+type VerifyStep = "verify_intro" | "verify_id_front" | "verify_id_back" | "verify_selfie";
 
 interface VerificationFlowProps {
   onComplete: () => void;
@@ -24,6 +25,39 @@ async function uploadVerificationPhoto(base64: string, path: string): Promise<vo
   if (error) throw error;
 }
 
+// The native preview fills the screen with `resizeAspectFill` (like CSS
+// `object-fit: cover`), so the captured photo is a bigger, uncropped frame
+// than what's on screen. This maps the on-screen guide rectangle back to
+// pixel coordinates in the raw photo and crops to just that region.
+function cropBase64ToRect(base64: string, rect: DOMRect): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const photoW = img.naturalWidth;
+      const photoH = img.naturalHeight;
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      const scale = Math.max(screenW / photoW, screenH / photoH);
+      const offsetX = (photoW * scale - screenW) / 2;
+      const offsetY = (photoH * scale - screenH) / 2;
+      const cropX = (rect.left + offsetX) / scale;
+      const cropY = (rect.top + offsetY) / scale;
+      const cropW = rect.width / scale;
+      const cropH = rect.height / scale;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(cropW);
+      canvas.height = Math.round(cropH);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('Canvas unavailable')); return; }
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      resolve(dataUrl.slice(dataUrl.indexOf(',') + 1));
+    };
+    img.onerror = () => reject(new Error('Failed to decode captured photo'));
+    img.src = `data:image/jpeg;base64,${base64}`;
+  });
+}
+
 // Live camera scanner with rectangle overlay
 function IDScanner({ onCapture, onCancel, mode }: {
   onCapture: (base64: string) => void;
@@ -34,19 +68,26 @@ function IDScanner({ onCapture, onCancel, mode }: {
   const [error, setError] = useState<string | null>(null);
   const [torch, setTorch] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const guideRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
+    // Camera must render behind the WebView (toBack: true) so the HTML guide
+    // rectangle and capture button stay visible on top of the live feed —
+    // the plugin makes the WKWebView transparent automatically for this,
+    // but our own CSS backgrounds must also turn transparent (see below).
+    document.documentElement.classList.add('camera-preview-active');
     async function start() {
       try {
         await CameraPreview.start({
           position: mode === 'selfie' ? 'front' : 'rear',
           parent: 'cameraPreviewContainer',
           className: 'cameraPreview',
-          toBack: false,
+          toBack: true,
           width: window.innerWidth,
           height: window.innerHeight,
           enableZoom: mode === 'id',
+          disableAudio: true,
         });
         if (mounted) setIsStarted(true);
       } catch (e) {
@@ -56,6 +97,7 @@ function IDScanner({ onCapture, onCancel, mode }: {
     start();
     return () => {
       mounted = false;
+      document.documentElement.classList.remove('camera-preview-active');
       CameraPreview.stop().catch(() => {});
     };
   }, [mode]);
@@ -65,8 +107,13 @@ function IDScanner({ onCapture, onCancel, mode }: {
     setCapturing(true);
     try {
       const result = await CameraPreview.capture({ quality: 85 });
-      await CameraPreview.stop();
-      onCapture(result.value);
+      const finalBase64 = mode === 'id' && guideRef.current
+        ? await cropBase64ToRect(result.value, guideRef.current.getBoundingClientRect())
+        : result.value;
+      // Session is stopped by this component's unmount cleanup once
+      // onCapture() swaps the scanner out — calling stop() here too would
+      // race it and log a harmless but confusing "camera already stopped".
+      onCapture(finalBase64);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setCapturing(false);
@@ -81,18 +128,19 @@ function IDScanner({ onCapture, onCancel, mode }: {
   }
 
   if (error) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center px-6 gap-4">
+    return createPortal(
+      <div className="fixed inset-0 z-[300] bg-black flex flex-col items-center justify-center px-6 gap-4">
         <p className="text-white text-sm text-center">{error}</p>
         <button onClick={onCancel} className="text-white underline text-sm">Go back</button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   const isId = mode === 'id';
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black">
+  return createPortal(
+    <div className="fixed inset-0 z-[300] bg-transparent">
       {/* Camera preview container */}
       <div id="cameraPreviewContainer" className="absolute inset-0" />
 
@@ -105,6 +153,7 @@ function IDScanner({ onCapture, onCancel, mode }: {
         {isId ? (
           // ID card rectangle — landscape ratio
           <div
+            ref={guideRef}
             className="relative z-10"
             style={{ width: '85vw', height: '54vw' }}
           >
@@ -158,7 +207,8 @@ function IDScanner({ onCapture, onCancel, mode }: {
           <div className="w-14 h-14 rounded-full bg-white border-2 border-gray-200" />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -166,8 +216,10 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   const [step, setStep] = useState<VerifyStep>("verify_intro");
   const [showScanner, setShowScanner] = useState(false);
   const [scannerMode, setScannerMode] = useState<'id' | 'selfie'>('id');
-  const [idPhotoBase64, setIdPhotoBase64] = useState<string | null>(null);
-  const [idPhotoPreview, setIdPhotoPreview] = useState<string | null>(null);
+  const [idFrontBase64, setIdFrontBase64] = useState<string | null>(null);
+  const [idFrontPreview, setIdFrontPreview] = useState<string | null>(null);
+  const [idBackBase64, setIdBackBase64] = useState<string | null>(null);
+  const [idBackPreview, setIdBackPreview] = useState<string | null>(null);
   const [selfieBase64, setSelfieBase64] = useState<string | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -185,8 +237,13 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   function handleCapture(base64: string) {
     setShowScanner(false);
     if (scannerMode === 'id') {
-      setIdPhotoBase64(base64);
-      setIdPhotoPreview(`data:image/jpeg;base64,${base64}`);
+      if (step === 'verify_id_back') {
+        setIdBackBase64(base64);
+        setIdBackPreview(`data:image/jpeg;base64,${base64}`);
+      } else {
+        setIdFrontBase64(base64);
+        setIdFrontPreview(`data:image/jpeg;base64,${base64}`);
+      }
     } else {
       setSelfieBase64(base64);
       setSelfiePreview(`data:image/jpeg;base64,${base64}`);
@@ -194,13 +251,20 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
   }
 
   async function finishVerification() {
-    if (!user || !idPhotoBase64 || !selfieBase64) return;
+    if (!user || !idFrontBase64 || !idBackBase64 || !selfieBase64) return;
     setIsSubmitting(true);
     setUploadError(null);
     try {
-      await uploadVerificationPhoto(idPhotoBase64, `${user.id}_id.jpg`);
+      await uploadVerificationPhoto(idFrontBase64, `${user.id}_id_front.jpg`);
+      await uploadVerificationPhoto(idBackBase64, `${user.id}_id_back.jpg`);
       await uploadVerificationPhoto(selfieBase64, `${user.id}_selfie.jpg`);
-      updateProfile({ verification_status: "pending" }, { onSuccess: onComplete, onError: onComplete });
+      updateProfile({ verification_status: "pending" }, {
+        onSuccess: onComplete,
+        onError: () => {
+          setUploadError(t("verify.upload_error"));
+          setIsSubmitting(false);
+        },
+      });
     } catch {
       setUploadError(t("verify.upload_error"));
       setIsSubmitting(false);
@@ -265,7 +329,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
 
         <div className="mt-8 space-y-3">
           <button
-            onClick={() => setStep("verify_id")}
+            onClick={() => setStep("verify_id_front")}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 gradient-cta text-white"
           >
             <Camera size={16} />
@@ -283,17 +347,29 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
     );
   }
 
-  /* ── VERIFY ID ── */
-  if (step === "verify_id") {
+  /* ── VERIFY ID (front + back) ── */
+  if (step === "verify_id_front" || step === "verify_id_back") {
+    const isFront = step === "verify_id_front";
+    const preview = isFront ? idFrontPreview : idBackPreview;
+    const clearPreview = isFront
+      ? () => { setIdFrontBase64(null); setIdFrontPreview(null); }
+      : () => { setIdBackBase64(null); setIdBackPreview(null); };
+
     return (
       <div className="mobile-container flex flex-col bg-background pb-10" style={{ minHeight: "100dvh" }}>
         <div className="px-6 pt-screen-top pb-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">{t("verify.id_step")}</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+            {isFront ? t("verify.id_front_step") : t("verify.id_back_step")}
+          </p>
           <h2 className="font-serif font-normal text-foreground leading-tight" style={{ fontSize: "1.75rem", letterSpacing: "-0.042em" }}>
-            {t("verify.scan_title")}
+            {isFront ? t("verify.scan_title") : t("verify.scan_back_title")}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">{t("verify.scan_sub")}</p>
-          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t("verify.gender_note")}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isFront ? t("verify.scan_sub") : t("verify.scan_back_sub")}
+          </p>
+          {isFront && (
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t("verify.gender_note")}</p>
+          )}
         </div>
 
         {/* Preview / tap area */}
@@ -302,8 +378,8 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
           style={{ minHeight: 220 }}
           onClick={() => openScanner('id')}
         >
-          {idPhotoPreview ? (
-            <img src={idPhotoPreview} alt="ID preview" className="w-full h-full object-cover" style={{ minHeight: 220 }} />
+          {preview ? (
+            <img src={preview} alt="ID preview" className="w-full h-full object-cover" style={{ minHeight: 220 }} />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3" style={{ minHeight: 220 }}>
               {/* ID card skeleton */}
@@ -318,24 +394,23 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
                 ))}
                 <Camera size={20} className="absolute inset-0 m-auto text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground">{t("verify.tap_id")}</p>
+              <p className="text-xs text-muted-foreground">
+                {isFront ? t("verify.tap_id") : t("verify.tap_id_back")}
+              </p>
             </div>
           )}
         </div>
 
         <div className="px-6 mt-5 space-y-3">
-          {idPhotoPreview ? (
+          {preview ? (
             <>
               <button
-                onClick={() => setStep("verify_selfie")}
+                onClick={() => setStep(isFront ? "verify_id_back" : "verify_selfie")}
                 className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
               >
                 {t("verify.looks_good")}
               </button>
-              <button
-                onClick={() => { setIdPhotoBase64(null); setIdPhotoPreview(null); }}
-                className="w-full py-2 text-muted-foreground text-sm"
-              >
+              <button onClick={clearPreview} className="w-full py-2 text-muted-foreground text-sm">
                 {t("verify.retake")}
               </button>
             </>
@@ -348,7 +423,10 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               {t("verify.take_photo")}
             </button>
           )}
-          <button onClick={() => setStep("verify_intro")} className="w-full py-2 text-muted-foreground text-sm">
+          <button
+            onClick={() => setStep(isFront ? "verify_intro" : "verify_id_front")}
+            className="w-full py-2 text-muted-foreground text-sm"
+          >
             {t("verify.back")}
           </button>
         </div>
@@ -414,7 +492,7 @@ export function VerificationFlow({ onComplete, onSkip }: VerificationFlowProps) 
               {t("verify.take_selfie")}
             </button>
           )}
-          <button onClick={() => setStep("verify_id")} disabled={isSubmitting} className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40">
+          <button onClick={() => setStep("verify_id_back")} disabled={isSubmitting} className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40">
             {t("verify.back")}
           </button>
         </div>

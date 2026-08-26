@@ -31,15 +31,10 @@ export function useApplyReferral() {
 
       if (me?.referred_by) throw new Error('Already applied')
 
-      // Mark current user as referred + give €10 credit (valid 14 days) + priority verification flag
-      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      // Track who referred this user — credits will be awarded when memberships launch
       const { error: e1 } = await supabase
         .from('profiles')
-        .update({
-          referred_by: referrer.id,
-          credits_cents: (me?.credits_cents ?? 0) + 1000,
-          referral_credit_expires_at: expiresAt,
-        })
+        .update({ referred_by: referrer.id })
         .eq('id', user.id)
       if (e1) throw e1
 

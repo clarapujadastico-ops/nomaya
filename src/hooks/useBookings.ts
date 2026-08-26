@@ -20,6 +20,7 @@ export function useBookings() {
           event:events (
             id,
             title,
+            title_es,
             date,
             city,
             image_url,

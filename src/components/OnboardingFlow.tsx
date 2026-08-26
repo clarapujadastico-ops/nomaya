@@ -1,14 +1,33 @@
 import { useState, useRef } from "react";
 import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift } from "lucide-react";
-import { INTERESTS } from "@/data/mockData";
+import { INTERESTS, LIFE_STAGES } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
-import { VerificationFlow } from "./VerificationFlow";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { useApplyReferral } from "@/hooks/useReferral";
 
-type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "about_you" | "profile" | "referral" | "verify";
+type Step = "language" | "welcome1" | "welcome2" | "welcome3" | "interests" | "about_you" | "profile" | "referral";
+
+// Nomaya no longer runs its own ID-verification funnel (too much friction
+// for new signups) — profiles land as "pending" for Clara to review by hand
+// in the Supabase dashboard, communicated to the user as "Level 1" status.
+function computeAge(dobIso: string): number | null {
+  const dob = new Date(dobIso);
+  if (isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+function ageRangeFromAge(age: number): string {
+  if (age < 26) return "18–25";
+  if (age < 36) return "26–35";
+  if (age < 46) return "36–45";
+  return "46+";
+}
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -51,8 +70,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   ];
   const [welcomeIndex, setWelcomeIndex] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [ageRange, setAgeRange] = useState<string | null>(null);
-  const [lifeStage, setLifeStage] = useState<string | null>(null);
+  const [birthdate, setBirthdate] = useState("");
+  const [lifeStages, setLifeStages] = useState<string[]>([]);
   const [profile, setProfile] = useState({
     name: "", city: "", bio: "",
     instagram_url: "", linkedin_url: "", tiktok_url: "",
@@ -101,6 +120,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
     setIsUploadingAvatar(false);
 
+    const age = birthdate ? computeAge(birthdate) : null;
+
     updateProfile(
       {
         name: profile.name.trim() || "",
@@ -113,12 +134,18 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         tiktok_url: profile.tiktok_url || null,
         favourite_song: profile.favourite_song || null,
         favourite_food: profile.favourite_food || null,
-        age_range: ageRange,
-        life_stage: lifeStage,
+        birthday: birthdate || null,
+        age_range: age !== null ? ageRangeFromAge(age) : null,
+        // Stored as a comma-joined string in the existing single life_stage
+        // text column so multi-select doesn't require a DB schema change.
+        life_stage: lifeStages.length > 0 ? lifeStages.join(",") : null,
+        // No self-serve ID verification anymore — profiles land "pending"
+        // for Clara to review by hand (communicated to the user as "Level 1").
+        verification_status: "pending",
         ...(avatar_url ? { avatar_url } : {}),
       },
       {
-        onSuccess: () => setStep("referral"),
+        onSuccess: onComplete,
         onError: (err) => {
           const msg = (err as Error).message ?? "";
           if (msg.includes("foreign key") || msg.includes("fkey")) {
@@ -321,7 +348,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                     fontWeight: isSelected ? 500 : 400,
                   }}
                 >
-                  {interest.label}
+                  {t(interest.labelKey)}
                 </span>
                 <div
                   className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-4 transition-all duration-200"
@@ -358,15 +385,9 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
 
   /* ── ABOUT YOU ── */
   if (step === "about_you") {
-    const AGE_RANGES = ["18–25", "26–35", "36–45", "46+"];
-    const LIFE_STAGES = [
-      { id: "student",              label: t("onboarding.ls_student"),    emoji: "🎓" },
-      { id: "working_professional", label: t("onboarding.ls_working"),    emoji: "💼" },
-      { id: "founder",              label: t("onboarding.ls_founder"),    emoji: "🚀" },
-      { id: "freelancer",           label: t("onboarding.ls_freelancer"), emoji: "✨" },
-      { id: "new_in_city",          label: t("onboarding.ls_new_city"),   emoji: "📍" },
-      { id: "parent",               label: t("onboarding.ls_parent"),     emoji: "🌸" },
-    ];
+    const age = birthdate ? computeAge(birthdate) : null;
+    const isUnderage = age !== null && age < 18;
+    const today = new Date().toISOString().slice(0, 10);
 
     return (
       <div className="mobile-container flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
@@ -379,55 +400,58 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 space-y-6 pb-4">
-          {/* Age range */}
+          {/* Birthdate — confirms 18+, replaces the old self-picked age-range buttons */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">{t("onboarding.age_range")}</p>
-            <div className="grid grid-cols-4 gap-2">
-              {AGE_RANGES.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setAgeRange(r)}
-                  className="py-3 rounded-2xl text-sm font-medium border-2 transition-all"
-                  style={{
-                    borderColor: ageRange === r ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
-                    background: ageRange === r ? "hsl(var(--primary-foreground) / 0.12)" : "hsl(var(--card))",
-                    color: ageRange === r ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("onboarding.birthdate")}</p>
+            <p className="text-xs text-muted-foreground mb-3">{t("onboarding.birthdate_sub")}</p>
+            <input
+              type="date"
+              value={birthdate}
+              max={today}
+              onChange={(e) => setBirthdate(e.target.value)}
+              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
+            />
+            {isUnderage && (
+              <p className="text-xs text-destructive mt-2">{t("onboarding.birthdate_under18")}</p>
+            )}
           </div>
 
           {/* Life stage */}
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">{t("onboarding.life_stage")}</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("onboarding.life_stage")}</p>
+            <p className="text-xs text-muted-foreground mb-3">{t("onboarding.life_stage_multi")}</p>
             <div className="space-y-2">
-              {LIFE_STAGES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setLifeStage(s.id)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 text-left transition-all"
-                  style={{
-                    borderColor: lifeStage === s.id ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
-                    background: lifeStage === s.id ? "hsl(var(--primary-foreground) / 0.12)" : "hsl(var(--card))",
-                  }}
-                >
-                  <span className="text-xl">{s.emoji}</span>
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: lifeStage === s.id ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+              {LIFE_STAGES.map((s) => {
+                const isSelected = lifeStages.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setLifeStages((prev) =>
+                        prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                      );
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 text-left transition-all"
+                    style={{
+                      borderColor: isSelected ? "hsl(var(--primary-foreground))" : "hsl(var(--border))",
+                      background: isSelected ? "hsl(var(--primary-foreground) / 0.12)" : "hsl(var(--card))",
+                    }}
                   >
-                    {s.label}
-                  </span>
-                  {lifeStage === s.id && (
-                    <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary-foreground))" }}>
-                      <Check size={11} className="text-primary" />
-                    </div>
-                  )}
-                </button>
-              ))}
+                    <span className="text-xl">{s.emoji}</span>
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: isSelected ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
+                    >
+                      {t(s.labelKey)}
+                    </span>
+                    {isSelected && (
+                      <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "hsl(var(--primary-foreground))" }}>
+                        <Check size={11} className="text-primary" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -435,11 +459,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         <div className="px-6 space-y-3 flex-shrink-0 border-t border-border/40" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)", paddingTop: "1rem" }}>
           <button
             onClick={() => setStep("profile")}
-            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white"
+            disabled={isUnderage}
+            className="w-full py-4 rounded-2xl font-medium text-sm transition-all duration-200 active:scale-[0.98] gradient-cta text-white disabled:opacity-40"
           >
             {t("onboarding.continue")}
           </button>
-          <button onClick={() => setStep("profile")} className="w-full py-2 text-muted-foreground text-sm">
+          <button onClick={() => setStep("profile")} disabled={isUnderage} className="w-full py-2 text-muted-foreground text-sm disabled:opacity-40">
             {t("onboarding.skip")}
           </button>
         </div>
@@ -513,6 +538,21 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
           </div>
 
+          {/* Instagram — required */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.instagram")}</label>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
+              <Instagram size={15} className="text-muted-foreground flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="@yourhandle"
+                value={profile.instagram_url}
+                onChange={(e) => setProfile((p) => ({ ...p, instagram_url: e.target.value }))}
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
+          </div>
+
           {/* Bio */}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">
@@ -527,12 +567,11 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             />
           </div>
 
-          {/* Social media */}
+          {/* Other social media — optional */}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-2 block">{t("onboarding.social_media")}</label>
             <div className="space-y-2">
               {[
-                { key: "instagram_url", icon: Instagram, placeholder: "instagram.com/yourhandle" },
                 { key: "linkedin_url", icon: Linkedin, placeholder: "linkedin.com/in/yourname" },
                 { key: "tiktok_url", icon: Music2, placeholder: "tiktok.com/@yourhandle" },
               ].map(({ key, icon: Icon, placeholder }) => (
@@ -579,9 +618,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 3rem)", paddingTop: "1rem" }}
         >
           {saveError && <p className="text-xs text-destructive px-1">{saveError}</p>}
+          {!profile.instagram_url.trim() && (
+            <p className="text-xs text-muted-foreground px-1">{t("onboarding.instagram_required")}</p>
+          )}
           <button
             onClick={uploadAvatarAndSave}
-            disabled={isBusy || !profile.name}
+            disabled={isBusy || !profile.name || !profile.instagram_url.trim()}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",
@@ -600,12 +642,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   if (step === "referral") {
     function handleApplyCode() {
       const code = referralInput.trim().toUpperCase();
-      if (!code) { setStep("verify"); return; }
+      if (!code) { onComplete(); return; }
       setReferralError(null);
       applyReferral(code, {
         onSuccess: () => {
           setReferralApplied(true);
-          setTimeout(() => setStep("verify"), 1400);
+          setTimeout(onComplete, 1400);
         },
         onError: () => {
           setReferralError(language === 'es' ? "Código no válido. Compruébalo e inténtalo de nuevo." : "That code doesn't look right. Double-check and try again.");
@@ -689,7 +731,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   : (language === 'es' ? "Continuar sin código" : "Continue without a code")}
             </button>
             {referralInput.trim() !== "" && (
-              <button onClick={() => setStep("verify")} className="w-full py-2 text-muted-foreground text-sm">
+              <button onClick={onComplete} className="w-full py-2 text-muted-foreground text-sm">
                 {language === 'es' ? "Saltar" : "Skip"}
               </button>
             )}
@@ -697,11 +739,6 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         )}
       </div>
     );
-  }
-
-  /* ── VERIFY ── */
-  if (step === "verify") {
-    return <VerificationFlow onComplete={onComplete} onSkip={onComplete} />;
   }
 
   return null;

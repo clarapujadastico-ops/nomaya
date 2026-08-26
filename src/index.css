@@ -18,37 +18,38 @@
 
 @layer base {
   :root {
-    /* Backgrounds — deep purple brand theme */
-    --background: 252 30% 45%;       /* #5f5095 deep purple */
-    --foreground: 0 0% 100%;         /* white — max readability on purple */
+    /* Backgrounds — light lavender dominant, per brand usage chart
+       (#E4DEFA ~55-60%, #5F5095 as structure/text ~20-25%, white cards) */
+    --background: 252 75% 93%;       /* #e4defa light lavender */
+    --foreground: 252 30% 45%;       /* #5f5095 deep purple — readable on light bg */
 
-    --card: 252 26% 58%;             /* clearly lighter than background */
-    --card-foreground: 0 0% 100%;    /* white */
+    --card: 0 0% 100%;                /* white cards, breathing room */
+    --card-foreground: 252 30% 45%;
 
-    --popover: 252 26% 56%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 252 30% 45%;
 
-    /* Primary — gold #eeb64e — pops off deep purple */
+    /* Primary — gold #eeb64e — kept as the occasional pop accent */
     --primary: 38 82% 62%;            /* #eeb64e gold */
     --primary-foreground: 252 35% 15%; /* dark text on gold */
 
-    /* Secondary */
-    --secondary: 252 28% 50%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary — a slightly warmer, near-white surface for subtle layering */
+    --secondary: 252 45% 97%;
+    --secondary-foreground: 252 30% 45%;
 
-    /* Muted — darker purple */
-    --muted: 252 22% 36%;
-    --muted-foreground: 252 50% 82%;  /* lighter lavender for secondary text */
+    /* Muted — soft lavender surface, darker purple text */
+    --muted: 252 35% 90%;
+    --muted-foreground: 252 25% 48%;
 
     /* Accent — rose pink #f796a6 */
     --accent: 347 86% 77%;
-    --accent-foreground: 252 35% 18%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 252 24% 62%;
-    --input: 252 26% 56%;
+    --border: 252 40% 85%;
+    --input: 0 0% 100%;
     --ring: 38 82% 62%;
 
     --radius: 1rem;
@@ -186,4 +187,31 @@
   .text-nomaya-blue { color: hsl(var(--nomaya-blue)); }
   .text-nomaya-gold { color: hsl(var(--nomaya-gold)); }
   .text-nomaya-rose { color: hsl(var(--nomaya-rose)); }
+}
+
+/* ── iOS keyboard zoom fix ────────────────────────────────────────────────────
+   iOS auto-zooms the viewport when focusing any input with font-size < 16px.
+   Setting font-size: 16px on all inputs prevents this everywhere in the app.
+   The visual size is controlled separately via Tailwind (text-sm etc on the
+   wrapper, not the input itself). */
+/* ── Native camera preview (toBack: true) ────────────────────────────────────
+   The camera-preview plugin renders the native camera behind the WKWebView
+   and makes the webview itself transparent, but our own app content still
+   paints over it unless removed too while active. The scanner UI is
+   portaled to document.body (a sibling of #root), so hiding #root entirely
+   is safe — nothing in it (including fixed-position chrome like the bottom
+   nav, which would otherwise still show through at its own z-index) needs
+   to stay visible under the full-screen scanner. */
+html.camera-preview-active,
+html.camera-preview-active body {
+  background: transparent !important;
+}
+html.camera-preview-active #root {
+  display: none !important;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px !important;
 }

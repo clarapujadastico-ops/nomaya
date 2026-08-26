@@ -80,6 +80,35 @@ Deno.serve(async (_req) => {
     }
   }
 
+  // ── 3. Post-event feedback notifications ──────────────────────────────────
+  // Events that ended yesterday → notify confirmed attendees to leave feedback
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    .toISOString().split("T")[0];
+
+  const { data: recentEvents } = await supabase
+    .from("events")
+    .select("id, title")
+    .eq("date", yesterday);
+
+  if (recentEvents) {
+    for (const event of recentEvents) {
+      const { data: attendees } = await supabase
+        .from("bookings")
+        .select("user_id")
+        .eq("event_id", event.id)
+        .eq("status", "confirmed");
+
+      for (const attendee of (attendees ?? [])) {
+        await sendPush({
+          userId: attendee.user_id,
+          title: `How was ${event.title}? 💜`,
+          body: "Your feedback helps us make every gathering better. Tap to share your thoughts.",
+          data: { tab: "community", type: "event_feedback", event_id: event.id },
+        });
+      }
+    }
+  }
+
   return new Response(JSON.stringify({ ok: true, friday: isFriday }), {
     headers: { "Content-Type": "application/json" },
   });

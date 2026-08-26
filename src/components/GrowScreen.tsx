@@ -1,387 +1,134 @@
 import { useState } from "react";
-import { Check, ChevronRight, X } from "lucide-react";
+import { Copy, Check, ChevronRight } from "lucide-react";
 import { Logo } from "./Logo";
-import { useMonthlyStats, type MonthStats } from "@/hooks/useMonthlyStats";
+import { useProfile } from "@/hooks/useProfile";
+import { useBookings } from "@/hooks/useBookings";
+import { useMyCircles } from "@/hooks/useCircles";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
 
-const TIERS = [
-  { icon: "🌸", label: "Founding Circle",       events: 1 },
-  { icon: "✨", label: "Inner Circle",           events: 3 },
-  { icon: "🔮", label: "Keeper of the Circle",   events: 5 },
-];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const NOMAYA_MOMENTS = [
-  { emoji: "🌸", titleKey: "moment.1.title", descKey: "moment.1.desc", lockedKey: "moment.1.locked", rewardKey: "moment.1.reward", events: 1 },
-  { emoji: "🌿", titleKey: "moment.2.title", descKey: "moment.2.desc", lockedKey: "moment.2.locked", rewardKey: "moment.2.reward", events: 2 },
-  { emoji: "🕯",  titleKey: "moment.3.title", descKey: "moment.3.desc", lockedKey: "moment.3.locked", rewardKey: "moment.3.reward", events: 3 },
-  { emoji: "💌", titleKey: "moment.4.title", descKey: "moment.4.desc", lockedKey: "moment.4.locked", rewardKey: "moment.4.reward", events: 4 },
-];
-
-// ─── Your Journey Tab ─────────────────────────────────────────────────────────
-
-// Varied phrasing so no two months feel the same
-const EVENT_PHRASES = [
-  (n: number) => n === 1 ? "You showed up for a gathering" : `You came back for ${n} more experiences`,
-  (n: number) => n === 1 ? "You came back for another experience" : `You attended ${n} gatherings`,
-  (n: number) => n === 1 ? "You made time for a Nomaya experience" : `You showed up ${n} times`,
-];
-const WOMEN_PHRASES = [
-  (n: number) => n === 1 ? "You met a new woman" : `You met ${n} new women`,
-  (n: number) => n === 1 ? "You were in the room with someone new" : `You were in the room with ${n} other women`,
-  (n: number) => n === 1 ? "A new connection was made" : `${n} women were part of the same experience`,
-];
-const CIRCLE_PHRASES = [
-  (n: number) => n === 1 ? "You found a circle you liked" : "You explored different circles",
-  (n: number) => n === 1 ? "You joined a new circle" : "You tried out new circles",
-  (n: number) => n === 1 ? "You found a circle that felt right" : "You explored what circles were out there",
-];
-
-function MonthCard({ m, isCurrent }: { m: MonthStats; isCurrent: boolean }) {
-  const { t } = useLang();
-  const monthOnly = new Date(m.year, m.month, 1).toLocaleString('default', { month: 'long' });
-  const hasAnything = m.eventsAttended > 0 || m.circlesJoined > 0 || m.womenMet > 0;
-  // Use month index to pick a phrase variant — consistent per month, varied across months
-  const variant = m.month % 3;
-
-  if (!isCurrent && !hasAnything) return null;
-
-  return (
-    <div className={`rounded-2xl p-4 space-y-3 ${isCurrent ? 'bg-card shadow-card border border-primary/20' : 'bg-muted'}`}>
-      <p className={`text-xs uppercase tracking-widest font-semibold ${isCurrent ? 'text-primary' : 'text-white/50'}`}>
-        {isCurrent ? `This month · ${monthOnly}` : monthOnly}
-      </p>
-
-      {!hasAnything ? (
-        <p className="text-xs text-muted-foreground italic leading-relaxed">{t("community.no_events_yet")}</p>
-      ) : (
-        <div className="space-y-2.5">
-          {m.eventsAttended > 0 && (
-            <div className="flex items-start gap-2.5">
-              <span className="text-base flex-shrink-0 mt-0.5">✦</span>
-              <p className="text-sm text-foreground leading-snug">
-                {EVENT_PHRASES[variant](m.eventsAttended)}
-              </p>
-            </div>
-          )}
-          {m.womenMet > 0 && (
-            <div className="flex items-start gap-2.5">
-              <span className="text-base flex-shrink-0 mt-0.5">👋</span>
-              <p className="text-sm text-foreground leading-snug">
-                {WOMEN_PHRASES[variant](m.womenMet)}
-              </p>
-            </div>
-          )}
-          {m.circlesJoined > 0 && (
-            <div className="flex items-start gap-2.5">
-              <span className="text-base flex-shrink-0 mt-0.5">🌀</span>
-              <p className="text-sm text-foreground leading-snug">
-                {CIRCLE_PHRASES[variant](m.circlesJoined)}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {isCurrent && hasAnything && (
-        <p className="text-xs text-muted-foreground italic">{t("community.finding_people")}</p>
-      )}
-    </div>
-  );
+function getRitualBadge(eventCount: number) {
+  if (eventCount >= 5) return { label: "Keeper of the Circle", icon: "🔮" };
+  if (eventCount >= 3) return { label: "Inner Circle",          icon: "✨" };
+  if (eventCount >= 1) return { label: "Founding Circle",       icon: "🌸" };
+  return null;
 }
 
-function YourJourneyTab({ onOpenCircle }: { onOpenCircle?: (id: string) => void }) {
-  const { t } = useLang();
-  const { data: stats, isLoading, error } = useMonthlyStats();
-  const [showHistory, setShowHistory] = useState(false);
-  const completedTotal = stats?.completedTotal ?? 0;
-  const unlockedMoments = NOMAYA_MOMENTS.filter(m => completedTotal >= m.events);
-  const nextMoment = NOMAYA_MOMENTS.find(m => completedTotal < m.events);
+function getMemberId(profile: any) {
+  return profile?.member_number != null
+    ? `NM-MAD-${String(profile.member_number).padStart(4, '0')}`
+    : 'NM-MAD-????';
+}
 
-  if (error) {
-    return (
-      <div className="bg-card rounded-2xl p-5 shadow-card">
-        <p className="text-sm text-muted-foreground text-center">{t("common.loading")}</p>
-      </div>
-    );
+function getMemberSince(profile: any) {
+  return profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : "recently";
+}
+
+// ─── Member Card Modal ────────────────────────────────────────────────────────
+
+function MemberCardModal({ onClose }: { onClose: () => void }) {
+  const { data: profile } = useProfile();
+  const { data: bookings = [] } = useBookings();
+  const { lang } = useLang();
+  const [walletLoading, setWalletLoading] = useState(false);
+
+  const memberId = getMemberId(profile);
+  const memberSince = getMemberSince(profile);
+  const displayName = profile?.name && profile.name !== "Member" && profile.name.trim()
+    ? profile.name : null;
+
+  async function handleAddToWallet() {
+    setWalletLoading(true);
+    try {
+      // generate-pass derives name/city/member number/badges itself from the
+      // caller's own profile via the auth token — it doesn't read a request
+      // body — and always responds with JSON `{ url }`, a signed URL to the
+      // generated .pkpass in storage, never a raw binary. Navigating to that
+      // URL lets WKWebView hand it to Apple Wallet directly.
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('https://jtoftrghfwdffrkqejlq.supabase.co/functions/v1/generate-pass', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const text = await res.text();
+      let json: any = {};
+      try { json = JSON.parse(text); } catch { /* not json */ }
+      if (!res.ok) {
+        alert(`HTTP ${res.status}: ${json?.detail || json?.error || text.slice(0, 200)}`);
+      } else if (json?.url) {
+        window.location.href = json.url;
+      } else if (json?.error === 'not_configured') {
+        alert(lang === 'es' ? "Apple Wallet estará disponible próximamente." : "Apple Wallet support is coming soon.");
+      } else {
+        alert(`Wallet error: ${json?.detail || json?.error || text.slice(0, 200)}`);
+      }
+    } catch (err) {
+      alert(`Wallet error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    setWalletLoading(false);
   }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[1, 2].map(i => <div key={i} className="h-24 bg-card rounded-2xl animate-pulse" />)}
-      </div>
-    );
-  }
-
-  const monthStats = stats?.monthStats ?? [];
-  const currentMonth = monthStats.find(m => m.isCurrent);
-  const pastMonths = monthStats.filter(m => !m.isCurrent);
 
   return (
-    <div className="space-y-3">
-      {currentMonth ? (
-        <MonthCard m={currentMonth} isCurrent={true} />
-      ) : (
-        <div className="bg-card rounded-2xl p-5 shadow-card text-center">
-          <p className="text-sm text-muted-foreground">{t("community.no_events_yet")}</p>
-        </div>
-      )}
-
-      {pastMonths.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowHistory(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-2 active:opacity-60 transition-opacity"
-          >
-            <p className="text-xs text-muted-foreground font-medium">
-              {showHistory ? t("community.hide_past") : `${t("community.see_past")} (${pastMonths.length})`}
-            </p>
-            <ChevronRight size={14} className={`text-muted-foreground transition-transform duration-200 ${showHistory ? 'rotate-90' : ''}`} />
-          </button>
-          {showHistory && pastMonths.map(m => (
-            <MonthCard key={`${m.year}-${m.month}`} m={m} isCurrent={false} />
-          ))}
-        </>
-      )}
-
-      {(unlockedMoments.length > 0 || nextMoment) && (
-        <div className="bg-card rounded-2xl p-5 shadow-card space-y-3 mt-2">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("community.moments_title")}</p>
-          <div className="space-y-2">
-            {unlockedMoments.map((m) => (
-              <div key={m.titleKey} className="rounded-2xl p-4 bg-primary/15 border border-primary/20 space-y-1.5">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{m.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground leading-snug">{t(m.titleKey)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{t(m.descKey)}</p>
-                    <p className="text-xs text-primary/80 mt-1 leading-snug">→ {t(m.rewardKey)}</p>
-                    <p className="text-xs font-medium text-primary mt-1.5">{t("community.received_this")}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {nextMoment && (
-              <div className="rounded-2xl p-4 bg-muted space-y-1.5">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0 opacity-40">{nextMoment.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-muted-foreground leading-snug">{t(nextMoment.titleKey)}</p>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5 leading-snug">{t(nextMoment.lockedKey)}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+    <div className="fixed inset-0 z-[300] flex items-end justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 bg-border rounded-full mx-auto" />
+        <h2 className="font-serif text-xl font-medium text-foreground">
+          {lang === 'es' ? "Mi tarjeta Nomaya" : "My Nomaya member card"}
+        </h2>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {lang === 'es'
+            ? "Tu pase personal a la comunidad Nomaya. Muéstralo en los eventos para hacer check-in."
+            : "Your personal pass to the Nomaya community. Show it at events to check in."}
+        </p>
+        <div className="rounded-2xl overflow-hidden shadow-card" style={{ background: "#5f5095" }}>
+          <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
+            <Logo className="h-14 w-auto mx-auto object-contain opacity-95" />
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <div>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
+              <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
+            </div>
+            <div>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
+              <p className="font-serif text-lg text-white">{displayName ?? (lang === 'es' ? 'Miembro' : 'Member')}</p>
+            </div>
+            <div className="pt-1 border-t border-white/10">
+              <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
+            </div>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Hosting Sheet ────────────────────────────────────────────────────────────
-
-// HOSTING_TYPES: labelKey/descKey resolved via t() at render time
-const HOSTING_TYPE_KEYS = [
-  { emoji: "🍝", labelKey: "host.types.dinner",   descKey: "host.types.dinner_desc" },
-  { emoji: "☕", labelKey: "host.types.coffee",   descKey: "host.types.coffee_desc" },
-  { emoji: "🎨", labelKey: "host.types.workshop", descKey: "host.types.workshop_desc" },
-  { emoji: "🌿", labelKey: "host.types.walk",     descKey: "host.types.walk_desc" },
-];
-
-function HostingSheet({ onClose, eventsAttended, canExpress = true }: { onClose: () => void; eventsAttended: number; canExpress?: boolean }) {
-  const { t } = useLang();
-  const { user } = useAuth();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  async function handleExpress() {
-    if (!user || !selected) return;
-    setLoading(true);
-    await supabase.from('hosting_interest').upsert({ user_id: user.id, event_type: selected });
-    setLoading(false);
-    setSent(true);
-  }
-
-  return (
-    <div className="fixed inset-0 z-[300] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-background rounded-t-3xl overflow-y-auto" style={{ maxHeight: 'calc(92dvh - env(safe-area-inset-bottom, 0px))' }}>
-        {/* Handle */}
-        <div className="sticky top-0 bg-background px-5 pt-4 pb-3 flex items-center justify-between border-b border-border z-10">
-          <div className="w-10 h-1 bg-border rounded-full absolute left-1/2 -translate-x-1/2 top-2" />
-          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <X size={14} className="text-muted-foreground" />
-          </button>
-        </div>
-
-        <div className="px-5 pb-8 pt-4 space-y-6" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
-
-          {sent ? (
-            <div className="flex flex-col items-center text-center py-8 gap-4">
-              <span className="text-5xl">💜</span>
-              <h2 className="font-serif text-2xl font-medium text-foreground">{t("host.sheet.listed")}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{t("host.sheet.listed_body")}</p>
-              <button onClick={onClose} className="mt-2 w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm">
-                {t("host.sheet.back")}
-              </button>
-            </div>
+        <button
+          onClick={handleAddToWallet}
+          disabled={walletLoading}
+          className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 font-semibold text-sm text-white disabled:opacity-60"
+          style={{ background: "#000" }}
+        >
+          {walletLoading ? (
+            <svg className="animate-spin" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
           ) : (
-            <>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("host.sheet.at_nomaya")}</p>
-                <h2 className="font-serif text-2xl font-medium text-foreground leading-snug">{t("host.sheet.title")}</h2>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{t("host.sheet.intro")}</p>
-              </div>
-
-              {/* What Nomaya does */}
-              <div className="bg-card rounded-2xl p-4 space-y-2.5">
-                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("host.sheet.we_handle")}</p>
-                {[
-                  "📣  Promoting your event to the community",
-                  "🎟️  Bookings, payments and confirmations",
-                  "🤝  Matching you with women who'll love it",
-                  "💬  Your own circle chat before and after",
-                ].map(line => (
-                  <p key={line} className="text-sm text-foreground leading-snug">{line}</p>
-                ))}
-              </div>
-
-              {/* What you do */}
-              <div className="bg-card rounded-2xl p-4 space-y-2.5">
-                <p className="text-xs uppercase tracking-widest font-semibold text-white/60">{t("host.sheet.you_bring")}</p>
-                {[
-                  "💡  An idea — a dinner, a walk, a skill",
-                  "🌸  Your energy and presence",
-                  "✦   Nothing has to be perfect",
-                ].map(line => (
-                  <p key={line} className="text-sm text-foreground leading-snug">{line}</p>
-                ))}
-              </div>
-
-              {canExpress ? (
-                <>
-                  {/* Pick a type */}
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("host.sheet.type")}</p>
-                    {HOSTING_TYPE_KEYS.map(({ emoji, labelKey, descKey }) => (
-                      <button
-                        key={labelKey}
-                        onClick={() => setSelected(labelKey)}
-                        className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
-                          selected === labelKey
-                            ? 'bg-primary/20 border border-primary/40'
-                            : 'bg-card border border-transparent'
-                        }`}
-                      >
-                        <span className="text-xl flex-shrink-0">{emoji}</span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{t(labelKey)}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t(descKey)}</p>
-                        </div>
-                        {selected === labelKey && <Check size={16} className="text-primary ml-auto flex-shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={handleExpress}
-                    disabled={!selected || loading}
-                    className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm disabled:opacity-40 transition-opacity active:opacity-80"
-                  >
-                    {loading ? t("host.sheet.sending") : t("host.sheet.interested")}
-                  </button>
-                  <p className="text-xs text-muted-foreground text-center -mt-2">{t("host.sheet.no_commitment")}</p>
-                </>
-              ) : (
-                <div className="bg-muted rounded-2xl px-4 py-4 text-center space-y-2">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    As you attend more gatherings and get a feel for the Nomaya community, hosting will open up naturally.
-                  </p>
-                  <button onClick={onClose} className="text-xs text-primary font-medium">Close</button>
-                </div>
-              )}
-            </>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
           )}
-        </div>
+          {walletLoading
+            ? (lang === 'es' ? "Generando pase..." : "Generating pass...")
+            : (lang === 'es' ? "Guardar en Apple Wallet" : "Add to Apple Wallet")}
+        </button>
       </div>
-    </div>
-  );
-}
-
-// ─── Hosting Tab ──────────────────────────────────────────────────────────────
-
-function HostingTab({ completedEvents }: { completedEvents: number }) {
-  const { t } = useLang();
-  const n = completedEvents;
-  const [showHostingSheet, setShowHostingSheet] = useState(false);
-  const [showWomenInfo, setShowWomenInfo] = useState(false);
-
-  // Invisible stages — no thresholds or lock language ever shown
-  const stage: 'early' | 'mid' | 'ready' =
-    n >= 5 ? 'ready' : n >= 4 ? 'mid' : 'early';
-
-  return (
-    <div className="space-y-3">
-      {showHostingSheet && (
-        <HostingSheet
-          onClose={() => setShowHostingSheet(false)}
-          eventsAttended={n}
-          canExpress={stage !== 'early'}
-        />
-      )}
-
-      {/* Women enjoyed meeting you — info sheet */}
-      {showWomenInfo && (
-        <div className="fixed inset-0 z-[300] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWomenInfo(false)} />
-          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-            <h3 className="font-serif text-xl font-medium text-foreground">{t("host.women.title")}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p1")}</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p2")}</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t("host.women.p3")}</p>
-            <button onClick={() => setShowWomenInfo(false)} className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm">
-              {t("host.women.cta")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Hosting card */}
-      <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-        <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <p className="text-xs uppercase tracking-widest font-semibold text-white/60 mb-1">{t("host.section")}</p>
-          <h2 className="font-serif text-xl font-medium text-foreground leading-snug">
-            {t("host.great_host")}
-          </h2>
-        </div>
-        <div className="px-5 py-4 space-y-4">
-          {stage === 'early' ? (
-            <>
-              <p className="text-sm text-muted-foreground leading-relaxed">{t("host.early_body")}</p>
-              <button onClick={() => setShowHostingSheet(true)} className="w-full py-3.5 rounded-2xl bg-muted text-muted-foreground font-medium text-sm active:opacity-70 transition-opacity">
-                {t("host.learn")}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {stage === 'ready' ? t("host.ready_body") : t("host.mid_body")}
-              </p>
-              <button onClick={() => setShowWomenInfo(true)} className="w-full flex items-center gap-2 text-left active:opacity-70">
-                <p className="text-xs text-primary font-medium">{t("host.women_link")}</p>
-              </button>
-              <button onClick={() => setShowHostingSheet(true)} className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm active:opacity-80 transition-opacity">
-                {stage === 'ready' ? t("host.first") : t("host.small")}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
     </div>
   );
 }
@@ -389,46 +136,276 @@ function HostingTab({ completedEvents }: { completedEvents: number }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id: string) => void; onGoToCircles?: () => void }) {
-  const { t } = useLang();
-  const [tab, setTab] = useState<"journey" | "hosting">("journey");
-  const { data: stats } = useMonthlyStats();
-  const completedEvents = stats?.completedTotal ?? 0;
+  const { user } = useAuth();
+  const { lang } = useLang();
+  const { data: profile } = useProfile();
+  const { data: bookings = [] } = useBookings();
+  const { data: myCircles = [] } = useMyCircles();
+
+  const [showMemberCard, setShowMemberCard] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  // Feedback state
+  const [selectedChips, setSelectedChips] = useState<Set<string>>(new Set());
+  const [suggestion, setSuggestion] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Derived values
+  const ritualBadge = getRitualBadge(bookings.length);
+  const isFoundingMember = (profile as any)?.badges?.includes?.('founding_member') ?? false;
+  const memberId = getMemberId(profile);
+  const memberSince = getMemberSince(profile);
+  const referralCode = profile?.id
+    ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
+    : '········';
+
+  const FEEDBACK_CHIPS = [
+    { key: "love_events",      label: lang === 'es' ? "🎨 Me encantan los eventos"     : "🎨 Love the events" },
+    { key: "great_community",  label: lang === 'es' ? "👥 Gran energía de grupo"        : "👥 Great community energy" },
+    { key: "welcoming",        label: lang === 'es' ? "🌸 Ambiente muy acogedor"        : "🌸 Feels very welcoming" },
+    { key: "love_circles",     label: lang === 'es' ? "🌀 Me encantan los círculos"     : "🌀 Love the circles" },
+    { key: "more_events",      label: lang === 'es' ? "📅 Quiero más eventos"           : "📅 Want more events" },
+    { key: "more_variety",     label: lang === 'es' ? "✨ Más variedad de actividades"  : "✨ More variety please" },
+    { key: "better_prices",    label: lang === 'es' ? "💰 Mejorar los precios"          : "💰 Better pricing" },
+    { key: "great_app",        label: lang === 'es' ? "📱 Buena experiencia en la app"  : "📱 Great app experience" },
+    { key: "improvement",      label: lang === 'es' ? "💡 Tiene margen de mejora"       : "💡 Has room to improve" },
+  ];
+
+  function toggleChip(key: string) {
+    setSelectedChips(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  function copyCode() {
+    navigator.clipboard?.writeText(referralCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
+
+  function shareWhatsApp() {
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} when you sign up.`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  async function handleSendFeedback() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const chipLabels = FEEDBACK_CHIPS.filter(c => selectedChips.has(c.key)).map(c => c.label).join(", ");
+      const message = [chipLabels, suggestion.trim()].filter(Boolean).join("\n\n");
+      await supabase.from('feedback').insert({
+        user_id: user?.id,
+        message,
+        type: 'general',
+      });
+      setFeedbackSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const hasAnyFeedback = selectedChips.size > 0 || suggestion.trim().length > 0;
 
   return (
     <div className="mobile-container flex flex-col bg-background overflow-y-auto pb-screen-bottom">
+
       {/* Header */}
-      <div className="px-5 pt-screen-top pb-2 text-center">
+      <div className="px-5 pt-screen-top pb-4 text-center">
         <Logo />
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Madrid · 2026</p>
-        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">{t("grow.community")}</h1>
+        <h1 className="font-serif text-4xl font-normal text-foreground tracking-display">
+          {lang === 'es' ? "Comunidad" : "Community"}
+        </h1>
       </div>
 
-      {/* Tab switcher */}
-      <div className="flex gap-2 px-5 py-4">
-        {([
-          { key: "journey", label: t("community.your_journey") },
-          { key: "hosting", label: t("community.become_host") },
-        ] as const).map(({ key, label }) => (
+      <div className="px-5 space-y-4 pb-8">
+
+        {/* ── YOUR PLACE ─────────────────────────────────────── */}
+        <div className="bg-card rounded-2xl shadow-soft overflow-hidden">
+          <div className="px-5 pt-5 pb-4 border-b border-white/10 text-center space-y-1">
+            <p className="text-3xl">{ritualBadge?.icon ?? "🌸"}</p>
+            <p className="font-serif text-xl font-medium text-foreground">{ritualBadge?.label ?? "Founding Circle"}</p>
+            {isFoundingMember && (
+              <span className="inline-block text-xs px-2.5 py-1 rounded-full font-medium"
+                style={{ background: "rgba(255,195,30,0.18)", color: "rgba(255,195,30,0.9)", border: "1px solid rgba(255,195,30,0.3)" }}>
+                🏛️ Founding Member
+              </span>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {lang === 'es' ? `Miembro desde ${memberSince}` : `Member since ${memberSince}`}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 divide-x divide-white/10">
+            {[
+              { label: lang === 'es' ? "Eventos" : "Events", value: bookings.length },
+              { label: lang === 'es' ? "Círculos" : "Circles", value: myCircles.length },
+              { label: "Credits", value: `€${((profile?.credits_cents ?? 0) / 100).toFixed(2)}` },
+            ].map(({ label, value }) => (
+              <div key={label} className="py-4 text-center">
+                <p className="font-serif text-xl font-medium text-foreground">{value}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+
           <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-              tab === key
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground border border-border"
-            }`}
+            onClick={() => setShowMemberCard(true)}
+            className="w-full flex items-center justify-between px-5 py-4 border-t border-white/10 active:opacity-70 transition-opacity"
           >
-            {label}
+            <div className="flex items-center gap-3">
+              <div className="relative w-12 h-8 rounded-lg flex-shrink-0 overflow-hidden"
+                style={{ background: "linear-gradient(135deg, #2e235a 0%, #7058c8 100%)" }}>
+                <div className="absolute -right-1 -top-1 w-8 h-8 rounded-full bg-white/10" />
+                <div className="absolute bottom-1 left-1.5">
+                  <p className="text-white/50 text-[5px] tracking-[0.2em] uppercase font-medium">Nomaya</p>
+                </div>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">
+                  {lang === 'es' ? "Mi tarjeta de miembro" : "My member card"}
+                </p>
+                <p className="text-[10px] text-muted-foreground font-mono">{memberId}</p>
+              </div>
+            </div>
+            <ChevronRight size={14} className="text-muted-foreground" />
           </button>
-        ))}
+        </div>
+
+        {/* ── GROW THE CIRCLE ────────────────────────────────── */}
+        <div className="bg-card rounded-2xl shadow-soft px-5 py-5 space-y-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+              {lang === 'es' ? "Haz crecer el círculo" : "Grow the circle"}
+            </p>
+            <h2 className="font-serif text-lg font-medium text-foreground leading-snug">
+              {lang === 'es'
+                ? "Invita a una mujer a tu mesa"
+                : "Invite a woman you'd love to see at your table"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              {lang === 'es'
+                ? "Ayúdanos a hacer crecer la comunidad."
+                : "Help us grow the community."}
+            </p>
+          </div>
+
+          <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+                {lang === 'es' ? "Tu código" : "Your code"}
+              </p>
+              <p className="font-mono text-2xl font-bold text-foreground tracking-wider">{referralCode}</p>
+            </div>
+            <button
+              onClick={copyCode}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm font-medium active:scale-95 transition-all"
+              style={{ color: codeCopied ? "hsl(252 50% 65%)" : undefined }}
+            >
+              {codeCopied ? <Check size={14} /> : <Copy size={14} />}
+              {codeCopied ? (lang === 'es' ? "Copiado" : "Copied") : (lang === 'es' ? "Copiar" : "Copy")}
+            </button>
+          </div>
+
+          <button
+            onClick={shareWhatsApp}
+            className="w-full py-3.5 rounded-2xl gradient-cta text-white font-medium text-sm flex items-center justify-center gap-2"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            {lang === 'es' ? "Compartir por WhatsApp" : "Share on WhatsApp"}
+          </button>
+        </div>
+
+        {/* ── GIVE FEEDBACK ──────────────────────────────────── */}
+        <div className="bg-card rounded-2xl shadow-soft px-5 py-5 space-y-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+              {lang === 'es' ? "Tu voz importa" : "Your voice matters"}
+            </p>
+            <h2 className="font-serif text-lg font-medium text-foreground leading-snug">
+              {lang === 'es' ? "Ayúdanos a mejorar" : "Help us improve"}
+            </h2>
+          </div>
+
+          {feedbackSubmitted ? (
+            <div className="text-center py-6 space-y-2">
+              <p className="text-3xl">💜</p>
+              <p className="font-serif text-lg font-medium text-foreground">
+                {lang === 'es' ? "¡Gracias!" : "Thank you!"}
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {lang === 'es'
+                  ? "Tu opinión nos ayuda a hacer Nomaya mejor para todas."
+                  : "Your feedback helps us make Nomaya better for everyone."}
+              </p>
+              <button
+                onClick={() => { setFeedbackSubmitted(false); setSelectedChips(new Set()); setSuggestion(""); }}
+                className="text-xs text-primary font-medium mt-2"
+              >
+                {lang === 'es' ? "Enviar más feedback" : "Send more feedback"}
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Guided chips */}
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
+                  {lang === 'es' ? "¿Qué describe mejor tu experiencia?" : "What best describes your experience?"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {FEEDBACK_CHIPS.map(c => (
+                    <button
+                      key={c.key}
+                      onClick={() => toggleChip(c.key)}
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-all border ${
+                        selectedChips.has(c.key)
+                          ? "bg-primary/20 border-primary/50 text-foreground"
+                          : "bg-muted border-transparent text-muted-foreground"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Additional thoughts */}
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                  {lang === 'es' ? "¿Algo más que añadir?" : "Anything else?"}
+                </p>
+                <textarea
+                  value={suggestion}
+                  onChange={e => setSuggestion(e.target.value)}
+                  placeholder={lang === 'es'
+                    ? "Cuéntanos más..."
+                    : "Tell us more…"}
+                  rows={3}
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+                />
+              </div>
+
+              <button
+                disabled={!hasAnyFeedback || isSubmitting}
+                onClick={handleSendFeedback}
+                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base disabled:opacity-40 transition-opacity"
+              >
+                {isSubmitting
+                  ? (lang === 'es' ? "Enviando…" : "Sending…")
+                  : (lang === 'es' ? "Enviar" : "Send feedback")}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="px-5 pb-6">
-        {tab === "journey"
-          ? <YourJourneyTab onOpenCircle={onOpenCircle} />
-          : <HostingTab completedEvents={completedEvents} />
-        }
-      </div>
+      {showMemberCard && <MemberCardModal onClose={() => setShowMemberCard(false)} />}
     </div>
   );
 }

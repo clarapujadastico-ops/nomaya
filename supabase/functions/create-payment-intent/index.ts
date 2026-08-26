@@ -77,9 +77,19 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' })
 
+    // Deduct credits server-side before creating the intent so the balance is
+    // always consistent regardless of client behaviour after payment.
+    if (discountCents > 0) {
+      await supabase
+        .from('profiles')
+        .update({ credits_cents: userCredits - discountCents })
+        .eq('id', userId)
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: chargeAmount,
       currency: event.currency.toLowerCase(),
+      automatic_payment_methods: { enabled: true },
       metadata: {
         event_id: eventId,
         user_id: userId,

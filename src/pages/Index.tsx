@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthScreen } from "@/components/AuthScreen";
+import { ResetPasswordScreen } from "@/components/ResetPasswordScreen";
 import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { BottomNav } from "@/components/BottomNav";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -10,7 +11,9 @@ import { GrowScreen } from "@/components/GrowScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { BookingsScreen } from "@/components/BookingsScreen";
+import { EventFeedbackModal } from "@/components/EventFeedbackModal";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
+import { usePendingEventFeedback } from "@/hooks/usePendingEventFeedback";
 
 type Tab = "events" | "community" | "groups" | "profile";
 
@@ -23,12 +26,14 @@ function LoadingScreen() {
 }
 
 function AppShell() {
-  const { session, loading: authLoading, signOut } = useAuth();
+  const { session, loading: authLoading, signOut, isPasswordRecovery } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
   const [openCircleTab, setOpenCircleTab] = useState<'chat' | 'about' | undefined>(undefined);
   const [showAllBookings, setShowAllBookings] = useState(false);
+  const { data: pendingFeedbackEvent } = usePendingEventFeedback();
+  const [feedbackDismissed, setFeedbackDismissed] = useState(false);
 
   // Determine ONCE whether onboarding is needed.
   // We intentionally do NOT re-evaluate when profile updates mid-onboarding
@@ -64,6 +69,7 @@ function AppShell() {
   }
 
   if (authLoading) return <LoadingScreen />;
+  if (isPasswordRecovery) return <ResetPasswordScreen />;
   if (!session) return <AuthScreen />;
   if (profileLoading || inOnboarding === null) return <LoadingScreen />;
   if (inOnboarding) return <OnboardingFlow onComplete={() => setInOnboarding(false)} />;
@@ -91,6 +97,12 @@ function AppShell() {
         </div>
         <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>
+      {pendingFeedbackEvent && !feedbackDismissed && (
+        <EventFeedbackModal
+          event={pendingFeedbackEvent}
+          onDismiss={() => setFeedbackDismissed(true)}
+        />
+      )}
     </div>
   );
 }

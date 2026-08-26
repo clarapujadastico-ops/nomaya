@@ -28,6 +28,7 @@ export interface Database {
           life_stage: string | null
           referral_code: string | null
           referred_by: string | null
+          circle_launch_interest: boolean
           created_at: string
         }
         Insert: {
@@ -52,6 +53,7 @@ export interface Database {
           life_stage?: string | null
           referral_code?: string | null
           referred_by?: string | null
+          circle_launch_interest?: boolean
           created_at?: string
         }
         Update: {
@@ -74,6 +76,7 @@ export interface Database {
           credits_cents?: number
           age_range?: string | null
           life_stage?: string | null
+          circle_launch_interest?: boolean
           created_at?: string
         }
       }
@@ -415,6 +418,8 @@ export interface Database {
           category_name: string | null
           category_slug: string | null
           category_color: string | null
+          title_es: string | null
+          description_es: string | null
         }
       }
     }
@@ -479,8 +484,14 @@ export function toAppCircle(row: CircleRow, userId: string, membershipRole: 'adm
 /** The shape all UI components use for events */
 export interface AppEvent {
   id: string
+  // title/description are always the canonical English text — internal
+  // logic (image matching, venue lookup, interest-keyword scoring) depends
+  // on it staying in English regardless of the selected UI language. Use
+  // localizedTitle()/localizedDescription() for anything shown to the user.
   title: string
   description: string
+  titleEs: string | null
+  descriptionEs: string | null
   date: string        // formatted "Mar 2"
   rawDate: string     // ISO "2026-02-22" for filtering
   time: string        // "11:00"
@@ -493,6 +504,7 @@ export interface AppEvent {
   price: string       // "€28" or "Free"
   featured: boolean
   isTbc: boolean
+  paymentAtVenue: boolean
   latitude: number | null
   longitude: number | null
 }
@@ -508,6 +520,7 @@ export interface BookingWithEvent {
   event: {
     id: string
     title: string
+    title_es: string | null
     date: string
     city: string
     image_url: string | null
@@ -534,6 +547,8 @@ export function toAppEvent(row: EventRow): AppEvent {
     id: row.id,
     title: row.title,
     description: row.description,
+    titleEs: row.title_es,
+    descriptionEs: row.description_es,
     date: formatDate(row.date),
     rawDate: row.date,
     time: row.time.substring(0, 5),
@@ -546,7 +561,18 @@ export function toAppEvent(row: EventRow): AppEvent {
     price: formatPrice(row.price_cents, row.currency),
     featured: row.is_featured,
     isTbc: row.is_tbc ?? false,
+    paymentAtVenue: (row as any).payment_at_venue ?? false,
     latitude: row.latitude,
     longitude: row.longitude,
   }
+}
+
+/** Display-only localized title — falls back to English if no translation exists yet. */
+export function localizedTitle(event: AppEvent, lang: 'en' | 'es'): string {
+  return lang === 'es' && event.titleEs ? event.titleEs : event.title
+}
+
+/** Display-only localized description — falls back to English if no translation exists yet. */
+export function localizedDescription(event: AppEvent, lang: 'en' | 'es'): string {
+  return lang === 'es' && event.descriptionEs ? event.descriptionEs : event.description
 }

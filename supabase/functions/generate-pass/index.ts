@@ -186,12 +186,15 @@ Deno.serve(async (req) => {
       foregroundColor: 'rgb(255, 255, 255)',
       backgroundColor: 'rgb(95, 80, 149)',
       labelColor: 'rgb(200, 185, 240)',
-      generic: {
-        primaryFields:   [{ key: 'name',     label: 'MEMBER',    value: displayName }],
-        secondaryFields: [{ key: 'memberId', label: 'MEMBER ID', value: memberId },
-                          { key: 'since',    label: 'SINCE',     value: memberSince }],
-        auxiliaryFields: [{ key: 'city',     label: 'CITY',      value: profile?.city || 'Madrid' },
-                          { key: 'tier',     label: 'TIER',      value: tier }],
+      // storeCard is Apple's dedicated membership/loyalty-card style — much
+      // less reserved blank space than `generic`, which is built for
+      // longer/flexible content and always renders with a tall body.
+      storeCard: {
+        primaryFields:   [{ key: 'memberId', label: 'MEMBERSHIP NUMBER', value: memberId }],
+        secondaryFields: [{ key: 'name',     label: 'MEMBER NAME',       value: displayName }],
+        auxiliaryFields: [{ key: 'city',     label: 'CITY',              value: profile?.city || 'Madrid' },
+                          { key: 'since',    label: 'SINCE',             value: memberSince },
+                          { key: 'tier',     label: 'TIER',              value: tier }],
       },
     })
 

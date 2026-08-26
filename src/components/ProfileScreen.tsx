@@ -13,8 +13,6 @@ import { useBookings } from "@/hooks/useBookings";
 import { useLang } from "@/contexts/LanguageContext";
 import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
-import { VerificationFlow } from "./VerificationFlow";
-import { AdminVerificationPanel } from "./AdminVerificationPanel";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 import { supabase } from "@/lib/supabase";
 
@@ -159,7 +157,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [editingBirthday, setEditingBirthday] = useState(false);
   const [birthdayValue, setBirthdayValue] = useState("");
   const [showHoroscopeSheet, setShowHoroscopeSheet] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
   const [showInterestsSheet, setShowInterestsSheet] = useState(false);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
@@ -398,15 +395,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     setShowLanguageSheet(false);
   }
 
-  if (showVerification) {
-    return (
-      <VerificationFlow
-        onComplete={() => { setShowVerification(false); refetchProfile(); }}
-        onSkip={() => { setShowVerification(false); refetchProfile(); }}
-      />
-    );
-  }
-
   // ── Settings screen ──────────────────────────────────────────────────────────
   if (showSettings) {
     const settingsSections = [
@@ -419,16 +407,9 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         ],
       },
       {
-        title: t("settings.plan_credits"),
-        items: [
-          { icon: Sparkles, label: t("settings.subscription"), value: ritualBadge?.label ?? "Member", onPress: () => setShowSubscriptionSheet(true) },
-        ],
-      },
-      {
         title: t("settings.help_support"),
         items: [
           { icon: MessageCircle, label: t("settings.chat_support"), value: null, onPress: () => setShowSupportChat(true) },
-          { icon: Sparkles, label: t("settings.feedback"), value: null, onPress: () => { setFeedbackRating(0); setFeedbackMessage(""); setFeedbackSubmitted(false); setShowFeedbackForm(true); } },
           { icon: Bell, label: t("settings.contact_us"), value: "hola.nomaya@gmail.com", onPress: () => setShowContactSheet(true) },
         ],
       },
@@ -527,14 +508,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             </button>
           </div>
 
-          {/* Admin: verification panel */}
-          {user && (
-            <div className="bg-card rounded-2xl overflow-hidden">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">Admin</p>
-              <AdminVerificationPanel />
-            </div>
-          )}
-
           {/* Log out */}
           <button
             onClick={onLogout}
@@ -592,8 +565,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </div>
         )}
 
-        {/* Referral sheet */}
-        {showReferralSheet && (() => {
+        {/* Referral sheet — moved to Community tab */}
+        {false && (() => {
           const code = profile?.id ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase() : '········';
           function copyCode() {
             navigator.clipboard?.writeText(code);
@@ -964,40 +937,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           );
         })()}
 
-        {/* Subscription sheet */}
-        {showSubscriptionSheet && (
-          <div className="fixed inset-0 z-[300] flex items-end justify-center">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSubscriptionSheet(false)} />
-            <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-2" />
-              <h2 className="font-serif text-xl font-medium text-foreground">Your community tier</h2>
-              <div className="bg-muted rounded-2xl p-5 text-center space-y-1">
-                <p className="text-3xl">{ritualBadge?.icon ?? "🌸"}</p>
-                <p className="font-serif text-lg font-medium text-foreground mt-2">{ritualBadge?.label ?? "Founding Circle"}</p>
-                <p className="text-xs text-muted-foreground">Member since {memberSince}</p>
-              </div>
-              <div className="bg-muted rounded-2xl p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Events attended</span>
-                  <span className="font-medium text-foreground">{bookings.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Refund credits</span>
-                  <span className="font-medium text-foreground">€{((profile?.credits_cents ?? 0) / 100).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Circles joined</span>
-                  <span className="font-medium text-foreground">{myCircles.length}</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Your tier is earned by attending events — it's free and updates automatically.{" "}
-                To delete your account, go to{" "}
-                <button onClick={() => setShowSubscriptionSheet(false)} className="text-primary underline">Settings → Delete account</button>.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Support chat sheet */}
         {showSupportChat && (
@@ -1064,7 +1003,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
 
         {/* Feedback form sheet */}
-        {showFeedbackForm && (
+        {false && showFeedbackForm && (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFeedbackForm(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
@@ -1200,36 +1139,31 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       </div>
 
-      {/* Verification banner */}
-      {profile?.verification_status === "unverified" && (
-        <button
-          onClick={() => setShowVerification(true)}
-          className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 text-left border border-primary/30"
-        >
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Shield size={18} className="text-primary" />
+      {/* Level 1 status — no self-serve verification anymore, Clara reviews profiles by hand */}
+      {(profile?.verification_status === "unverified" || profile?.verification_status === "pending") && (
+        <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft border border-primary/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-lg">⏳</div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("profile.level1_label")}</p>
+              <p className="text-sm font-medium text-foreground leading-snug mt-0.5">{t("profile.level1_pending_title")}</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground leading-snug">{t("profile.verification_banner")}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-2">{t("profile.level1_pending_body")}</p>
+          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_email")}</span>
+            <span className="flex items-center gap-1">⏳ {t("profile.level1_review")}</span>
           </div>
-          <span className="text-xs font-medium text-primary flex-shrink-0">{t("profile.verify_now")}</span>
-        </button>
+        </div>
       )}
 
-      {profile?.verification_status === "pending" && (
-        <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 border border-yellow-400/30">
-          <div className="w-9 h-9 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0 text-lg">
-            ⏳
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground leading-snug">
-              {lang === 'es' ? "Verificación en revisión" : "Verification under review"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              {lang === 'es'
-                ? "Estamos revisando tu ID. Te notificaremos en menos de 24h."
-                : "We're reviewing your ID. You'll be notified within 24 hours."}
-            </p>
+      {profile?.verification_status === "verified" && (
+        <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft border border-primary/20">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("profile.level1_label")}</p>
+          <p className="text-sm font-medium text-foreground leading-snug mt-0.5">{t("profile.level1_verified_title")}</p>
+          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_email")}</span>
+            <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_review")}</span>
           </div>
         </div>
       )}
@@ -1314,29 +1248,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </button>
         )}
 
-        {/* Member card */}
-        <button
-          onClick={() => setShowMemberCard(true)}
-          className="mt-4 pt-4 border-t border-border w-full flex items-center gap-3 active:opacity-70 transition-opacity"
-        >
-          {/* Mini card thumbnail */}
-          <div className="relative w-16 h-10 rounded-lg flex-shrink-0 overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #2e235a 0%, #7058c8 100%)" }}>
-            <div className="absolute -right-2 -top-2 w-10 h-10 rounded-full bg-white/10" />
-            <div className="absolute -right-1 -top-1 w-6 h-6 rounded-full bg-white/8" />
-            <div className="absolute bottom-1.5 left-2">
-              <p className="text-white/60 text-[6px] tracking-[0.2em] uppercase font-medium">Nomaya</p>
-            </div>
-          </div>
-          {/* Text */}
-          <div className="flex-1 text-left">
-            <p className="text-sm font-semibold text-foreground leading-tight">
-              {displayName ?? (lang === 'es' ? "Tu tarjeta de miembro" : "Your member card")}
-            </p>
-            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{memberId}</p>
-          </div>
-          <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
-        </button>
       </div>
 
       {/* About me */}
@@ -1449,7 +1360,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
               if (!interest) return null;
               return (
                 <span key={id} className="px-3 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-foreground">
-                  {interest.emoji} {interest.label}
+                  {interest.emoji} {t(interest.labelKey)}
                 </span>
               );
             })}
@@ -1461,15 +1372,6 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
       </div>
 
-      {/* ── Admin: verification panel ── */}
-      {user && (
-        <div className="px-5 mt-5">
-          <div className="bg-card rounded-2xl overflow-hidden">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">Admin</p>
-            <AdminVerificationPanel />
-          </div>
-        </div>
-      )}
 
       {/* ── Sign out ── */}
       <div className="px-5 mt-6 mb-2">
@@ -1532,7 +1434,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
                         : "bg-muted text-foreground border-border"
                     }`}
                   >
-                    {interest.label}
+                    {t(interest.labelKey)}
                   </button>
                 );
               })}
@@ -1645,7 +1547,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
       })()}
 
       {/* Member card modal */}
-      {showMemberCard && (
+      {false && showMemberCard && (
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMemberCard(false)} />
           <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
@@ -1664,7 +1566,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
             {/* Card visual */}
             <div className="rounded-2xl overflow-hidden shadow-card mb-4" style={{ background: "#5f5095" }}>
               <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
-                <Logo className="h-20 w-auto mx-auto object-contain opacity-95" />
+                <Logo className="h-14 w-auto mx-auto object-contain opacity-95" />
               </div>
               <div className="px-6 py-5 space-y-4">
                 <div>

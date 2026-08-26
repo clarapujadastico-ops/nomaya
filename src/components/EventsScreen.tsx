@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, X, Shield, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight, Users } from "lucide-react";
+import { Search, SlidersHorizontal, X, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight, Users } from "lucide-react";
 import { MemberProfileSheet } from "./MemberProfileSheet";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
@@ -11,10 +11,12 @@ import { useLang } from "@/contexts/LanguageContext";
 import { useEnsureEventCircle, useCircles } from "@/hooks/useCircles";
 import { useCircleMessages, useSendMessage } from "@/hooks/useCircleMessages";
 import { resolveEventImage } from "@/assets/eventImages";
+import { CATEGORY_KEYS as CAT_KEYS } from "@/data/mockData";
 import { useMyRatingsForEvent, useRateAttendee } from "@/hooks/useAttendeeRatings";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { AppEvent } from "@/types/database";
+import { localizedTitle, localizedDescription } from "@/types/database";
 import { useEventAttendees } from "@/hooks/useEventAttendees";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
@@ -43,7 +45,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
   const { data: myRatings = {} } = useMyRatingsForEvent(event.id);
   const { mutate: rateAttendee } = useRateAttendee();
   const [tab, setTab] = useState<"photos" | "chat" | "rate" | "members">("chat");
-  const [selectedMember, setSelectedMember] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
+  const [selectedMember, setSelectedMember] = useState<{ profile: import("@/hooks/useCircleMembers").MemberProfile; userId: string } | null>(null);
   const [text, setText] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -107,12 +109,12 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
       {tab === "photos" && (
         <>
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">Loading…</p>}
+            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">{tl("chat.loading")}</p>}
             {!isLoading && photos.length === 0 && (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
                 <ImageIcon size={36} className="text-muted-foreground opacity-40" />
-                <p className="text-sm font-medium text-foreground">No photos yet</p>
-                <p className="text-xs text-muted-foreground max-w-[200px]">Be the first to share a moment from this event.</p>
+                <p className="text-sm font-medium text-foreground">{tl("chat.no_photos")}</p>
+                <p className="text-xs text-muted-foreground max-w-[200px]">{tl("chat.no_photos_sub")}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
@@ -124,7 +126,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent px-2 py-1.5">
-                    <p className="text-[10px] text-white/90">{msg.sender?.name ?? "Attendee"}</p>
+                    <p className="text-[10px] text-white/90">{msg.sender?.name ?? tl("chat.attendee_fallback")}</p>
                   </div>
                 </div>
               ))}
@@ -156,11 +158,11 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
       {tab === "chat" && (
         <>
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">Loading…</p>}
+            {isLoading && <p className="text-xs text-muted-foreground text-center py-8">{tl("chat.loading")}</p>}
             {!isLoading && chatMessages.length === 0 && (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
-                <p className="text-sm font-medium text-foreground">No messages yet</p>
-                <p className="text-xs text-muted-foreground">Say hello to your fellow attendees 👋</p>
+                <p className="text-sm font-medium text-foreground">{tl("chat.no_messages")}</p>
+                <p className="text-xs text-muted-foreground">{tl("chat.say_hello")}</p>
               </div>
             )}
             {chatMessages.map((msg) => {
@@ -176,7 +178,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
                     </div>
                   )}
                   <div className={`max-w-[75%] flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
-                    {!isOwn && <p className="text-[10px] text-muted-foreground mb-0.5 px-1">{msg.sender?.name ?? "Attendee"}</p>}
+                    {!isOwn && <p className="text-[10px] text-muted-foreground mb-0.5 px-1">{msg.sender?.name ?? tl("chat.attendee_fallback")}</p>}
                     <div className={`px-3 py-2 rounded-2xl text-sm leading-snug ${isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-card text-foreground rounded-tl-sm"}`}>
                       {msg.content}
                     </div>
@@ -192,7 +194,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-              placeholder="Say something…"
+              placeholder={tl("chat.say_something")}
               className="flex-1 bg-card rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <button
@@ -212,13 +214,13 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
         <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
           <div className="bg-card rounded-2xl px-4 py-3">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Ratings help build trust in the community. A score of <span className="text-foreground font-medium">4.8+</span> is required to become a Nomaya host.
+              {tl("chat.rating_info_pre")} <span className="text-foreground font-medium">4.8+</span> {tl("chat.rating_info_post")}
             </p>
           </div>
           {attendees.filter((a) => a.user_id !== user?.id).length === 0 && (
             <div className="flex flex-col items-center gap-2 py-12 text-center">
               <Star size={32} className="text-muted-foreground opacity-40" />
-              <p className="text-sm text-muted-foreground">No other attendees to rate yet.</p>
+              <p className="text-sm text-muted-foreground">{tl("chat.no_other_attendees")}</p>
             </div>
           )}
           {attendees
@@ -235,7 +237,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{attendee.profile?.name ?? "Attendee"}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{attendee.profile?.name ?? tl("chat.attendee_fallback")}</p>
                     <div className="flex gap-1 mt-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -252,7 +254,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
                     </div>
                   </div>
                   {current > 0 && (
-                    <span className="text-xs text-muted-foreground flex-shrink-0">Rated</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">{tl("chat.rated")}</span>
                   )}
                 </div>
               );
@@ -265,12 +267,12 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
           {attendees.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-16 text-center">
-              <p className="text-sm text-muted-foreground">No attendees yet.</p>
+              <p className="text-sm text-muted-foreground">{tl("chat.no_attendees")}</p>
             </div>
           ) : attendees.map((a) => (
             <button
               key={a.user_id}
-              onClick={() => a.profile && setSelectedMember(a.profile as import("@/hooks/useCircleMembers").MemberProfile)}
+              onClick={() => a.profile && setSelectedMember({ profile: a.profile as import("@/hooks/useCircleMembers").MemberProfile, userId: a.user_id })}
               className="w-full flex items-center gap-3 bg-card rounded-2xl px-4 py-3 text-left active:opacity-70 transition-opacity"
             >
               {a.profile?.avatar_url ? (
@@ -291,7 +293,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
       )}
 
       {selectedMember && (
-        <MemberProfileSheet profile={selectedMember} onClose={() => setSelectedMember(null)} />
+        <MemberProfileSheet profile={selectedMember.profile} userId={selectedMember.userId} onClose={() => setSelectedMember(null)} />
       )}
     </div>
   );
@@ -326,13 +328,6 @@ function isThisMonth(dateStr: string) {
   const now = new Date();
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
-
-const CAT_KEYS: Record<string, string> = {
-  "Wellness":      "cat.wellness",
-  "Creative":      "cat.creative",
-  "Social":        "cat.social",
-  "Professional":  "cat.professional",
-};
 
 // Interest id → event categories it maps to
 const INTEREST_CATEGORY_MAP: Record<string, string[]> = {
@@ -461,9 +456,8 @@ interface EventsScreenProps {
 }
 
 export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: EventsScreenProps = {}) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
-  const [view, setView] = useState<"suggested" | "all" | "daytrips" | "retreats" | "week">("suggested");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -478,7 +472,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { user } = useAuth();
   const verificationStatus = profile?.verification_status ?? 'unverified';
   const isUnverified = verificationStatus !== 'verified';
-  const isPendingVerification = verificationStatus === 'pending';
   const { city: selectedCity, selectCity, cities } = useCityPreference(profile?.city);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -496,19 +489,12 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { mutate: cancelWaitlist, isPending: isCancellingWaitlist } = useCancelWaitlist();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
-  const [selectedAttendee, setSelectedAttendee] = useState<import("@/hooks/useCircleMembers").MemberProfile | null>(null);
+  const [selectedAttendee, setSelectedAttendee] = useState<{ profile: import("@/hooks/useCircleMembers").MemberProfile; userId: string } | null>(null);
 
   // Compute isBooked here (before any useEffect that depends on it) to avoid TDZ
   const booking = bookings.find((b) => b.event_id === selectedEvent);
   const isBooked = !!booking;
 
-  // Initialise Stripe once on mount (no-op if key not set)
-  useEffect(() => {
-    const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (publishableKey) {
-      Stripe.initialize({ publishableKey });
-    }
-  }, []);
 
   // Reset cancel/map state whenever the user opens a different event
   useEffect(() => {
@@ -534,6 +520,19 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
     .filter((e) => e.isTbc || new Date(e.rawDate) >= today)
     .filter((e) => !e.city || e.city === selectedCity);
   const featured = upcomingEvents.filter((e) => e.featured);
+
+  // Simple month header ("September 2026" / "septiembre de 2026") derived
+  // from the earliest dated upcoming event, instead of a tab switcher.
+  const earliestDated = [...upcomingEvents]
+    .filter((e) => !e.isTbc && e.rawDate)
+    .sort((a, b) => a.rawDate.localeCompare(b.rawDate))[0];
+  const monthLabel = earliestDated
+    ? (() => {
+        const label = new Date(earliestDated.rawDate + 'T00:00:00')
+          .toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'long', year: 'numeric' });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      })()
+    : t("events.upcoming");
 
   // Scoring inputs
   const userInterests: string[] = profile?.interests ?? [];
@@ -563,26 +562,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   }, [upcomingEvents]);
 
   const filtered = useMemo(() => {
-    // Base list by view
-    let list: AppEvent[];
-    if (view === "week") {
-      list = upcomingEvents.filter((e) => !e.isTbc && isThisWeek(e.rawDate));
-    } else if (view === "daytrips") {
-      list = upcomingEvents.filter((e) => e.category === "Trips" &&
-        !e.title.toLowerCase().includes("weekend") && !e.title.toLowerCase().includes("retreat"));
-    } else if (view === "retreats") {
-      list = upcomingEvents.filter((e) => e.category === "Trips" &&
-        (e.title.toLowerCase().includes("weekend") || e.title.toLowerCase().includes("retreat")));
-    } else if (view === "suggested") {
-      list = [...upcomingEvents].sort((a, b) =>
-        scoreEvent(b, userInterests, bookedCategories) - scoreEvent(a, userInterests, bookedCategories)
-      );
-    } else {
-      // "all" = Events tab — exclude Trips (handled by dedicated tabs)
-      list = activeFilter === "All"
-        ? upcomingEvents.filter((e) => e.category !== "Trips")
-        : upcomingEvents.filter((e) => e.category === activeFilter);
-    }
+    let list: AppEvent[] = activeFilter === "All"
+      ? upcomingEvents
+      : upcomingEvents.filter((e) => e.category === activeFilter);
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -611,7 +593,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       });
     }
     return list;
-  }, [events, view, activeFilter, appliedFilters, searchQuery, userInterests, bookedCategories]);
+  }, [upcomingEvents, activeFilter, appliedFilters, searchQuery]);
 
   const hasFilters = appliedFilters.groupSize !== null || appliedFilters.dateRange !== null || appliedFilters.type !== "";
 
@@ -621,7 +603,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
     if (!event) {
       return (
         <div className="mobile-container flex flex-col bg-background pb-screen-bottom items-center justify-center">
-          <p className="text-muted-foreground text-sm">Loading event…</p>
+          <p className="text-muted-foreground text-sm">{t("event.loading")}</p>
         </div>
       );
     }
@@ -632,7 +614,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         {/* Event hero */}
         <div className="relative h-72">
           {event.image ? (
-            <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+            <img src={event.image} alt={localizedTitle(event, lang)} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full" style={{ background: event.categoryColor }} />
           )}
@@ -648,7 +630,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <span className="text-xs font-medium px-2.5 py-1 rounded-full mb-2 inline-block" style={{ background: "hsl(347 86% 77%)", color: "hsl(0 0% 100%)" }}>
               {event.category}
             </span>
-            <h2 className="font-serif text-2xl font-medium text-white">{event.title}</h2>
+            <h2 className="font-serif text-2xl font-medium text-white">{localizedTitle(event, lang)}</h2>
           </div>
         </div>
 
@@ -658,30 +640,44 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="space-y-3">
               {/* Interest count card */}
               <div className="rounded-2xl p-5 text-center space-y-1 shadow-soft" style={{ background: "hsl(252 30% 40%)" }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2">Women interested</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/50 mb-2">{t("event.women_interested")}</p>
                 {interestCount > 0 && (
                   <p className="font-serif text-5xl font-medium text-white">{interestCount}</p>
                 )}
                 <p className="text-xs text-white/60 mt-1">
                   {interestCount === 0
-                    ? "Be the first to register interest ✨"
+                    ? t("event.be_first_interest")
                     : interestCount === 1
-                    ? "1 woman wants to know when this opens"
-                    : `${interestCount} women want to know when this opens`}
+                    ? t("event.one_woman_interested")
+                    : `${interestCount} ${t("event.women_interested_count")}`}
                 </p>
               </div>
               <div className="bg-card rounded-2xl p-4 shadow-soft">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Location</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("event.location")}</p>
                 <p className="text-sm font-medium text-foreground">{event.city}</p>
-                <p className="text-xs text-muted-foreground mt-1 italic">Date & details to be confirmed</p>
+                <p className="text-xs text-muted-foreground mt-1 italic">{t("event.date_tbc")}</p>
               </div>
             </div>
           ) : (
+            <>
+            {/* Prominent date banner */}
+            {event.rawDate && (
+              <div className="bg-primary/10 border border-primary/25 rounded-2xl px-5 py-4">
+                <p className="text-[10px] uppercase tracking-widest text-primary mb-1">{t("event.when")}</p>
+                <p className="font-serif text-2xl font-medium text-foreground leading-tight">
+                  {new Date(event.rawDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                {event.time && event.time !== '00:00' && (
+                  <p className="text-base text-foreground/80 mt-0.5">
+                    {new Date(`2000-01-01T${event.time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Date", value: `${event.date} · ${event.time}` },
-                { label: "Spots left", value: `${event.spotsLeft} spots left` },
-                { label: "Price", value: event.price },
+                { label: t("event.spots_left_label"), value: `${event.spotsLeft} ${t("card.spots_left")}` },
+                { label: event.paymentAtVenue ? t("event.price_at_venue") : t("event.price"), value: event.price === 'Free' && event.paymentAtVenue ? '—' : event.price },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -689,37 +685,38 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 </div>
               ))}
               <div className="bg-card rounded-xl p-3.5 shadow-soft">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Location</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("event.location")}</p>
                 <p className="text-sm font-medium text-foreground mt-0.5">{event.city}</p>
                 {isBooked ? (
                   <button
                     onClick={() => setShowMapSheet(true)}
                     className="text-xs text-primary font-medium mt-0.5"
                   >
-                    See map →
+                    {t("event.see_map")}
                   </button>
                 ) : (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Register to see address</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t("event.register_address")}</p>
                 )}
               </div>
             </div>
+            </>
           )}
 
           <div className="bg-card rounded-2xl p-4 shadow-soft">
-            <h3 className="font-serif text-lg font-medium text-foreground mb-2">About this event</h3>
+            <h3 className="font-serif text-lg font-medium text-foreground mb-2">{t("event.about")}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {event.description || `A carefully curated gathering for women who share a love of ${event.category.toLowerCase()}. Small group of max ${event.totalSpots} participants. Come as you are. Leave feeling connected.`}
+              {localizedDescription(event, lang) || `A carefully curated gathering for women who share a love of ${event.category.toLowerCase()}. Small group of max ${event.totalSpots} participants. Come as you are. Leave feeling connected.`}
             </p>
           </div>
 
           {attendees.length > 0 && (
             <div className="bg-card rounded-2xl p-4 shadow-soft">
-              <h3 className="font-serif text-lg font-medium text-foreground mb-3">Who's coming</h3>
+              <h3 className="font-serif text-lg font-medium text-foreground mb-3">{t("event.whos_coming")}</h3>
               <div className="space-y-2">
                 {attendees.map((a) => (
                   <button
                     key={a.user_id}
-                    onClick={() => a.profile && setSelectedAttendee(a.profile as import("@/hooks/useCircleMembers").MemberProfile)}
+                    onClick={() => a.profile && setSelectedAttendee({ profile: a.profile as import("@/hooks/useCircleMembers").MemberProfile, userId: a.user_id })}
                     className="w-full flex items-center gap-3 py-1.5 text-left active:opacity-70 transition-opacity"
                   >
                     {a.profile?.avatar_url ? (
@@ -754,12 +751,18 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
+          {!bookingInfo && !isBooked && !event.isTbc && event.price !== "Free" && (profile?.credits_cents ?? 0) > 0 && (
+            <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 text-xs text-foreground">
+              💜 You have €{((profile?.credits_cents ?? 0) / 100).toFixed(2)} in credits — will be deducted at checkout
+            </div>
+          )}
+
           {isUnverified ? (
             <button
               onClick={() => setShowVerifyPrompt(true)}
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98]"
             >
-              Verify to join this event →
+              {t("events.review_pending_cta")}
             </button>
           ) : event.isTbc ? (
             <button
@@ -775,111 +778,79 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 setBookingError(null);
                 if (isBooked || isBooking || isProcessingPayment || event.spotsLeft === 0) return;
 
-                if (event.price === "Free") {
-                  bookEvent(
-                    { eventId: selectedEvent },
-                    { onError: (e) => setBookingError(e.message) }
-                  );
+                if (event.price === "Free" || event.paymentAtVenue) {
+                  bookEvent({ eventId: selectedEvent }, { onError: (e) => setBookingError(e.message) });
                   return;
                 }
 
-                // Paid event — use Stripe Payment Sheet
+                // Paid event — fetch PaymentIntent then show web card form
                 setIsProcessingPayment(true);
                 try {
-                  let fnRes: Response | null = null;
-                  try {
-                    fnRes = await fetch(
-                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
-                      {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                        },
-                        body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
-                      }
-                    );
-                  } catch {
-                    fnRes = null;
-                  }
+                  const fnRes = await fetch(
+                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                      },
+                      body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
+                    }
+                  );
 
-                  // Edge Function unavailable or Stripe not configured — book directly
-                  if (!fnRes || !fnRes.ok) {
-                    bookEvent(
-                      { eventId: selectedEvent },
-                      { onError: (e) => setBookingError(e.message) }
-                    );
+                  if (!fnRes.ok) {
+                    bookEvent({ eventId: selectedEvent }, { onError: (e) => setBookingError(e.message) });
                     return;
                   }
 
                   const data = await fnRes.json();
 
-                  // Graceful degradation: Stripe not yet configured
                   if (data?.warning === 'Stripe not configured') {
-                    bookEvent(
-                      { eventId: selectedEvent },
-                      { onError: (e) => setBookingError(e.message) }
-                    );
+                    bookEvent({ eventId: selectedEvent }, { onError: (e) => setBookingError(e.message) });
                     return;
                   }
 
-                  // Credits covered the full price — no card needed
                   if (data?.free === true) {
                     const creditsEur = Math.round((data.discountApplied ?? 0) / 100);
                     setBookingInfo(`✨ Your €${creditsEur} credits covered this event — no payment needed!`);
-                    bookEvent(
-                      { eventId: selectedEvent, amountCentsPaid: 0 },
-                      { onError: (e) => { setBookingInfo(null); setBookingError(e.message); } }
-                    );
+                    bookEvent({ eventId: selectedEvent, amountCentsPaid: 0 }, { onError: (e) => { setBookingInfo(null); setBookingError(e.message); } });
+                    return;
+                  }
+
+                  if (!data?.clientSecret) {
+                    setBookingError(`Payment setup failed: ${JSON.stringify(data)}`);
                     return;
                   }
 
                   const { clientSecret, publishableKey, amountCents, discountApplied } = data;
 
-                  if (!clientSecret) {
-                    setBookingError(`Payment setup failed: ${JSON.stringify(data)}`);
-                    return;
-                  }
-
-                  // Re-initialize with the key returned by the server to ensure they match
-                  if (publishableKey) {
-                    await Stripe.initialize({ publishableKey });
-                  }
+                  // Initialize Stripe with server key (guarantees key/secret match)
+                  await Stripe.initialize({ publishableKey: publishableKey ?? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY });
 
                   await Stripe.createPaymentSheet({
                     paymentIntentClientSecret: clientSecret,
                     merchantDisplayName: 'Nomaya',
                     returnURL: 'nomaya://stripe-redirect',
+                    enableApplePay: true,
+                    applePayMerchantId: 'merchant.com.nomaya.app',
+                    countryCode: 'ES',
+                    style: 'alwaysDark',
                   });
 
-                  // Listen for completion before presenting
-                  const listener = await Stripe.addListener(
-                    PaymentSheetEventsEnum.Completed,
-                    () => {
-                      if (discountApplied > 0) {
-                        updateProfile({ credits_cents: Math.max(0, (profile?.credits_cents ?? 0) - discountApplied) });
-                      }
-                      bookEvent(
-                        {
-                          eventId: selectedEvent,
-                          paymentIntentId: clientSecret.split('_secret_')[0],
-                          amountCentsPaid: amountCents,
-                        },
-                        { onError: (e) => setBookingError(e.message) }
-                      );
-                      listener.remove();
-                    }
-                  );
+                  const { paymentResult } = await Stripe.presentPaymentSheet();
 
-                  try {
-                    await Stripe.presentPaymentSheet();
-                  } finally {
-                    listener.remove();
+                  if (paymentResult === PaymentSheetEventsEnum.Completed) {
+                    bookEvent(
+                      { eventId: selectedEvent, paymentIntentId: clientSecret.split('_secret_')[0], amountCentsPaid: amountCents },
+                      { onError: (e) => setBookingError(e.message) }
+                    );
                   }
                 } catch (err) {
-                  // Show ALL errors so we can diagnose issues
-                  setBookingError(err instanceof Error ? err.message : String(err));
+                  const msg = err instanceof Error ? err.message : String(err);
+                  if (!msg.toLowerCase().includes('cancel') && !msg.toLowerCase().includes('dismiss')) {
+                    setBookingError(msg);
+                  }
                 } finally {
                   setIsProcessingPayment(false);
                 }
@@ -941,11 +912,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCancelSheet(false)} />
             <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
               <div className="w-10 h-1 bg-border rounded-full mx-auto" />
-              <h2 className="font-serif text-xl font-medium text-foreground text-center">Cancel reservation</h2>
+              <h2 className="font-serif text-xl font-medium text-foreground text-center">{t("event.cancel_reservation")}</h2>
 
               {isEligible && (
                 <>
-                  <p className="text-xs text-muted-foreground text-center">Choose how you'd like your refund</p>
+                  <p className="text-xs text-muted-foreground text-center">{t("event.choose_refund")}</p>
                   <div className="space-y-3">
                     {/* Credits option */}
                     <button
@@ -955,8 +926,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       <div className="flex items-start gap-3">
                         <span className="text-xl mt-0.5">✨</span>
                         <div>
-                          <p className="text-sm font-medium text-foreground">Nomaya Credits + 10% bonus</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">€{creditsEur} to spend on future events</p>
+                          <p className="text-sm font-medium text-foreground">{t("event.credits_bonus")}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">€{creditsEur} {t("event.credits_future")}</p>
                         </div>
                         <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'credits' ? 'border-primary bg-primary' : 'border-border'}`}>
                           {cancelChoice === 'credits' && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -971,8 +942,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       <div className="flex items-start gap-3">
                         <span className="text-xl mt-0.5">💳</span>
                         <div>
-                          <p className="text-sm font-medium text-foreground">Full refund</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">€{amountEur} back to your original payment method</p>
+                          <p className="text-sm font-medium text-foreground">{t("event.full_refund")}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">€{amountEur} {t("event.refund_original")}</p>
                         </div>
                         <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'refund' ? 'border-primary bg-primary' : 'border-border'}`}>
                           {cancelChoice === 'refund' && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -981,7 +952,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     </button>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
-                    Cancellations 48h+ before the event receive a full refund or Nomaya Credits with a 10% bonus. Credits are applied automatically at checkout.
+                    {t("event.cancel_policy")}
                   </p>
                 </>
               )}
@@ -989,16 +960,16 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               {isTooLate && (
                 <>
                   <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4 text-center space-y-1">
-                    <p className="text-sm font-medium text-foreground">Non-refundable cancellation</p>
+                    <p className="text-sm font-medium text-foreground">{t("event.non_refundable")}</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      This event is less than 48 hours away. Cancellations within 48h of the event are non-refundable.
+                      {t("event.non_refundable_desc")}
                     </p>
                   </div>
                 </>
               )}
 
               {!isPaid && (
-                <p className="text-sm text-muted-foreground text-center">Are you sure you want to cancel your spot?</p>
+                <p className="text-sm text-muted-foreground text-center">{t("event.confirm_cancel_free")}</p>
               )}
 
               <div className="flex gap-3">
@@ -1006,7 +977,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   onClick={() => setShowCancelSheet(false)}
                   className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
                 >
-                  Keep my spot
+                  {t("event.keep_spot")}
                 </button>
                 <button
                   disabled={isCancelling}
@@ -1018,11 +989,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                         onSuccess: (result) => {
                           setShowCancelSheet(false);
                           if (result.credits_awarded) {
-                            setCancelOutcome(`✨ €${(result.credits_awarded / 100).toFixed(2)} credits added to your account`);
+                            setCancelOutcome(`✨ €${(result.credits_awarded / 100).toFixed(2)} ${t("event.credits_added")}`);
                           } else if (result.refunded_cents) {
-                            setCancelOutcome(`✓ €${(result.refunded_cents / 100).toFixed(2)} refund initiated`);
+                            setCancelOutcome(`✓ €${(result.refunded_cents / 100).toFixed(2)} ${t("event.refund_initiated")}`);
                           } else {
-                            setCancelOutcome('✓ Reservation cancelled');
+                            setCancelOutcome(`✓ ${t("event.reservation_cancelled")}`);
                           }
                         },
                         onError: (e) => {
@@ -1034,7 +1005,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   }}
                   className="flex-1 py-3 rounded-2xl bg-red-500/80 text-white text-sm font-medium disabled:opacity-50"
                 >
-                  {isCancelling ? 'Cancelling…' : isTooLate ? 'Cancel anyway' : 'Confirm cancellation'}
+                  {isCancelling ? t("event.cancelling") : isTooLate ? t("event.cancel_anyway") : t("event.confirm_cancellation")}
                 </button>
               </div>
             </div>
@@ -1072,16 +1043,16 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             "BEGIN:VEVENT",
             dtStart ? `DTSTART:${dtStart}` : "",
             dtEnd ? `DTEND:${dtEnd}` : "",
-            `SUMMARY:${event.title}`,
+            `SUMMARY:${localizedTitle(event, lang)}`,
             `LOCATION:${locationLabel}`,
-            `DESCRIPTION:${(event.description ?? "").replace(/\n/g, "\\n")}`,
+            `DESCRIPTION:${localizedDescription(event, lang).replace(/\n/g, "\\n")}`,
             "END:VEVENT", "END:VCALENDAR",
           ].filter(Boolean).join("\r\n");
 
           // iOS: share the .ics file — iOS routes it to Calendar app
           const file = new File([ics], "nomaya-event.ics", { type: "text/calendar" });
           if (navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: event.title });
+            await navigator.share({ files: [file], title: localizedTitle(event, lang) });
             return;
           }
           // Fallback for non-iOS
@@ -1131,10 +1102,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               </div>
               <div className="px-5 py-4 space-y-3">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-0.5">Location</p>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-0.5">{t("event.location")}</p>
                   <p className="text-sm font-medium text-foreground">{locationLabel}</p>
                   {event.latitude == null && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Exact address shared after booking confirmation</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{t("event.exact_address")}</p>
                   )}
                 </div>
                 <div className="flex gap-3">
@@ -1142,13 +1113,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     onClick={() => window.open(mapsUrl, "_blank")}
                     className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium"
                   >
-                    📍 Open in Maps
+                    {t("event.open_maps")}
                   </button>
                   <button
                     onClick={addToCalendar}
                     className="flex-1 py-3 rounded-2xl bg-muted border border-border text-foreground text-sm font-medium"
                   >
-                    📅 Add to Calendar
+                    {t("event.add_calendar")}
                   </button>
                 </div>
               </div>
@@ -1159,8 +1130,9 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
       {/* Member profile sheet */}
       {selectedAttendee && (
-        <MemberProfileSheet profile={selectedAttendee} onClose={() => setSelectedAttendee(null)} />
+        <MemberProfileSheet profile={selectedAttendee.profile} userId={selectedAttendee.userId} onClose={() => setSelectedAttendee(null)} />
       )}
+
 </>
     );
   }
@@ -1196,7 +1168,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           onClick={() => setShowVerifyPrompt(true)}
           className="mx-5 mb-4 bg-primary/10 border border-primary/30 rounded-2xl p-4 flex items-center gap-3 text-left"
         >
-          <Shield size={18} className="text-primary flex-shrink-0" />
+          <span className="text-lg flex-shrink-0">⏳</span>
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">{t("events.verify_gate")}</p>
           </div>
@@ -1232,47 +1204,22 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         </div>
       </div>
 
-      {/* View tabs */}
-      <div className="flex gap-2 px-5 mb-3 overflow-x-auto scrollbar-hide">
-        {([
-          { id: "suggested", label: t("events.tab_suggested") },
-          { id: "week",      label: t("events.tab_week") },
-          { id: "all",       label: t("events.tab_events") },
-          { id: "daytrips",  label: t("events.tab_daytrips") },
-          { id: "retreats",  label: t("events.tab_getaways") },
-        ] as const).map((tab) => (
+      {/* Category filter */}
+      <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-2">
+        {categories.map((f) => (
           <button
-            key={tab.id}
-            onClick={() => setView(tab.id)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
-              view === tab.id
+            key={f}
+            onClick={() => setActiveFilter(f)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+              activeFilter === f
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border"
             }`}
           >
-            {tab.label}
+            {f === "All" ? t("cat.all") : tCat(f)}
           </button>
         ))}
       </div>
-
-      {/* Category sub-filter — only shown in All view */}
-      {view === "all" && (
-        <div className="flex gap-2 px-5 overflow-x-auto pb-2 scrollbar-hide mb-2">
-          {categories.map((f) => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
-                activeFilter === f
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border"
-              }`}
-            >
-              {f === "All" ? t("cat.all") : tCat(f)}
-            </button>
-          ))}
-        </div>
-      )}
 
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -1281,7 +1228,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       ) : (
         <>
           {/* Nomaya Only — single compact banner */}
-          {view === "suggested" && !hasFilters && !searchQuery && featured.length > 0 && (
+          {!hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between px-5 mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">{t("events.nomaya_only")}</h2>
@@ -1291,21 +1238,21 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 return (
                   <button
                     onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(ev.id)}
-                    className="mx-5 w-[calc(100%-2.5rem)] rounded-2xl overflow-hidden shadow-soft h-28 relative text-left"
+                    className="mx-5 w-[calc(50%-1.5rem)] aspect-square rounded-2xl overflow-hidden shadow-soft relative text-left"
                   >
                     {ev.image ? (
-                      <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
+                      <img src={ev.image} alt={localizedTitle(ev, lang)} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full" style={{ background: ev.categoryColor }} />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-                    <div className="absolute inset-0 flex flex-col justify-center px-4 gap-1">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full self-start" style={{ background: "hsl(347 86% 77%)", color: "#fff" }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 space-y-0.5">
+                      <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full inline-block" style={{ background: "hsl(347 86% 77%)", color: "#fff" }}>
                         {ev.category}
                       </span>
-                      <p className="font-serif text-base font-medium text-white leading-snug">{ev.title}</p>
+                      <p className="text-xs font-semibold text-white leading-snug">{localizedTitle(ev, lang)}</p>
                       {!ev.isTbc && (
-                        <p className="text-[11px] text-white/70">{ev.date}</p>
+                        <p className="text-[10px] text-white/70">{ev.date}</p>
                       )}
                     </div>
                   </button>
@@ -1314,18 +1261,17 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
-          {/* My Bookings — attended events with chat CTA */}
-          {bookings.filter(b => b.status === 'confirmed').length > 0 && !searchQuery && view === "suggested" && !hasFilters && (
-            <div className="mb-5">
-              <div className="flex items-center justify-between px-5 mb-3">
-                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.my_bookings")}</h2>
-                <button onClick={() => onSeeAllBookings?.()} className="text-xs text-primary">
-                  {t("events.see_all_arrow")}
-                </button>
+          {/* Your Bookings */}
+          {bookings.filter(b => b.status === 'confirmed' && b.event).length > 0 && !searchQuery && !hasFilters && (
+            <div className="mb-5 px-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.your_bookings")}</h2>
+                <button onClick={() => onSeeAllBookings?.()} className="text-xs text-primary">{t("events.see_all_arrow")}</button>
               </div>
-              <div className="flex gap-3 px-5 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="space-y-2">
                 {bookings.filter(b => b.status === 'confirmed' && b.event).map((booking) => {
                   const ev = booking.event!;
+                  const imgSrc = resolveEventImage(ev.title, ev.image_url ?? "");
                   return (
                     <button
                       key={booking.id}
@@ -1334,22 +1280,19 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                         const circleId = await ensureEventCircle({ eventId: booking.event_id, eventTitle: ev.title });
                         setEventChat({ circleId, event: ev });
                       }}
-                      className="flex-shrink-0 w-36 rounded-xl overflow-hidden shadow-soft active:scale-[0.97] transition-transform disabled:opacity-60"
+                      className="w-full bg-card rounded-2xl overflow-hidden shadow-soft flex items-center gap-3 pr-4 active:opacity-80 transition-opacity disabled:opacity-60"
                     >
-                      <div className="h-24 relative">
-                        {resolveEventImage(ev.title, ev.image_url ?? "") ? (
-                          <img src={resolveEventImage(ev.title, ev.image_url ?? "")} alt={ev.title} className="w-full h-full object-cover" />
+                      <div className="w-20 h-16 flex-shrink-0 relative">
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={lang === 'es' && ev.title_es ? ev.title_es : ev.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full" style={{ background: ev.category?.color ?? "hsl(252 30% 45%)" }} />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <span className="absolute bottom-1.5 left-2 text-[9px] uppercase tracking-wider text-white font-medium">
-                          {fmtDate(ev.date)}
-                        </span>
                       </div>
-                      <div className="bg-card px-2.5 py-2 h-[4.5rem] flex flex-col justify-between">
-                        <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{ev.title}</p>
-                        <p className="text-[10px] text-primary">{t("events.open_chat")}</p>
+                      <div className="flex-1 min-w-0 text-left py-2">
+                        <p className="text-sm font-semibold text-foreground leading-snug truncate">{lang === 'es' && ev.title_es ? ev.title_es : ev.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(ev.date)}</p>
+                        <p className="text-[10px] text-primary mt-1">{t("events.open_chat")} →</p>
                       </div>
                     </button>
                   );
@@ -1358,44 +1301,41 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </div>
           )}
 
-          {/* What's next for you — 2–3 curated picks */}
-          {view === "suggested" && !hasFilters && !searchQuery ? (
-            <>
-              {nextForYou.length > 0 && (
-                <div className="px-5 mb-6">
-                  <h2 className="font-serif text-lg font-medium text-foreground mb-3">What's next for you</h2>
-                  <div className="space-y-2.5">
-                    {nextForYou.map(({ event, context }) => {
-                      const emoji = CAT_EMOJI[event.category] ?? "✦";
-                      const attendees = event.totalSpots - event.spotsLeft;
-                      const vibe = groupVibe(event.totalSpots, event.spotsLeft);
-                      const timing = event.rawDate ? relativeDay(event.rawDate) : event.date;
-                      return (
-                        <button
-                          key={event.id}
-                          onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)}
-                          className="w-full bg-card rounded-2xl px-4 py-3.5 text-left flex items-center gap-4 shadow-soft active:opacity-80 transition-opacity"
-                        >
-                          <span className="text-2xl flex-shrink-0">{emoji}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground leading-snug truncate">{event.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {attendees > 0 ? `${attendees} women · ` : ''}{vibe}
-                            </p>
-                            <p className="text-xs text-primary mt-0.5 font-medium">
-                              {timing}{context ? ` · ${context}` : ''}
-                            </p>
-                          </div>
-                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: event.categoryColor }} />
-                        </button>
-                      );
-                    })}
+          {/* What's next for you — only when no active bookings */}
+          {!hasFilters && !searchQuery && bookings.filter(b => b.status === 'confirmed').length === 0 && (() => {
+            const nextEvent = upcomingEvents
+              .filter(e => !e.isTbc && e.spotsLeft > 0)
+              .sort((a, b) => a.rawDate.localeCompare(b.rawDate))[0];
+            if (!nextEvent) return null;
+            const emoji = CAT_EMOJI[nextEvent.category] ?? "✦";
+            return (
+              <div className="px-5 mb-5">
+                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.next_for_you")}</h2>
+                <button
+                  onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(nextEvent.id)}
+                  className="w-full bg-card rounded-2xl px-4 py-3.5 text-left flex items-center gap-4 shadow-soft active:opacity-80 transition-opacity"
+                >
+                  <span className="text-2xl flex-shrink-0">{emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground leading-snug truncate">{localizedTitle(nextEvent, lang)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(nextEvent.rawDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {nextEvent.time && nextEvent.time !== '00:00' ? ` · ${new Date(`2000-01-01T${nextEvent.time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}` : ''}
+                    </p>
+                    <p className="text-xs text-primary mt-0.5 font-medium">{nextEvent.spotsLeft} spots left · {nextEvent.price}</p>
                   </div>
-                </div>
-              )}
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: nextEvent.categoryColor }} />
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* Upcoming events grid */}
+          {!hasFilters && !searchQuery ? (
+            <>
               {/* All upcoming below */}
               <div className="px-5">
-                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{t("events.upcoming")}</h2>
+                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{monthLabel}</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {filtered.map((event) => (
                     <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
@@ -1408,7 +1348,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="px-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">
-                  {view === "week" ? t("events.tab_week") : activeFilter === "All" ? t("events.upcoming") : activeFilter}
+                  {activeFilter === "All" ? monthLabel : tCat(activeFilter)}
                 </h2>
                 {hasFilters && (
                   <button onClick={() => setAppliedFilters(defaultFilters)} className="flex items-center gap-1 text-xs text-primary">
@@ -1556,31 +1496,21 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto" />
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-              {isPendingVerification ? <span className="text-2xl">⏳</span> : <Shield size={28} className="text-primary" />}
+              <span className="text-2xl">⏳</span>
             </div>
             <div>
               <h2 className="font-serif text-2xl font-medium text-foreground">
-                {isPendingVerification ? "Verification pending" : "Verify to join events"}
+                {t("events.review_pending_title")}
               </h2>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                {isPendingVerification
-                  ? "We're reviewing your ID. You'll receive a notification as soon as you're approved — it usually takes less than 24 hours."
-                  : "Nomaya is a women-only space. Complete verification to access and reserve events."}
+                {t("events.review_pending_body")}
               </p>
             </div>
-            {!isPendingVerification && (
-              <button
-                onClick={() => setShowVerifyPrompt(false)}
-                className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base"
-              >
-                Go to Profile → Verify
-              </button>
-            )}
             <button
               onClick={() => setShowVerifyPrompt(false)}
               className="w-full py-2 text-muted-foreground text-sm"
             >
-              {isPendingVerification ? "Got it" : "Maybe later"}
+              {t("events.got_it")}
             </button>
           </div>
         </div>

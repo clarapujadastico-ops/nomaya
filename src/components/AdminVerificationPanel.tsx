@@ -18,19 +18,22 @@ async function getSignedUrl(path: string) {
 
 function VerificationCard({ user, onDecision }: { user: PendingUser; onDecision: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const [idUrl, setIdUrl] = useState<string | null>(null);
+  const [idFrontUrl, setIdFrontUrl] = useState<string | null>(null);
+  const [idBackUrl, setIdBackUrl] = useState<string | null>(null);
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
   async function loadPhotos() {
-    if (idUrl) { setExpanded(e => !e); return; }
+    if (idFrontUrl) { setExpanded(e => !e); return; }
     setExpanded(true);
-    const [id, selfie] = await Promise.all([
-      getSignedUrl(`${user.id}_id.jpg`),
+    const [front, back, selfie] = await Promise.all([
+      getSignedUrl(`${user.id}_id_front.jpg`),
+      getSignedUrl(`${user.id}_id_back.jpg`),
       getSignedUrl(`${user.id}_selfie.jpg`),
     ]);
-    setIdUrl(id);
+    setIdFrontUrl(front);
+    setIdBackUrl(back);
     setSelfieUrl(selfie);
   }
 
@@ -56,9 +59,16 @@ function VerificationCard({ user, onDecision }: { user: PendingUser; onDecision:
         <div className="px-4 pb-4 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">ID Document</p>
-              {idUrl
-                ? <img src={idUrl} alt="ID" className="w-full rounded-lg object-cover" style={{ aspectRatio: '85/54' }} />
+              <p className="text-xs text-muted-foreground mb-1">ID Front</p>
+              {idFrontUrl
+                ? <img src={idFrontUrl} alt="ID front" className="w-full rounded-lg object-cover" style={{ aspectRatio: '85/54' }} />
+                : <div className="w-full bg-muted rounded-lg animate-pulse" style={{ aspectRatio: '85/54' }} />
+              }
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">ID Back</p>
+              {idBackUrl
+                ? <img src={idBackUrl} alt="ID back" className="w-full rounded-lg object-cover" style={{ aspectRatio: '85/54' }} />
                 : <div className="w-full bg-muted rounded-lg animate-pulse" style={{ aspectRatio: '85/54' }} />
               }
             </div>
