@@ -235,15 +235,17 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# Production SMTP via Resend — removes the built-in mailer's ~2 emails/hour cap.
+# RESEND_API_KEY must be set as a local env var before running `supabase config push`
+# (never commit the actual key — see README/chat instructions for the export command).
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "noreply@nomaya.community"
+sender_name = "Nomaya"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
