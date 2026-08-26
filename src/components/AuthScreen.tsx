@@ -49,7 +49,7 @@ export function AuthScreen() {
 
   if (verificationSent) {
     const handleConfirm = async () => {
-      if (otpCode.trim().length < 6) return
+      if (!otpCode.trim()) return
       setConfirming(true)
       setConfirmError(null)
       const { error } = await confirmSignUp(email, otpCode.trim())
@@ -83,12 +83,12 @@ export function AuthScreen() {
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={6}
-            placeholder="123456"
+            maxLength={10}
+            placeholder="······"
             value={otpCode}
             onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, '')); setConfirmError(null) }}
             onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
-            className="w-full max-w-[200px] px-4 py-3.5 rounded-xl border border-input bg-card text-foreground text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
+            className="w-full max-w-[280px] px-4 py-3.5 rounded-xl border border-input bg-card text-foreground text-center text-2xl tracking-[0.3em] font-mono focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
           />
           {confirmError && <p className="text-xs text-destructive mt-3">{confirmError}</p>}
           {codeResent && <p className="text-xs text-muted-foreground mt-3">{t('auth.otp_resent')}</p>}
@@ -96,7 +96,7 @@ export function AuthScreen() {
         <div className="pb-10 space-y-3">
           <button
             onClick={handleConfirm}
-            disabled={confirming || otpCode.trim().length < 6}
+            disabled={confirming || !otpCode.trim()}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
             style={{
               background: 'hsl(var(--nomaya-purple))',
