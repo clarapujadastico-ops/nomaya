@@ -29,9 +29,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 252 30% 45%;
 
-    /* Primary — gold #eeb64e — kept as the occasional pop accent */
-    --primary: 38 82% 62%;            /* #eeb64e gold */
-    --primary-foreground: 252 35% 15%; /* dark text on gold */
+    /* Primary — rose #f796a6 — swapped from gold 2026-08-27, which didn't have
+       enough contrast against the light lavender background */
+    --primary: 347 86% 77%;           /* #f796a6 rose — same value as --accent/--nomaya-rose */
+    --primary-foreground: 0 0% 100%;  /* white text on rose, matching --accent-foreground */
 
     /* Secondary — a slightly warmer, near-white surface for subtle layering */
     --secondary: 252 45% 97%;
@@ -50,7 +51,7 @@
 
     --border: 252 40% 85%;
     --input: 0 0% 100%;
-    --ring: 38 82% 62%;
+    --ring: 347 86% 77%;
 
     --radius: 1rem;
 
