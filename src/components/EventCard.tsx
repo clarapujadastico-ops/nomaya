@@ -1,6 +1,6 @@
 import { Calendar, MapPin, Users, Bell, Bus } from "lucide-react";
 import type { AppEvent } from "@/types/database";
-import { localizedTitle } from "@/types/database";
+import { localizedTitle, localizedEventDate } from "@/types/database";
 import { CATEGORY_KEYS } from "@/data/mockData";
 import { useEventInterestCount } from "@/hooks/useEventInterest";
 import { useLang } from "@/contexts/LanguageContext";
@@ -57,7 +57,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
               <div className="flex items-center gap-3 text-white/80 text-xs">
                 <span className="flex items-center gap-1">
                   <Calendar size={11} />
-                  {event.date}
+                  {localizedEventDate(event, lang)}
                 </span>
                 <span className="flex items-center gap-1">
                   <MapPin size={11} />
@@ -66,10 +66,10 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className={`text-xs font-medium ${isAlmostFull ? "text-nomaya-rose" : "text-white/70"}`}>
-                  {event.spotsLeft} spots left
+                  {event.spotsLeft} {t("card.spots_left")}
                 </span>
                 {event.price && (
-                  <span className="text-xs font-medium text-white/90">{event.price}</span>
+                  <span className="text-xs font-medium text-white/90">{event.price === "Free" ? t("event.free") : event.price}</span>
                 )}
               </div>
             </>
@@ -198,7 +198,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
             <div className="flex items-center gap-3 text-muted-foreground text-xs">
               <span className="flex items-center gap-1">
                 <Calendar size={10} />
-                {event.date} · {event.time}
+                {localizedEventDate(event, lang)} · {event.time}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -208,7 +208,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
               </span>
               <span className={`text-xs font-medium ${isAlmostFull ? "text-primary" : "text-muted-foreground"}`}>
                 <Users size={10} className="inline mr-0.5" />
-                {event.spotsLeft} left
+                {event.spotsLeft} {t("card.spots_left")}
               </span>
             </div>
           </div>

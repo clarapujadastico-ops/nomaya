@@ -259,7 +259,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
     : null;
 
   const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    ? new Date(profile.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: "short", year: "numeric" })
     : t("profile.recently");
 
   const memberId = (profile as any)?.member_number != null
@@ -1568,15 +1568,15 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
               </div>
               <div className="px-6 py-5 space-y-4">
                 <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">{t("profile.membership_number")}</p>
                   <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">{t("profile.full_name")}</p>
                   <p className="font-serif text-lg text-white">{displayName ?? (lang === 'es' ? 'Miembro' : 'Member')}</p>
                 </div>
                 <div className="pt-1 border-t border-white/10">
-                  <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
+                  <p className="text-xs text-white/40">{profile?.city || "Madrid"} · {t("profile.member_since")} {memberSince}</p>
                 </div>
               </div>
             </div>

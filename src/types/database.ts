@@ -576,3 +576,13 @@ export function localizedTitle(event: AppEvent, lang: 'en' | 'es'): string {
 export function localizedDescription(event: AppEvent, lang: 'en' | 'es'): string {
   return lang === 'es' && event.descriptionEs ? event.descriptionEs : event.description
 }
+
+/**
+ * Display-only localized short date ("Sep 5" / "5 sept"), computed fresh from
+ * rawDate at render time — unlike `.date` (baked English at fetch time via
+ * formatDate(), kept as-is for anything internal), this always matches the
+ * current UI language.
+ */
+export function localizedEventDate(event: AppEvent, lang: 'en' | 'es'): string {
+  return new Date(event.rawDate + 'T00:00:00').toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' })
+}

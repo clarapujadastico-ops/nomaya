@@ -23,10 +23,10 @@ function getMemberId(profile: any) {
     : 'NM-MAD-????';
 }
 
-function getMemberSince(profile: any) {
+function getMemberSince(profile: any, lang: 'en' | 'es') {
   return profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
-    : "recently";
+    ? new Date(profile.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: "long", year: "numeric" })
+    : lang === 'es' ? "recientemente" : "recently";
 }
 
 // ─── Member Card Modal ────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
   const [walletLoading, setWalletLoading] = useState(false);
 
   const memberId = getMemberId(profile);
-  const memberSince = getMemberSince(profile);
+  const memberSince = getMemberSince(profile, lang);
   const displayName = profile?.name && profile.name !== "Member" && profile.name.trim()
     ? profile.name : null;
 
@@ -155,7 +155,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
   const ritualBadge = getRitualBadge(bookings.length);
   const isFoundingMember = (profile as any)?.badges?.includes?.('founding_member') ?? false;
   const memberId = getMemberId(profile);
-  const memberSince = getMemberSince(profile);
+  const memberSince = getMemberSince(profile, lang);
   const referralCode = profile?.id
     ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
     : '········';

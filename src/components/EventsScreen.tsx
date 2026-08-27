@@ -665,11 +665,11 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               <div className="bg-primary/10 border border-primary/25 rounded-2xl px-5 py-4">
                 <p className="text-[10px] uppercase tracking-widest text-primary mb-1">{t("event.when")}</p>
                 <p className="font-serif text-2xl font-medium text-foreground leading-tight">
-                  {new Date(event.rawDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {new Date(event.rawDate + 'T00:00:00').toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
                 {event.time && event.time !== '00:00' && (
                   <p className="text-base text-foreground/80 mt-0.5">
-                    {new Date(`2000-01-01T${event.time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}
+                    {new Date(`2000-01-01T${event.time}`).toLocaleTimeString(lang === 'es' ? 'es-ES' : 'en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}
                   </p>
                 )}
               </div>
@@ -677,7 +677,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: t("event.spots_left_label"), value: `${event.spotsLeft} ${t("card.spots_left")}` },
-                { label: event.paymentAtVenue ? t("event.price_at_venue") : t("event.price"), value: event.price === 'Free' && event.paymentAtVenue ? '—' : event.price },
+                { label: event.paymentAtVenue ? t("event.price_at_venue") : t("event.price"), value: event.price === 'Free' && event.paymentAtVenue ? '—' : event.price === 'Free' ? t("event.free") : event.price },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -859,12 +859,12 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               className="w-full py-4 rounded-2xl gradient-cta text-white font-medium text-base shadow-soft transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-default"
             >
               {isBooked
-                ? "✓ Spot reserved"
+                ? t("event.reserved")
                 : isBooking || isProcessingPayment
-                ? "Processing…"
+                ? t("event.processing")
                 : event.spotsLeft === 0
                 ? t("events.fully_booked")
-                : `Reserve my spot · ${event.price}`}
+                : `${t("event.reserve")} · ${event.price === "Free" ? t("event.free") : event.price}`}
             </button>
           )}
 
@@ -1319,10 +1319,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground leading-snug truncate">{localizedTitle(nextEvent, lang)}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(nextEvent.rawDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-                      {nextEvent.time && nextEvent.time !== '00:00' ? ` · ${new Date(`2000-01-01T${nextEvent.time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}` : ''}
+                      {new Date(nextEvent.rawDate + 'T00:00:00').toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {nextEvent.time && nextEvent.time !== '00:00' ? ` · ${new Date(`2000-01-01T${nextEvent.time}`).toLocaleTimeString(lang === 'es' ? 'es-ES' : 'en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}` : ''}
                     </p>
-                    <p className="text-xs text-primary mt-0.5 font-medium">{nextEvent.spotsLeft} spots left · {nextEvent.price}</p>
+                    <p className="text-xs text-primary mt-0.5 font-medium">{nextEvent.spotsLeft} {t("card.spots_left")} · {nextEvent.price === "Free" ? t("event.free") : nextEvent.price}</p>
                   </div>
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: nextEvent.categoryColor }} />
                 </button>

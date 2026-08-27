@@ -103,6 +103,8 @@ export const translations: TranslationMap = {
   "event.reserve":      { en: "Reserve my spot",  es: "Reservar mi plaza" },
   "event.reserved":     { en: "✓ Spot reserved",  es: "✓ Plaza reservada" },
   "event.reserving":    { en: "Reserving…",        es: "Reservando…" },
+  "event.processing":   { en: "Processing…",       es: "Procesando…" },
+  "event.free":         { en: "Free",              es: "Gratis" },
   "event.register_interest": { en: "Register interest", es: "Registrar interés" },
   "event.interest_registered": { en: "✓ Interest registered", es: "✓ Interés registrado" },
   "event.location":     { en: "Location",       es: "Ubicación" },
@@ -196,6 +198,8 @@ export const translations: TranslationMap = {
   // Profile screen
   "profile.heading":    { en: "Profile",        es: "Perfil" },
   "profile.member_since": { en: "Member since", es: "Miembro desde" },
+  "profile.membership_number": { en: "Membership Number", es: "Número de socia" },
+  "profile.full_name": { en: "Full Name", es: "Nombre completo" },
   "profile.events":     { en: "Events",         es: "Eventos" },
   "profile.circles":    { en: "Circles",        es: "Círculos" },
   "profile.connections":{ en: "Connections",    es: "Conexiones" },
