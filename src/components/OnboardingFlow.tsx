@@ -538,9 +538,9 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
           </div>
 
-          {/* Instagram — required */}
+          {/* Instagram — optional, kept prominent for profile review */}
           <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.instagram")}</label>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.instagram_optional")}</label>
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
               <Instagram size={15} className="text-muted-foreground flex-shrink-0" />
               <input
@@ -618,12 +618,9 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 3rem)", paddingTop: "1rem" }}
         >
           {saveError && <p className="text-xs text-destructive px-1">{saveError}</p>}
-          {!profile.instagram_url.trim() && (
-            <p className="text-xs text-muted-foreground px-1">{t("onboarding.instagram_required")}</p>
-          )}
           <button
             onClick={uploadAvatarAndSave}
-            disabled={isBusy || !profile.name || !profile.instagram_url.trim()}
+            disabled={isBusy || !profile.name}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",
