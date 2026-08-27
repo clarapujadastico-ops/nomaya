@@ -86,7 +86,7 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
 
   // Refund
   if (/refund|money back|charged|paid/.test(lower))
-    return "For paid events cancelled 48h+ in advance you can get a full refund or Nomaya credits (+10% bonus). Cancel from the event page. Still need help? Email hola@nomaya.app.";
+    return "For paid events cancelled 48h+ in advance you can get a full refund or Nomaya credits (+15% bonus). Cancel from the event page. Still need help? Email hola@nomaya.app.";
 
   // Payment
   if (/payment|pay|card|stripe|price|cost|how much|precio/.test(lower)) {

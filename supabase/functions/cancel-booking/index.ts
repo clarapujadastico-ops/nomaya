@@ -88,8 +88,8 @@ Deno.serve(async (req) => {
             .eq('id', bookingId)
         }
       } else if (choice === 'credits') {
-        // Award credits with 10% bonus
-        credits_awarded = Math.round((booking.amount_cents_paid ?? 0) * 1.1)
+        // Award credits with 15% bonus
+        credits_awarded = Math.round((booking.amount_cents_paid ?? 0) * 1.15)
 
         const { data: profileData } = await supabase
           .from('profiles')

@@ -905,7 +905,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const isEligible = isPaid && hoursUntil >= 48;
         const isTooLate = isPaid && hoursUntil < 48;
         const amountEur = ((booking.amount_cents_paid ?? 0) / 100).toFixed(2);
-        const creditsEur = (Math.round((booking.amount_cents_paid ?? 0) * 1.1) / 100).toFixed(2);
+        const creditsEur = (Math.round((booking.amount_cents_paid ?? 0) * 1.15) / 100).toFixed(2);
 
         return (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
