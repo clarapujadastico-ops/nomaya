@@ -31,10 +31,13 @@ export function useApplyReferral() {
 
       if (me?.referred_by) throw new Error('Already applied')
 
-      // Track who referred this user — credits will be awarded when memberships launch
+      // Track who referred this user and award the new user's €10 signup
+      // credit immediately. The referrer's €5 is awarded separately, on the
+      // new user's first event attendance (reward_referrer_on_first_attendance
+      // trigger on event_attendance).
       const { error: e1 } = await supabase
         .from('profiles')
-        .update({ referred_by: referrer.id })
+        .update({ referred_by: referrer.id, credits_cents: (me?.credits_cents ?? 0) + 1000 })
         .eq('id', user.id)
       if (e1) throw e1
 

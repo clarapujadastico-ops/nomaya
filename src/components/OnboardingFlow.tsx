@@ -145,7 +145,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         ...(avatar_url ? { avatar_url } : {}),
       },
       {
-        onSuccess: onComplete,
+        onSuccess: () => setStep("referral"),
         onError: (err) => {
           const msg = (err as Error).message ?? "";
           if (msg.includes("foreign key") || msg.includes("fkey")) {

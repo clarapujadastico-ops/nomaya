@@ -186,8 +186,12 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
     setTimeout(() => setCodeCopied(false), 2000);
   }
 
+  const APP_STORE_URL = 'https://apps.apple.com/es/app/nomaya/id6760704850?l=en-GB';
+
   function shareWhatsApp() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} when you sign up.`;
+    const text = lang === 'es'
+      ? `Me encantaría verte en mi mesa 💜 Únete a Nomaya — una comunidad exclusiva para mujeres en Madrid. Usa mi código ${referralCode} al registrarte. Descárgala aquí: ${APP_STORE_URL}`
+      : `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} when you sign up. Download here: ${APP_STORE_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
