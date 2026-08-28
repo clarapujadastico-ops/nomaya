@@ -25,19 +25,18 @@ export function useApplyReferral() {
       // Check not already referred
       const { data: me } = await supabase
         .from('profiles')
-        .select('credits_cents, referred_by')
+        .select('referred_by')
         .eq('id', user.id)
         .single()
 
       if (me?.referred_by) throw new Error('Already applied')
 
-      // Track who referred this user and award the new user's €10 signup
-      // credit immediately. The referrer's €5 is awarded separately, on the
-      // new user's first event attendance (reward_referrer_on_first_attendance
-      // trigger on event_attendance).
+      // Social reward only, deliberately no money — see Clara's 2026-08-28
+      // note. Setting referred_by here fires the notify_referrer_on_signup
+      // trigger, which pushes "X joined with your invite 💜" to the referrer.
       const { error: e1 } = await supabase
         .from('profiles')
-        .update({ referred_by: referrer.id, credits_cents: (me?.credits_cents ?? 0) + 1000 })
+        .update({ referred_by: referrer.id })
         .eq('id', user.id)
       if (e1) throw e1
 

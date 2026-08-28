@@ -111,7 +111,7 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
 
   // Credits / referral
   if (/credit|referral|refer|code|discount/.test(lower))
-    return "Your Nomaya credits show in the Community tab. You earn credits by referring friends (€10 per referral). Your friend gets €7.50 welcome credit when they sign up with your code!";
+    return "Invite a friend from the Community tab — share your code and she'll know it came from you. No points or credits, just genuine invites to women who'd love Nomaya.";
 
   // Account / login
   if (/password|login|sign in|account|log out/.test(lower))

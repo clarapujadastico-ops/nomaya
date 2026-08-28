@@ -663,8 +663,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
             {language === 'es'
-              ? "Si alguien te invitó a Nomaya, introduce su código para que ambas recibáis créditos."
-              : "If a friend invited you to Nomaya, enter her code and you'll both get credits."}
+              ? "Si una amiga te invitó a Nomaya, introduce su código aquí."
+              : "If a friend invited you to Nomaya, enter her code here."}
           </p>
         </div>
 
@@ -674,10 +674,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
-              {language === 'es' ? "Tú recibes €10 · Tu amiga recibe €5 cuando asistas" : "You get €10 credit · Your friend gets €5 when you attend"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {language === 'es' ? "Tu crédito es válido 14 días · Acceso prioritario a la verificación" : "Your credit is valid for 14 days · Priority verification"}
+              {language === 'es' ? "Le avisaremos a tu amiga de que te uniste 💜" : "We'll let your friend know you joined 💜"}
             </p>
           </div>
         </div>
@@ -689,12 +686,6 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             </div>
             <p className="text-base font-medium text-foreground">
               {language === 'es' ? "¡Código aplicado! 💜" : "Code applied! 💜"}
-            </p>
-            <p className="text-base font-medium text-foreground">
-              {language === 'es' ? "Tu €10 está listo para tu primer plan 🎉" : "Your €10 is ready for your first plan 🎉"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {language === 'es' ? "Válido 14 días · Verificación prioritaria activada" : "Valid for 14 days · Priority verification activated"}
             </p>
           </div>
         ) : (
