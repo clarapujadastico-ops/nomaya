@@ -49,7 +49,7 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (!profile?.id) return;
-    QRCode.toDataURL(profile.id, { margin: 1, width: 240, color: { dark: "#1a1428", light: "#ffffff" } })
+    QRCode.toDataURL(profile.id, { margin: 4, width: 400, errorCorrectionLevel: 'H', color: { dark: "#1a1428", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null));
   }, [profile?.id]);
@@ -131,7 +131,7 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
           {qrDataUrl && (
             <div className="px-6 pb-6 flex flex-col items-center gap-2">
               <div className="bg-white rounded-xl p-3">
-                <img src={qrDataUrl} alt="QR" className="w-32 h-32" />
+                <img src={qrDataUrl} alt="QR" className="w-48 h-48" />
               </div>
               <p className="text-[10px] tracking-[0.15em] uppercase text-white/40">
                 {lang === 'es' ? "Muestra este código para hacer check-in" : "Show this code to check in"}
