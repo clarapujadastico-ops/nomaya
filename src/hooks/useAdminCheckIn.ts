@@ -45,12 +45,22 @@ export function useCheckInAttendee() {
 
       let targetBookingId = bookingId
       let attendeeName = ''
+      let alreadyCheckedIn = false
 
-      if (!targetBookingId) {
+      if (targetBookingId) {
+        const { data: booking, error: findError } = await supabase
+          .from('bookings')
+          .select('id, checked_in_at, profile:profiles(name)')
+          .eq('id', targetBookingId)
+          .single()
+        if (findError) throw findError
+        attendeeName = (booking as any).profile?.name ?? ''
+        alreadyCheckedIn = !!booking.checked_in_at
+      } else {
         if (!memberId) throw new Error('No booking or member specified')
         const { data: booking, error: findError } = await supabase
           .from('bookings')
-          .select('id, profile:profiles(name)')
+          .select('id, checked_in_at, profile:profiles(name)')
           .eq('event_id', eventId)
           .eq('user_id', memberId)
           .eq('status', 'confirmed')
@@ -59,7 +69,10 @@ export function useCheckInAttendee() {
         if (!booking) throw new Error('NOT_BOOKED')
         targetBookingId = booking.id
         attendeeName = (booking as any).profile?.name ?? ''
+        alreadyCheckedIn = !!booking.checked_in_at
       }
+
+      if (alreadyCheckedIn) throw new Error('ALREADY_CHECKED_IN')
 
       const { data: updated, error } = await supabase
         .from('bookings')

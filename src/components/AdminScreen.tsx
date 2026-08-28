@@ -26,6 +26,17 @@ async function decodeQrFromBase64(base64: string): Promise<string | null> {
   return code?.data ?? null;
 }
 
+function checkInErrorMessage(err: unknown, lang: 'en' | 'es'): string {
+  const msg = err instanceof Error ? err.message : '';
+  if (msg === 'NOT_BOOKED') {
+    return lang === 'es' ? "Esta persona no tiene reserva para este evento." : "This person doesn't have a booking for this event.";
+  }
+  if (msg === 'ALREADY_CHECKED_IN') {
+    return lang === 'es' ? "Esta persona ya ha hecho check-in." : "This person is already checked in.";
+  }
+  return lang === 'es' ? "No se pudo verificar el código." : "Couldn't verify that code.";
+}
+
 interface AdminScreenProps {
   onClose: () => void;
 }
@@ -107,14 +118,7 @@ function AdminCheckInScreen({ event, onBack, onClose }: { event: AppEvent; onBac
           setConfirmation({ name: name || (lang === 'es' ? "Miembro" : "Member") });
           setTimeout(() => setConfirmation(null), 1800);
         },
-        onError: (err) => {
-          const msg = (err as Error).message;
-          setScanError(
-            msg === 'NOT_BOOKED'
-              ? (lang === 'es' ? "Esta persona no tiene reserva para este evento." : "This person doesn't have a booking for this event.")
-              : (lang === 'es' ? "No se pudo verificar el código." : "Couldn't verify that code.")
-          );
-        },
+        onError: (err) => setScanError(checkInErrorMessage(err, lang)),
       });
     } catch {
       // user cancelled the scan — no error needed
@@ -122,11 +126,13 @@ function AdminCheckInScreen({ event, onBack, onClose }: { event: AppEvent; onBac
   }
 
   function handleManualCheckIn(bookingId: string, name: string) {
+    setScanError(null);
     checkIn({ eventId: event.id, bookingId }, {
       onSuccess: () => {
         setConfirmation({ name });
         setTimeout(() => setConfirmation(null), 1400);
       },
+      onError: (err) => setScanError(checkInErrorMessage(err, lang)),
     });
   }
 
