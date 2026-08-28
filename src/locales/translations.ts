@@ -200,7 +200,7 @@ export const translations: TranslationMap = {
   "profile.member_since": { en: "Member since", es: "Miembro desde" },
   "profile.membership_number": { en: "Membership Number", es: "Número de socia" },
   "profile.full_name": { en: "Full Name", es: "Nombre completo" },
-  "profile.events":     { en: "Events",         es: "Eventos" },
+  "profile.events":     { en: "Plans attended", es: "Planes asistidos" },
   "profile.circles":    { en: "Circles",        es: "Círculos" },
   "profile.connections":{ en: "Connections",    es: "Conexiones" },
   "profile.add_bio":    { en: "Add a short bio…", es: "Añade una breve bio…" },

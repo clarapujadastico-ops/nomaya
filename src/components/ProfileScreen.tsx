@@ -14,6 +14,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
 import { AdminScreen } from "./AdminScreen";
+import { YourNomayaModal } from "./YourNomayaModal";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 import { supabase } from "@/lib/supabase";
 
@@ -33,6 +34,7 @@ async function uploadAvatar(base64: string, userId: string): Promise<string> {
 interface ProfileScreenProps {
   onLogout?: () => void;
   onOpenCircle?: (id: string) => void;
+  onGoToEvents?: () => void;
 }
 
 const STAR_SIGNS = [
@@ -108,7 +110,7 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
 
   // Badges / levels
   if (/badge|founding|level|tier|inner circle|keeper/.test(lower))
-    return "Badges are earned by attending events:\n• 🌸 Founding Circle — 1 event\n• ✨ Inner Circle — 3 events\n• 🔮 Keeper of the Circle — 5 events\n• 🏛️ Founding Member — attended our very first event";
+    return "Your 'Plans attended' count tracks how many Nomaya plans you've actually shown up to — not just booked. 🏛️ Founding Member means you were part of Nomaya's very first cohort.";
 
   // Credits / referral
   if (/credit|referral|refer|code|discount/.test(lower))
@@ -132,7 +134,7 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
   return "Happy to help! Could you tell me a bit more? You can also reach us at hola@nomaya.app 💜";
 }
 
-export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
+export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileScreenProps) {
   const { t, lang, setLang } = useLang();
   const { data: profile, refetch: refetchProfile } = useProfile();
   const { data: bookings = [] } = useBookings();
@@ -160,7 +162,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showHoroscopeSheet, setShowHoroscopeSheet] = useState(false);
   const [showInterestsSheet, setShowInterestsSheet] = useState(false);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
-  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [showYourNomaya, setShowYourNomaya] = useState(false);
   const [showMemberCard, setShowMemberCard] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -242,23 +244,12 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const badges: string[] = (profile as { badges?: string[] } | null)?.badges ?? [];
   const isFoundingMember = badges.includes('founding_member');
 
-  const isTopHost = allCircles.some(c => c.isAdmin) || bookings.length >= 8;
-  const isEarlyMember = isFoundingMember;
   const isCommunityBuilder = myCircles.length >= 2;
+  const plansAttended = bookings.filter(b => b.checked_in_at).length;
 
   const recognitionBadges = [
-    ...(isTopHost ? [{ label: "Top host", icon: "🎤" }] : []),
-    ...(isEarlyMember ? [{ label: "Early member", icon: "🌱" }] : []),
     ...(isCommunityBuilder ? [{ label: "Community builder", icon: "🤝" }] : []),
   ];
-
-  const ritualBadge = bookings.length >= 5
-    ? { label: "Keeper of the Circle", icon: "🔮" }
-    : bookings.length >= 3
-    ? { label: "Inner Circle", icon: "✨" }
-    : bookings.length >= 1
-    ? { label: "Founding Circle", icon: "🌸" }
-    : null;
 
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: "short", year: "numeric" })
@@ -1221,51 +1212,33 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         )}
 
         {/* Stats */}
-        <div className="flex gap-4 mt-4 pt-4 border-t border-border">
-          <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">{bookings.length}</p>
+        <button
+          onClick={() => setShowYourNomaya(true)}
+          className="w-full flex items-center justify-between mt-4 pt-4 border-t border-border active:opacity-70 transition-opacity"
+        >
+          <div className="text-left">
+            <p className="font-serif text-2xl font-medium text-foreground">{plansAttended}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t("profile.events")}</p>
           </div>
-          <div className="w-px bg-border" />
-          <div className="flex-1 text-center">
-            <p className="font-serif text-2xl font-medium text-foreground">{myCircles.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("profile.circles")}</p>
-          </div>
-        </div>
+          <ChevronRight size={14} className="text-muted-foreground" />
+        </button>
 
         {/* Badges */}
-        {(ritualBadge || isFoundingMember || recognitionBadges.length > 0) && (
-          <button
-            onClick={() => setShowBadgeModal(true)}
-            className="mt-4 pt-4 border-t border-border w-full text-left active:opacity-80"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                {lang === 'es' ? "Insignias" : "Badges"}
-              </p>
-              <ChevronRight size={12} className="text-muted-foreground" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {isFoundingMember && (
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                  style={{ background: "rgba(255,195,30,0.28)", border: "1px solid rgba(255,195,30,0.45)" }}>
-                  🏛️ Founding Member
-                </span>
-              )}
-              {ritualBadge && (
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                  style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.32)" }}>
-                  {ritualBadge.icon} {ritualBadge.label}
-                </span>
-              )}
-              {recognitionBadges.map(b => (
-                <span key={b.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-                  style={{ background: "rgba(255,255,255,0.13)", border: "1px solid rgba(255,255,255,0.22)" }}>
-                  {b.icon} {b.label}
-                </span>
-              ))}
-            </div>
-          </button>
+        {(isFoundingMember || recognitionBadges.length > 0) && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {isFoundingMember && (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-primary"
+                style={{ background: "hsl(252 75% 93%)", border: "1px solid hsl(252 60% 80%)" }}>
+                🏛️ Founding Member
+              </span>
+            )}
+            {recognitionBadges.map(b => (
+              <span key={b.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-foreground"
+                style={{ background: "hsl(252 20% 92%)", border: "1px solid hsl(252 20% 85%)" }}>
+                {b.icon} {b.label}
+              </span>
+            ))}
+          </div>
         )}
 
       </div>
@@ -1499,72 +1472,15 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       )}
 
-      {/* Badge modal */}
-      {showBadgeModal && (() => {
-        const TIERS = [
-          { icon: "🌸", label: "Founding Circle",  perk: "Access to all Nomaya events",          events: 1 },
-          { icon: "✨", label: "Inner Circle",      perk: "Priority booking + 1 guest pass",      events: 3 },
-          { icon: "🔮", label: "Keeper",            perk: "Exclusive circles + Nomaya credits",   events: 5 },
-          { icon: "👁️", label: "Circle Host",       perk: "Host your own Nomaya event",           events: 8 },
-        ];
-        const nextTier = TIERS.find((t) => bookings.length < t.events);
-        const progressPct = nextTier ? Math.round((bookings.length / nextTier.events) * 100) : 100;
-        return (
-          <div className="fixed inset-0 z-[300] flex items-end justify-center">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBadgeModal(false)} />
-            <div className="relative w-full max-w-sm bg-card rounded-t-3xl overflow-y-auto" style={{ maxHeight: "90dvh", paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}>
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mt-4" />
-              <div className="px-6 pt-4 pb-5 text-center border-b border-border">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Your Circle</p>
-                <p className="font-serif text-xl text-foreground leading-snug">The more you show up,<br />the more doors open</p>
-              </div>
-              <div className="px-6 py-4 border-b border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Events attended</span>
-                  <span className="text-xs font-medium text-foreground">{bookings.length}{nextTier ? ` / ${nextTier.events}` : ""}</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: "hsl(252 75% 80%)" }} />
-                </div>
-                {nextTier && <p className="text-[10px] text-muted-foreground mt-1.5">{nextTier.events - bookings.length} more to unlock {nextTier.label}</p>}
-              </div>
-              {TIERS.map((tier, i) => {
-                const earned = bookings.length >= tier.events;
-                return (
-                  <div key={tier.label} className={`px-6 py-4 flex items-center gap-4 ${i < TIERS.length - 1 ? "border-b border-border" : ""} ${!earned ? "opacity-45" : ""}`}>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0" style={{ background: earned ? "hsl(252 75% 93%)" : "hsl(252 20% 50% / 0.15)" }}>
-                      {tier.icon}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{tier.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{tier.perk}</p>
-                    </div>
-                    {earned ? (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <Check size={11} className="text-primary-foreground" />
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">{tier.events} events</p>
-                    )}
-                  </div>
-                );
-              })}
-              {isFoundingMember && (
-                <div className="px-6 py-4 border-t border-border flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">🏛️</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">Founding Member</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">You joined Nomaya in the very first cohort.</p>
-                  </div>
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Check size={11} className="text-primary-foreground" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
+      {/* Your Nomaya modal — attendance history, not a progression ladder */}
+      {showYourNomaya && (
+        <YourNomayaModal
+          bookings={bookings}
+          lang={lang}
+          onClose={() => setShowYourNomaya(false)}
+          onGoToEvents={() => onGoToEvents?.()}
+        />
+      )}
 
       {/* Member card modal */}
       {false && showMemberCard && (

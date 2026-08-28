@@ -84,10 +84,16 @@ function AppShell() {
               onSeeAllBookings={() => setShowAllBookings(true)}
             />
           )}
-          {activeTab === "community" && <GrowScreen onOpenCircle={handleOpenCircle} onGoToCircles={() => handleTabChange("groups")} />}
+          {activeTab === "community" && (
+            <GrowScreen
+              onOpenCircle={handleOpenCircle}
+              onGoToCircles={() => handleTabChange("groups")}
+              onGoToEvents={() => handleTabChange("events")}
+            />
+          )}
           {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
           {activeTab === "profile" && (
-            <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} />
+            <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} onGoToEvents={() => handleTabChange("events")} />
           )}
           {showAllBookings && (
             <div className="absolute inset-0 z-50 bg-background overflow-y-auto">

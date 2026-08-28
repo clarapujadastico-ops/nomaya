@@ -525,6 +525,7 @@ export interface BookingWithEvent {
   status: 'confirmed' | 'cancelled' | 'waitlisted'
   payment_status: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
   amount_cents_paid: number | null
+  checked_in_at: string | null
   created_at: string
   event: {
     id: string

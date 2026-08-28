@@ -2,21 +2,22 @@ import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import { Copy, Check, ChevronRight } from "lucide-react";
 import { Logo } from "./Logo";
+import { YourNomayaModal } from "./YourNomayaModal";
 import { useProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
-import { useMyCircles } from "@/hooks/useCircles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLang } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import type { BookingWithEvent } from "@/types/database";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getRitualBadge(eventCount: number) {
-  if (eventCount >= 5) return { label: "Keeper of the Circle", icon: "🔮" };
-  if (eventCount >= 3) return { label: "Inner Circle",          icon: "✨" };
-  if (eventCount >= 1) return { label: "Founding Circle",       icon: "🌸" };
-  return null;
+function plansAttendedCount(bookings: BookingWithEvent[]) {
+  return bookings.filter(b => b.checked_in_at).length;
 }
+
+// Feature-gated: set once the private community invite link exists.
+const NOMAYA_COMMUNITY_URL = '';
 
 function getMemberId(profile: any) {
   return profile?.member_number != null
@@ -42,6 +43,8 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
   const memberSince = getMemberSince(profile, lang);
   const displayName = profile?.name && profile.name !== "Member" && profile.name.trim()
     ? profile.name : null;
+  const isFoundingMember = (profile as any)?.badges?.includes?.('founding_member') ?? false;
+  const plansAttended = plansAttendedCount(bookings);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,8 +118,14 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
               <p className="font-serif text-lg text-white">{displayName ?? (lang === 'es' ? 'Miembro' : 'Member')}</p>
             </div>
-            <div className="pt-1 border-t border-white/10">
+            <div className="pt-1 border-t border-white/10 flex items-center justify-between">
               <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
+              {isFoundingMember && <span className="text-[10px] text-white/50 flex-shrink-0 ml-2">🌸 Founding Member</span>}
+            </div>
+            <div className="pt-1 border-t border-white/10">
+              <p className="text-xs text-white/40">
+                {plansAttended} {lang === 'es' ? (plansAttended === 1 ? "plan asistido" : "planes asistidos") : (plansAttended === 1 ? "plan attended" : "plans attended")}
+              </p>
             </div>
           </div>
           {qrDataUrl && (
@@ -154,14 +163,14 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id: string) => void; onGoToCircles?: () => void }) {
+export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOpenCircle?: (id: string) => void; onGoToCircles?: () => void; onGoToEvents?: () => void }) {
   const { user } = useAuth();
   const { lang } = useLang();
   const { data: profile } = useProfile();
   const { data: bookings = [] } = useBookings();
-  const { data: myCircles = [] } = useMyCircles();
 
   const [showMemberCard, setShowMemberCard] = useState(false);
+  const [showYourNomaya, setShowYourNomaya] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
   // Feedback state
@@ -171,7 +180,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Derived values
-  const ritualBadge = getRitualBadge(bookings.length);
+  const plansAttended = plansAttendedCount(bookings);
   const isFoundingMember = (profile as any)?.badges?.includes?.('founding_member') ?? false;
   const memberId = getMemberId(profile);
   const memberSince = getMemberSince(profile, lang);
@@ -249,25 +258,27 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
 
         {/* ── YOUR PLACE ─────────────────────────────────────── */}
         <div className="bg-card rounded-2xl shadow-soft overflow-hidden">
-          <div className="px-5 pt-5 pb-4 border-b border-white/10 text-center space-y-1">
-            <p className="text-3xl">{ritualBadge?.icon ?? "🌸"}</p>
-            <p className="font-serif text-xl font-medium text-foreground">{ritualBadge?.label ?? "Founding Circle"}</p>
+          <button
+            onClick={() => setShowYourNomaya(true)}
+            className="w-full px-5 pt-5 pb-4 border-b border-white/10 text-center space-y-1 active:opacity-70 transition-opacity"
+          >
             {isFoundingMember && (
-              <span className="inline-block text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(255,195,30,0.18)", color: "rgba(255,195,30,0.9)", border: "1px solid rgba(255,195,30,0.3)" }}>
-                🏛️ Founding Member
-              </span>
+              <>
+                <p className="text-3xl">🌸</p>
+                <p className="font-serif text-xl font-medium text-foreground">
+                  {lang === 'es' ? "Miembro fundadora" : "Founding Member"}
+                </p>
+              </>
             )}
             <p className="text-xs text-muted-foreground">
               {lang === 'es' ? `Miembro desde ${memberSince}` : `Member since ${memberSince}`}
             </p>
-          </div>
+          </button>
 
-          <div className="grid grid-cols-3 divide-x divide-white/10">
+          <div className="grid grid-cols-2 divide-x divide-white/10">
             {[
-              { label: lang === 'es' ? "Eventos" : "Events", value: bookings.length },
-              { label: lang === 'es' ? "Círculos" : "Circles", value: myCircles.length },
-              { label: "Credits", value: `€${((profile?.credits_cents ?? 0) / 100).toFixed(2)}` },
+              { label: lang === 'es' ? "Planes asistidos" : "Plans attended", value: plansAttended },
+              { label: "Nomaya Credit", value: `€${((profile?.credits_cents ?? 0) / 100).toFixed(2)}` },
             ].map(({ label, value }) => (
               <div key={label} className="py-4 text-center">
                 <p className="font-serif text-xl font-medium text-foreground">{value}</p>
@@ -298,6 +309,34 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
             <ChevronRight size={14} className="text-muted-foreground" />
           </button>
         </div>
+
+        {/* ── COMMUNITY ACCESS — unlocked by real attendance, not signup/booking/referral (2026-08-28) ── */}
+        {plansAttended >= 1 && (
+          <div className="bg-card rounded-2xl shadow-soft px-5 py-5 space-y-3">
+            <h2 className="font-serif text-lg font-medium text-foreground leading-snug">
+              {lang === 'es' ? "Bienvenida a la comunidad 💜" : "Welcome to the community 💜"}
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {lang === 'es'
+                ? "Ya viniste a tu primer plan Nomaya. Ahora puedes unirte a nuestra comunidad privada y seguir en contacto más allá de los planes."
+                : "You came to your first Nomaya plan. Now you can join our private community and stay connected beyond the plans."}
+            </p>
+            {NOMAYA_COMMUNITY_URL ? (
+              <a
+                href={NOMAYA_COMMUNITY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center py-3 rounded-2xl gradient-cta text-white font-medium text-sm"
+              >
+                {lang === 'es' ? "Únete a la comunidad Nomaya" : "Join the Nomaya community"}
+              </a>
+            ) : (
+              <p className="text-[11px] text-muted-foreground italic">
+                {lang === 'es' ? "Muy pronto." : "Coming soon."}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── INVITE (social only, deliberately no points/tiers/money — 2026-08-28) ── */}
         <div className="bg-card rounded-2xl shadow-soft px-5 py-5 space-y-4">
@@ -424,6 +463,14 @@ export function GrowScreen({ onOpenCircle, onGoToCircles }: { onOpenCircle?: (id
       </div>
 
       {showMemberCard && <MemberCardModal onClose={() => setShowMemberCard(false)} />}
+      {showYourNomaya && (
+        <YourNomayaModal
+          bookings={bookings}
+          lang={lang}
+          onClose={() => setShowYourNomaya(false)}
+          onGoToEvents={() => onGoToEvents?.()}
+        />
+      )}
     </div>
   );
 }

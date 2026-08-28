@@ -16,6 +16,7 @@ export function useBookings() {
           status,
           payment_status,
           amount_cents_paid,
+          checked_in_at,
           created_at,
           event:events (
             id,
