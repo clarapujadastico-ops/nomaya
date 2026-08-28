@@ -11,13 +11,13 @@ export interface AttendeeBooking {
 }
 
 /** Confirmed bookings for one event, with attendee profile info — for the admin check-in list */
-export function useEventAttendees(eventId: string | null) {
+export function useAdminEventAttendees(eventId: string | null) {
   return useQuery({
-    queryKey: ['event_attendees', eventId],
+    queryKey: ['admin_event_attendees', eventId],
     queryFn: async (): Promise<AttendeeBooking[]> => {
       const { data, error } = await supabase
         .from('bookings')
-        .select('id, user_id, status, checked_in_at, profile:profiles(id, name, avatar_url)')
+        .select('id, user_id, status, checked_in_at, profile:profiles!bookings_user_id_fkey(id, name, avatar_url)')
         .eq('event_id', eventId!)
         .eq('status', 'confirmed')
         .order('checked_in_at', { ascending: true, nullsFirst: true })
@@ -50,7 +50,7 @@ export function useCheckInAttendee() {
       if (targetBookingId) {
         const { data: booking, error: findError } = await supabase
           .from('bookings')
-          .select('id, checked_in_at, profile:profiles(name)')
+          .select('id, checked_in_at, profile:profiles!bookings_user_id_fkey(name)')
           .eq('id', targetBookingId)
           .single()
         if (findError) throw findError
@@ -60,7 +60,7 @@ export function useCheckInAttendee() {
         if (!memberId) throw new Error('No booking or member specified')
         const { data: booking, error: findError } = await supabase
           .from('bookings')
-          .select('id, checked_in_at, profile:profiles(name)')
+          .select('id, checked_in_at, profile:profiles!bookings_user_id_fkey(name)')
           .eq('event_id', eventId)
           .eq('user_id', memberId)
           .eq('status', 'confirmed')
@@ -78,14 +78,14 @@ export function useCheckInAttendee() {
         .from('bookings')
         .update({ checked_in_at: new Date().toISOString(), checked_in_by: user.id })
         .eq('id', targetBookingId)
-        .select('id, profile:profiles(name)')
+        .select('id, profile:profiles!bookings_user_id_fkey(name)')
         .single()
       if (error) throw error
 
       return { bookingId: targetBookingId, name: attendeeName || (updated as any)?.profile?.name || '' }
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['event_attendees', variables.eventId] })
+      queryClient.invalidateQueries({ queryKey: ['admin_event_attendees', variables.eventId] })
     },
   })
 }

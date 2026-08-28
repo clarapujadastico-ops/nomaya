@@ -3,7 +3,7 @@ import { ArrowLeft, QrCode, ListChecks, Check, Calendar } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import jsQR from "jsqr";
 import { useEvents } from "@/hooks/useEvents";
-import { useEventAttendees, useCheckInAttendee } from "@/hooks/useAdminCheckIn";
+import { useAdminEventAttendees, useCheckInAttendee } from "@/hooks/useAdminCheckIn";
 import { localizedTitle, localizedEventDate } from "@/types/database";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AppEvent } from "@/types/database";
@@ -91,7 +91,7 @@ export function AdminScreen({ onClose }: AdminScreenProps) {
 
 function AdminCheckInScreen({ event, onBack, onClose }: { event: AppEvent; onBack: () => void; onClose: () => void }) {
   const { lang } = useLang();
-  const { data: attendees = [], isLoading } = useEventAttendees(event.id);
+  const { data: attendees = [], isLoading } = useAdminEventAttendees(event.id);
   const { mutate: checkIn, isPending } = useCheckInAttendee();
   const [confirmation, setConfirmation] = useState<{ name: string } | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);

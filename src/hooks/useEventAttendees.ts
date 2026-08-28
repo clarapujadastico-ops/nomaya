@@ -26,7 +26,7 @@ export function useEventAttendees(eventId: string | null) {
     queryFn: async (): Promise<EventAttendee[]> => {
       const { data, error } = await supabase
         .from('bookings')
-        .select('user_id, profile:profiles(name, avatar_url, bio, city, interests, horoscope, instagram_url, favourite_song, favourite_food, badges, age_range, life_stage, birthday)')
+        .select('user_id, profile:profiles!bookings_user_id_fkey(name, avatar_url, bio, city, interests, horoscope, instagram_url, favourite_song, favourite_food, badges, age_range, life_stage, birthday)')
         .eq('event_id', eventId!)
         .eq('status', 'confirmed')
       if (error) throw error
