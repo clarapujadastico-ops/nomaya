@@ -29,6 +29,7 @@ export interface Database {
           referral_code: string | null
           referred_by: string | null
           circle_launch_interest: boolean
+          is_admin: boolean
           created_at: string
         }
         Insert: {
@@ -54,6 +55,7 @@ export interface Database {
           referral_code?: string | null
           referred_by?: string | null
           circle_launch_interest?: boolean
+          is_admin?: boolean
           created_at?: string
         }
         Update: {
@@ -77,6 +79,7 @@ export interface Database {
           age_range?: string | null
           life_stage?: string | null
           circle_launch_interest?: boolean
+          is_admin?: boolean
           created_at?: string
         }
       }
@@ -165,6 +168,8 @@ export interface Database {
           stripe_payment_intent_id: string | null
           payment_status: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
           amount_cents_paid: number | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
         }
         Insert: {
@@ -175,6 +180,8 @@ export interface Database {
           stripe_payment_intent_id?: string | null
           payment_status?: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
           amount_cents_paid?: number | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
         }
         Update: {
@@ -185,6 +192,8 @@ export interface Database {
           stripe_payment_intent_id?: string | null
           payment_status?: 'unpaid' | 'succeeded' | 'failed' | 'refunded' | null
           amount_cents_paid?: number | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
         }
       }

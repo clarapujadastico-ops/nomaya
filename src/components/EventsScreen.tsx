@@ -1292,7 +1292,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       <div className="flex-1 min-w-0 text-left py-2">
                         <p className="text-sm font-semibold text-foreground leading-snug truncate">{lang === 'es' && ev.title_es ? ev.title_es : ev.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(ev.date)}</p>
-                        <p className="text-[10px] text-primary mt-1">{t("events.open_chat")} →</p>
+                        <p className="text-[10px] text-primary mt-1">{t("events.open_chat")}</p>
                       </div>
                     </button>
                   );

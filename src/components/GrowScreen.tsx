@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import { Copy, Check, ChevronRight } from "lucide-react";
 import { Logo } from "./Logo";
 import { useProfile } from "@/hooks/useProfile";
@@ -41,6 +42,14 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
   const memberSince = getMemberSince(profile, lang);
   const displayName = profile?.name && profile.name !== "Member" && profile.name.trim()
     ? profile.name : null;
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    QRCode.toDataURL(profile.id, { margin: 1, width: 240, color: { dark: "#1a1428", light: "#ffffff" } })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [profile?.id]);
 
   async function handleAddToWallet() {
     setWalletLoading(true);
@@ -110,6 +119,16 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
               <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
             </div>
           </div>
+          {qrDataUrl && (
+            <div className="px-6 pb-6 flex flex-col items-center gap-2">
+              <div className="bg-white rounded-xl p-3">
+                <img src={qrDataUrl} alt="QR" className="w-32 h-32" />
+              </div>
+              <p className="text-[10px] tracking-[0.15em] uppercase text-white/40">
+                {lang === 'es' ? "Muestra este código para hacer check-in" : "Show this code to check in"}
+              </p>
+            </div>
+          )}
         </div>
         <button
           onClick={handleAddToWallet}

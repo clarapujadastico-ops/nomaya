@@ -95,13 +95,10 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
         : null;
 
     const trip = tripMeta(event);
-    const going = event.totalSpots - event.spotsLeft;
     const subtext = event.isTbc
       ? interestCount > 0 ? `${t("card.join_waitlist")} · ${interestCount} ${t("card.interested")}` : t("card.join_waitlist")
       : event.spotsLeft === 0
       ? t("card.fully_booked")
-      : going > 0
-      ? `${going} ${t("card.going")} · ${event.spotsLeft} ${t("card.spots_left")}`
       : `${event.spotsLeft} ${t("card.spots_left")}`;
 
     return (

@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import {
   ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
-  Sparkles, FileText, ArrowLeft, Settings, LogOut, Copy,
+  Sparkles, FileText, ArrowLeft, Settings, LogOut, Copy, QrCode,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
@@ -13,6 +13,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { useLang } from "@/contexts/LanguageContext";
 import { INTERESTS } from "@/data/mockData";
 import { Logo } from "./Logo";
+import { AdminScreen } from "./AdminScreen";
 import { useFoundingMemberBadge } from "@/hooks/useFoundingMember";
 import { supabase } from "@/lib/supabase";
 
@@ -161,6 +162,7 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showMemberCard, setShowMemberCard] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotificationsSheet, setShowNotificationsSheet] = useState(false);
   const [showSubscriptionSheet, setShowSubscriptionSheet] = useState(false);
@@ -1139,6 +1141,26 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
         </div>
       </div>
 
+      {profile?.is_admin && (
+        <div className="mx-5 mt-4">
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="w-full bg-card rounded-2xl p-4 shadow-soft flex items-center gap-3 border border-primary/30 text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <QrCode size={16} className="text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary">Admin</p>
+              <p className="text-sm font-medium text-foreground leading-snug mt-0.5">
+                {lang === 'es' ? "Check-in de eventos" : "Event check-in"}
+              </p>
+            </div>
+            <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+          </button>
+        </div>
+      )}
+
       {/* Level 1 status — no self-serve verification anymore, Clara reviews profiles by hand */}
       {(profile?.verification_status === "unverified" || profile?.verification_status === "pending") && (
         <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft border border-primary/30">
@@ -1600,6 +1622,8 @@ export function ProfileScreen({ onLogout, onOpenCircle }: ProfileScreenProps) {
           </div>
         </div>
       )}
+
+      {showAdmin && <AdminScreen onClose={() => setShowAdmin(false)} />}
     </div>
   );
 }
