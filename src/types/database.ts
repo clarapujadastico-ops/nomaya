@@ -429,6 +429,7 @@ export interface Database {
           category_color: string | null
           title_es: string | null
           description_es: string | null
+          venue_address: string | null
         }
       }
     }
@@ -516,6 +517,7 @@ export interface AppEvent {
   paymentAtVenue: boolean
   latitude: number | null
   longitude: number | null
+  venueAddress: string | null
 }
 
 /** Booking row with nested event data from Supabase joined query */
@@ -574,6 +576,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     paymentAtVenue: (row as any).payment_at_venue ?? false,
     latitude: row.latitude,
     longitude: row.longitude,
+    venueAddress: row.venue_address,
   }
 }
 
