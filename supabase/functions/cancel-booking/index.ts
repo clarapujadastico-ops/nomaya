@@ -11,14 +11,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { bookingId, userId, choice } = await req.json() as {
+    const { bookingId, choice } = await req.json() as {
       bookingId: string
-      userId: string
       choice: 'refund' | 'credits' | 'none'
     }
 
-    if (!bookingId || !userId) {
-      return new Response(JSON.stringify({ error: 'Missing bookingId or userId' }), {
+    if (!bookingId) {
+      return new Response(JSON.stringify({ error: 'Missing bookingId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -28,6 +27,20 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
+
+    // Never trust a client-supplied userId — a caller could pass any other
+    // booking's id + its owner's userId (both readable via the "confirmed
+    // attendees" policy) and cancel or refund someone else's booking.
+    // Derive the acting user from their own verified session token instead.
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const userId = user.id
 
     // Fetch booking + event
     const { data: booking, error: bookingErr } = await supabase

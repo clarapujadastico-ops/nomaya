@@ -23,10 +23,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { eventId, userId } = await req.json()
-    if (!eventId || !userId) {
+    const { eventId } = await req.json()
+    if (!eventId) {
       return new Response(
-        JSON.stringify({ error: 'eventId and userId are required' }),
+        JSON.stringify({ error: 'eventId is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -36,6 +36,19 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Never trust a client-supplied userId — a caller could pass anyone's id
+    // and have their credits read and deducted. Derive the acting user from
+    // their own verified session token instead.
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const userId = user.id
 
     const [{ data: event, error: eventError }, { data: userProfile }] = await Promise.all([
       supabase.from('events').select('title, price_cents, currency').eq('id', eventId).single(),

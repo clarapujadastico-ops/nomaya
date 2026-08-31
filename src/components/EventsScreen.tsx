@@ -786,16 +786,17 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 // Paid event — fetch PaymentIntent then show web card form
                 setIsProcessingPayment(true);
                 try {
+                  const { data: { session } } = await supabase.auth.getSession();
                   const fnRes = await fetch(
                     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
                     {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                        'Authorization': `Bearer ${session?.access_token}`,
                         'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
                       },
-                      body: JSON.stringify({ eventId: selectedEvent, userId: user?.id }),
+                      body: JSON.stringify({ eventId: selectedEvent }),
                     }
                   );
 

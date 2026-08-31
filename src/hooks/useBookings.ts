@@ -128,16 +128,17 @@ export function useCancelBooking() {
 
       // Paid bookings: try edge function for refund/credits handling
       try {
+        const { data: { session } } = await supabase.auth.getSession()
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': `Bearer ${session?.access_token}`,
               'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             },
-            body: JSON.stringify({ bookingId, userId: user!.id, choice }),
+            body: JSON.stringify({ bookingId, choice }),
           }
         )
         const data = await res.json()
