@@ -20,18 +20,25 @@ export function useMyCircleInvitations() {
     queryKey: ['circle_invitations', 'mine', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: invitations, error } = await supabase
         .from('circle_invitations')
         .select(`
           id, circle_id, invited_user_id, invited_by, status, created_at,
-          circle:circles(name, cover_url, category_id),
-          inviter:profiles!invited_by(name, avatar_url)
+          circle:circles(name, cover_url, category_id)
         `)
         .eq('invited_user_id', user!.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as unknown as CircleInvitation[];
+      if (!invitations || invitations.length === 0) return [];
+
+      const { data: inviters } = await supabase
+        .from('profiles_public')
+        .select('id, name, avatar_url')
+        .in('id', invitations.map((i: any) => i.invited_by));
+      const byId = new Map((inviters ?? []).map(p => [p.id, p]));
+
+      return invitations.map((i: any) => ({ ...i, inviter: byId.get(i.invited_by) ?? null })) as unknown as CircleInvitation[];
     },
   });
 }
@@ -82,7 +89,7 @@ export function useSearchUsers(query: string, circleId: string) {
       ];
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('id, name, avatar_url, city')
         .ilike('name', `%${query.trim()}%`)
         .limit(10);

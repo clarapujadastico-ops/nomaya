@@ -19,8 +19,6 @@ export function useConnections() {
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async (): Promise<Connection[]> => {
-      const profileFields = 'name, avatar_url, bio, city, interests, horoscope, instagram_url, favourite_song, favourite_food, badges, age_range, life_stage, birthday'
-
       const [{ data: myCircles }, { data: myBookings }] = await Promise.all([
         supabase.from('circle_memberships').select('circle_id, circles(name)').eq('user_id', user!.id),
         supabase.from('bookings').select('event_id, events(title)').eq('user_id', user!.id).eq('status', 'confirmed'),
@@ -33,29 +31,45 @@ export function useConnections() {
         circleIds.length > 0
           ? supabase
               .from('circle_memberships')
-              .select(`user_id, circle_id, circles(id, name), profile:profiles(${profileFields})`)
+              .select('user_id, circle_id, circles(id, name)')
               .in('circle_id', circleIds)
               .neq('user_id', user!.id)
           : Promise.resolve({ data: [] }),
         eventIds.length > 0
           ? supabase
               .from('bookings')
-              .select(`user_id, event_id, events(title), profile:profiles(${profileFields})`)
+              .select('user_id, event_id, events(title)')
               .in('event_id', eventIds)
               .neq('user_id', user!.id)
               .eq('status', 'confirmed')
           : Promise.resolve({ data: [] }),
       ])
 
+      const allUserIds = [
+        ...(circleMembers ?? []).map((m: any) => m.user_id),
+        ...(eventAttendees ?? []).map((a: any) => a.user_id),
+      ]
+
+      // profiles_public only exposes the fields the app actually shows for
+      // other members — not the full profiles row.
+      const { data: profiles } = allUserIds.length > 0
+        ? await supabase
+            .from('profiles_public')
+            .select('id, name, avatar_url, bio, city, interests, horoscope, instagram_url, favourite_song, favourite_food, badges, age_range, life_stage')
+            .in('id', allUserIds)
+        : { data: [] }
+      const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p as MemberProfile]))
+
       const seen = new Set<string>()
       const connections: Connection[] = []
 
       for (const m of (circleMembers ?? []) as any[]) {
-        if (!seen.has(m.user_id) && m.profile) {
+        const profile = profileById.get(m.user_id)
+        if (!seen.has(m.user_id) && profile) {
           seen.add(m.user_id)
           connections.push({
             user_id: m.user_id,
-            profile: m.profile as MemberProfile,
+            profile,
             via: 'circle',
             context: m.circles?.name ?? 'a circle',
             circle_id: m.circle_id,
@@ -64,11 +78,12 @@ export function useConnections() {
       }
 
       for (const a of (eventAttendees ?? []) as any[]) {
-        if (!seen.has(a.user_id) && a.profile) {
+        const profile = profileById.get(a.user_id)
+        if (!seen.has(a.user_id) && profile) {
           seen.add(a.user_id)
           connections.push({
             user_id: a.user_id,
-            profile: a.profile as MemberProfile,
+            profile,
             via: 'event',
             context: a.events?.title ?? 'an event',
             circle_id: null,

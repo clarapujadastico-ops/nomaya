@@ -704,7 +704,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                       const q = e.target.value;
                       setReportUserQuery(q);
                       if (!q.trim()) { setReportUserResults([]); return; }
-                      const { data } = await supabase.from('profiles').select('id, name, avatar_url').ilike('name', `%${q}%`).limit(10);
+                      const { data } = await supabase.from('profiles_public').select('id, name, avatar_url').ilike('name', `%${q}%`).limit(10);
                       setReportUserResults(data ?? []);
                     }}
                     placeholder={lang === 'es' ? "Buscar miembro por nombre…" : "Search member by name…"}

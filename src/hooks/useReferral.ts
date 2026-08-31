@@ -14,7 +14,7 @@ export function useApplyReferral() {
 
       // Find the referrer by their referral_code
       const { data: referrer, error: findError } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('id')
         .eq('referral_code', trimmed)
         .neq('id', user.id)

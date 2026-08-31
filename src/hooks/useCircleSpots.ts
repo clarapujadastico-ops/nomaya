@@ -30,12 +30,22 @@ export function useCircleSpots(circleId: string) {
     queryFn: async () => {
       const { data: spots, error } = await supabase
         .from("circle_spots")
-        .select("*, circle_spot_votes(user_id), added_by_profile:profiles!added_by(name, avatar_url)")
+        .select("*, circle_spot_votes(user_id)")
         .eq("circle_id", circleId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (spots ?? []).map((s: any) => ({
+      if (!spots || spots.length === 0) return [];
+
+      const adderIds = [...new Set(spots.map((s: any) => s.added_by))];
+      const { data: adders } = await supabase
+        .from("profiles_public")
+        .select("id, name, avatar_url")
+        .in("id", adderIds);
+      const byId = new Map((adders ?? []).map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]));
+
+      return spots.map((s: any) => ({
         ...s,
+        added_by_profile: byId.get(s.added_by) ?? null,
         vote_count: s.circle_spot_votes?.length ?? 0,
         user_voted: s.circle_spot_votes?.some((v: any) => v.user_id === user?.id) ?? false,
       })) as CircleSpot[];
@@ -92,13 +102,22 @@ export function useMyCircleSpots() {
 
       const { data: spots, error: spotsErr } = await supabase
         .from("circle_spots")
-        .select("*, added_by_profile:profiles!added_by(name, avatar_url), circle:circles(name)")
+        .select("*, circle:circles(name)")
         .in("circle_id", circleIds)
         .order("vote_count", { ascending: false });
       if (spotsErr) throw spotsErr;
+      if (!spots || spots.length === 0) return [];
 
-      return (spots ?? []).map((s: any) => ({
+      const adderIds = [...new Set(spots.map((s: any) => s.added_by))];
+      const { data: adders } = await supabase
+        .from("profiles_public")
+        .select("id, name, avatar_url")
+        .in("id", adderIds);
+      const byId = new Map((adders ?? []).map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]));
+
+      return spots.map((s: any) => ({
         ...s,
+        added_by_profile: byId.get(s.added_by) ?? null,
         vote_count: s.vote_count ?? 0,
         user_voted: false,
         circle_name: s.circle?.name ?? "",

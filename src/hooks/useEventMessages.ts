@@ -19,13 +19,22 @@ export function useEventMessages(eventId: string | null) {
   return useQuery({
     queryKey: ["event_messages", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from("event_messages")
-        .select("*, sender:profiles!user_id(name, avatar_url)")
+        .select("id, event_id, user_id, content, created_at")
         .eq("event_id", eventId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as EventMessage[];
+      if (!messages || messages.length === 0) return [];
+
+      const senderIds = [...new Set(messages.map((m) => m.user_id))];
+      const { data: senders } = await supabase
+        .from("profiles_public")
+        .select("id, name, avatar_url")
+        .in("id", senderIds);
+      const byId = new Map((senders ?? []).map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]));
+
+      return messages.map((m) => ({ ...m, sender: byId.get(m.user_id) })) as EventMessage[];
     },
     enabled: !!eventId,
     refetchInterval: 5000,

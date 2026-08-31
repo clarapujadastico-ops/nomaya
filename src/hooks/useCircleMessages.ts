@@ -38,26 +38,28 @@ export function useCircleMessages(circleId: string | null) {
   return useQuery({
     queryKey: ['circle_messages', circleId],
     queryFn: async (): Promise<CircleMessage[]> => {
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from('circle_messages')
-        .select('*, sender:profiles!circle_messages_user_id_fkey(name, avatar_url)')
+        .select('id, circle_id, user_id, content, created_at')
         .eq('circle_id', circleId!)
         .order('created_at', { ascending: true })
       if (error) throw error
-      return (data ?? []).map((row: {
-        id: string
-        circle_id: string
-        user_id: string
-        content: string
-        created_at: string
-        sender: { name: string; avatar_url: string | null } | null
-      }) => ({
+      if (!messages || messages.length === 0) return []
+
+      const senderIds = [...new Set(messages.map(m => m.user_id))]
+      const { data: senders } = await supabase
+        .from('profiles_public')
+        .select('id, name, avatar_url')
+        .in('id', senderIds)
+      const byId = new Map((senders ?? []).map(p => [p.id, { name: p.name, avatar_url: p.avatar_url }]))
+
+      return messages.map(row => ({
         id: row.id,
         circle_id: row.circle_id,
         user_id: row.user_id,
         content: row.content,
         created_at: row.created_at,
-        sender: row.sender,
+        sender: byId.get(row.user_id) ?? null,
       }))
     },
     enabled: !!circleId,

@@ -200,14 +200,22 @@ export function useCircleJoinRequests(circleId: string | null) {
   return useQuery({
     queryKey: ['join_requests', 'circle', circleId],
     queryFn: async (): Promise<JoinRequest[]> => {
-      const { data, error } = await supabase
+      const { data: requests, error } = await supabase
         .from('circle_join_requests')
-        .select('id, circle_id, user_id, message, status, created_at, profile:profiles ( name, avatar_url, bio, city )')
+        .select('id, circle_id, user_id, message, status, created_at')
         .eq('circle_id', circleId!)
         .eq('status', 'pending')
         .order('created_at', { ascending: true })
       if (error) throw error
-      return (data ?? []) as JoinRequest[]
+      if (!requests || requests.length === 0) return []
+
+      const { data: profiles } = await supabase
+        .from('profiles_public')
+        .select('id, name, avatar_url, bio, city')
+        .in('id', requests.map(r => r.user_id))
+      const byId = new Map((profiles ?? []).map(p => [p.id, p]))
+
+      return requests.map(r => ({ ...r, profile: byId.get(r.user_id) ?? null })) as JoinRequest[]
     },
     enabled: !!circleId,
   })
