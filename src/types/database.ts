@@ -553,7 +553,7 @@ function formatDate(dateStr: string): string {
 function formatPrice(priceCents: number, currency: string): string {
   if (priceCents === 0) return 'Free'
   const symbol = currency === 'EUR' ? '€' : currency
-  return `${symbol}${Math.round(priceCents / 100)}`
+  return `${Math.round(priceCents / 100)}${symbol}`
 }
 
 export function toAppEvent(row: EventRow): AppEvent {

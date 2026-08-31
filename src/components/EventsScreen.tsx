@@ -704,7 +704,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
 
           <div className="bg-card rounded-2xl p-4 shadow-soft">
             <h3 className="font-serif text-lg font-medium text-foreground mb-2">{t("event.about")}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
               {localizedDescription(event, lang) || `A carefully curated gathering for women who share a love of ${event.category.toLowerCase()}. Small group of max ${event.totalSpots} participants. Come as you are. Leave feeling connected.`}
             </p>
           </div>
