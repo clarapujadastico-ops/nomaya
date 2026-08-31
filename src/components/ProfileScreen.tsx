@@ -1152,14 +1152,13 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
         </div>
       )}
 
-      {/* Level 1 status — no self-serve verification anymore, Clara reviews profiles by hand */}
+      {/* Verification status — no self-serve verification anymore, Clara reviews profiles by hand */}
       {(profile?.verification_status === "unverified" || profile?.verification_status === "pending") && (
         <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft border border-primary/30">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-lg">⏳</div>
             <div className="flex-1">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("profile.level1_label")}</p>
-              <p className="text-sm font-medium text-foreground leading-snug mt-0.5">{t("profile.level1_pending_title")}</p>
+              <p className="text-base font-semibold text-foreground leading-snug">{t("profile.level1_pending_title")}</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed mt-2">{t("profile.level1_pending_body")}</p>
@@ -1171,8 +1170,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
 
       {profile?.verification_status === "verified" && (
         <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft border border-primary/20">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("profile.level1_label")}</p>
-          <p className="text-sm font-medium text-foreground leading-snug mt-0.5">{t("profile.level1_verified_title")}</p>
+          <p className="text-base font-semibold text-foreground leading-snug">{t("profile.level1_verified_title")}</p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Check size={12} className="text-primary" /> {t("profile.level1_review")}</span>
           </div>
