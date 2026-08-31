@@ -1031,16 +1031,15 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
         const hasExact = event.latitude != null || venueOverride != null;
         const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
-        // Only offer directions once we know a specific place — a bare city
-        // name is too vague for Google's geocoder and can resolve to an
-        // unrelated nearby business instead of a neutral area.
-        const mapsDestination = event.venueName ?? event.venueAddress ?? venueOverride?.name ?? null;
-        // Google's dir API reliably computes a route from the user's current
-        // location — Apple's daddr link only works when launched natively
-        // (e.g. tapped in Safari directly), not when opened from inside the
-        // app, where it lands on the maps.apple.com website with a dead
-        // "Directions" panel instead of an actual route.
-        const mapsUrl = mapsDestination ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsDestination)}` : null;
+        // Only offer directions once we know a specific place. Destination is
+        // the raw coordinates, not the venue name/address as text — a text
+        // destination goes through Google's own search/autocomplete, which
+        // factors in the viewer's account history and location and can
+        // resolve to a completely unrelated place with no way for us to
+        // control or predict it. Coordinates are a fixed point: no search,
+        // no ambiguity, no dependence on what Google (or the user's account)
+        // thinks is the "best match" for a name.
+        const mapsUrl = hasExact ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : null;
 
         async function addToCalendar() {
           const date = event.rawDate ?? "";
