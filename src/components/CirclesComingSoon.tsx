@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sparkles, Check } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useCircleInterestSignups, useSignalCircleInterest } from "@/hooks/useCircleInterest";
 
 const EVENTS_BUCKET = "https://jtoftrghfwdffrkqejlq.supabase.co/storage/v1/object/public/Events";
 
@@ -27,6 +28,8 @@ export function CirclesComingSoon() {
   const { t } = useLang();
   const { data: profile } = useProfile();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
+  const { data: interestedCircles = [] } = useCircleInterestSignups();
+  const { mutate: signalCircleInterest, isPending: isSignalling } = useSignalCircleInterest();
   const [error, setError] = useState<string | null>(null);
   const alreadyInterested = profile?.circle_launch_interest ?? false;
 
@@ -36,6 +39,11 @@ export function CirclesComingSoon() {
       { circle_launch_interest: true },
       { onError: (e) => setError(e.message) }
     );
+  }
+
+  function handleCircleInterest(circleName: string) {
+    setError(null);
+    signalCircleInterest(circleName, { onError: (e) => setError(e.message) });
   }
 
   return (
@@ -68,30 +76,41 @@ export function CirclesComingSoon() {
       </div>
 
       {/* Preview cards — clearly illustrative, not real circles. Tapping one
-          leads to the same notify-me action, since there's nothing else to
-          open yet — better than doing nothing when tapped. */}
+          registers interest in that specific circle (circle_interest table),
+          so whoever gets notified when it launches is targeted, not just
+          "someone tapped something". */}
       <div className="space-y-2.5 mb-6">
-        {PREVIEW_CIRCLES.map((c) => (
-          <button
-            key={c.name}
-            onClick={handleNotifyMe}
-            disabled={isPending || alreadyInterested}
-            className="w-full flex items-center gap-3 bg-card rounded-2xl p-3.5 border border-dashed border-border text-left transition-transform active:scale-[0.98] disabled:opacity-70"
-          >
-            <img
-              src={c.image}
-              alt={c.name}
-              className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-              <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{c.tagline}</p>
-            </div>
-            <span className="text-[9px] font-semibold tracking-wide uppercase text-nomaya-gold flex-shrink-0 self-start mt-0.5">
-              {t("circles.coming_soon_badge")}
-            </span>
-          </button>
-        ))}
+        {PREVIEW_CIRCLES.map((c) => {
+          const isInterested = interestedCircles.includes(c.name);
+          return (
+            <button
+              key={c.name}
+              onClick={() => !isInterested && handleCircleInterest(c.name)}
+              disabled={isSignalling || isInterested}
+              className="w-full flex items-center gap-3 bg-card rounded-2xl p-3.5 border border-dashed border-border text-left transition-transform active:scale-[0.98] disabled:opacity-100"
+            >
+              <img
+                src={c.image}
+                alt={c.name}
+                className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{c.tagline}</p>
+              </div>
+              {isInterested ? (
+                <span className="flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase text-nomaya-rose flex-shrink-0 self-start mt-0.5">
+                  <Check size={11} />
+                  {t("circles.interested")}
+                </span>
+              ) : (
+                <span className="text-[9px] font-semibold tracking-wide uppercase text-nomaya-gold flex-shrink-0 self-start mt-0.5">
+                  {t("circles.coming_soon_badge")}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Notify me */}

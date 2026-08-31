@@ -150,6 +150,7 @@ export const translations: TranslationMap = {
 
   // Circles — coming soon teaser (launch gate)
   "circles.coming_soon_badge":  { en: "COMING SOON", es: "PRÓXIMAMENTE" },
+  "circles.interested":         { en: "NOTIFIED", es: "AVISADA" },
   "circles.find_title":         { en: "Find your circle", es: "Encuentra tu círculo" },
   "circles.find_body":          { en: "Soon you'll be able to create and join small groups of women around shared interests, hobbies and plans.", es: "Muy pronto podrás crear y unirte a pequeños grupos de mujeres alrededor de intereses, hobbies y planes compartidos." },
   "circles.tag_running":        { en: "Running",  es: "Running" },
