@@ -6,13 +6,19 @@ import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 const EVENTS_BUCKET = "https://jtoftrghfwdffrkqejlq.supabase.co/storage/v1/object/public/Events";
 
 // Illustrative-only previews of what circles could look like — never real
-// data. Names stay the same in both languages, like brand names. Reusing
-// real photos already uploaded for the matching September events, rather
-// than sourcing new stock images.
+// data. Names and taglines stay the same in both languages, like brand
+// copy, matching the English-only pattern already used for event
+// title/description internals elsewhere in the app.
 const PREVIEW_CIRCLES = [
-  { name: "Running Girls", image: `${EVENTS_BUCKET}/running-club.jpg` },
-  { name: "Book Lovers", image: `${EVENTS_BUCKET}/book-club-gelato.jpg` },
-  { name: "Creative Girls", image: `${EVENTS_BUCKET}/ceramics.JPG` },
+  { name: "Running Club", tagline: "For girls who love a good run — and even better company.", image: `${EVENTS_BUCKET}/circle-running-club.jpg` },
+  { name: "Book Club", tagline: "For book lovers looking for their next read and someone to talk about it with.", image: `${EVENTS_BUCKET}/circle-book-club.jpg` },
+  { name: "Creative Girls", tagline: "A space to create, share ideas and find inspiration together.", image: `${EVENTS_BUCKET}/circle-creative-girls.jpg` },
+  { name: "Art Lovers", tagline: "For gallery dates, exhibitions and girls who can never get enough art.", image: `${EVENTS_BUCKET}/circle-art-lovers.jpg` },
+  { name: "Wander Club", tagline: "For girls who are always dreaming about — or planning — their next trip.", image: `${EVENTS_BUCKET}/circle-wander-club.jpg` },
+  { name: "Digital Nomads", tagline: "For girls working from anywhere and looking for community along the way.", image: `${EVENTS_BUCKET}/circle-digital-nomads.jpg` },
+  { name: "New Mums", tagline: "A space to connect with other mums navigating this new chapter together.", image: `${EVENTS_BUCKET}/circle-new-mums.jpg` },
+  { name: "Yoga Girls", tagline: "For girls who love yoga, from first flows to everyday yogis.", image: `${EVENTS_BUCKET}/circle-yoga-girls.jpg` },
+  { name: "Foodies", tagline: "For girls who are always saving restaurants and planning where to eat next.", image: `${EVENTS_BUCKET}/circle-foodies.jpg` },
 ];
 
 const TAG_KEYS = ["circles.tag_running", "circles.tag_books", "circles.tag_yoga", "circles.tag_art", "circles.tag_travel", "circles.tag_foodies"];
@@ -75,13 +81,13 @@ export function CirclesComingSoon() {
             <img
               src={c.image}
               alt={c.name}
-              className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+              className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
-              <p className="text-xs text-muted-foreground">Madrid</p>
+              <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{c.tagline}</p>
             </div>
-            <span className="text-[9px] font-semibold tracking-wide uppercase text-nomaya-gold flex-shrink-0">
+            <span className="text-[9px] font-semibold tracking-wide uppercase text-nomaya-gold flex-shrink-0 self-start mt-0.5">
               {t("circles.coming_soon_badge")}
             </span>
           </button>

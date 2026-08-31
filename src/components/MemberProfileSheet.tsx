@@ -9,9 +9,6 @@ import { INTERESTS, LIFE_STAGES } from "@/data/mockData";
 
 const BADGE_LABELS: Record<string, string> = {
   "founding_member": "🏛️ Founding Member",
-  "ritual_1": "🌸 Founding Circle",
-  "ritual_3": "✨ Inner Circle",
-  "ritual_5": "🔮 Keeper",
 };
 
 interface MemberProfileSheetProps {

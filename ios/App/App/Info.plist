@@ -54,7 +54,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Nomaya needs permission to save photos to your library.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Nomaya needs camera access to take photos for your profile and ID verification.</string>
+	<string>Nomaya needs camera access to take photos for your profile and to scan member QR codes for event check-in.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Nomaya needs microphone access as part of the camera used for ID verification and photos.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
