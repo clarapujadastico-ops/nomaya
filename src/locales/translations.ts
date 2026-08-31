@@ -484,6 +484,7 @@ export const translations: TranslationMap = {
   "onboarding.about_sub":     { en: "Helps us suggest the right events. Never shown publicly.", es: "Nos ayuda a sugerirte los eventos correctos. No se muestra públicamente." },
   "onboarding.age_range":     { en: "Your age range",                               es: "Tu rango de edad" },
   "onboarding.birthdate":     { en: "Your date of birth",                           es: "Tu fecha de nacimiento" },
+  "onboarding.birthdate_placeholder": { en: "Tap to select a date",                 es: "Toca para seleccionar una fecha" },
   "onboarding.birthdate_sub": { en: "Nomaya is an 18+ community. We'll use this to confirm your age.", es: "Nomaya es una comunidad para mayores de 18 años. Lo usaremos para confirmar tu edad." },
   "onboarding.birthdate_under18": { en: "You must be 18 or older to join Nomaya.", es: "Debes tener 18 años o más para unirte a Nomaya." },
   "onboarding.instagram":     { en: "Instagram @ (required)",                       es: "Instagram @ (obligatorio)" },

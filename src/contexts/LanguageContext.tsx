@@ -30,6 +30,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [profile?.language]);
 
+  // Native form controls (e.g. the birthdate picker's month/day wheel) pick
+  // their locale from the document's lang, not our in-app language state —
+  // without this they always render in the device's system language.
+  useEffect(() => {
+    document.documentElement.lang = lang === "es" ? "es-ES" : "en-US";
+  }, [lang]);
+
   function setLang(l: Lang) {
     setLangState(l);
     localStorage.setItem("nomaya_lang", l);

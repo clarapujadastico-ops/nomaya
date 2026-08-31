@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift } from "lucide-react";
+import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift, Calendar } from "lucide-react";
 import { INTERESTS, LIFE_STAGES } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -404,13 +404,21 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">{t("onboarding.birthdate")}</p>
             <p className="text-xs text-muted-foreground mb-3">{t("onboarding.birthdate_sub")}</p>
-            <input
-              type="date"
-              value={birthdate}
-              max={today}
-              onChange={(e) => setBirthdate(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
-            />
+            <div className="relative">
+              <input
+                type="date"
+                value={birthdate}
+                max={today}
+                onChange={(e) => setBirthdate(e.target.value)}
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 transition"
+              />
+              <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              {!birthdate && (
+                <span className="absolute left-11 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                  {t("onboarding.birthdate_placeholder")}
+                </span>
+              )}
+            </div>
             {isUnderage && (
               <p className="text-xs text-destructive mt-2">{t("onboarding.birthdate_under18")}</p>
             )}
@@ -528,7 +536,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
                   onClick={() => setProfile((p) => ({ ...p, city }))}
                   className={`py-3.5 rounded-xl border text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
                     profile.city === city
-                      ? "border-primary bg-primary/20 text-foreground"
+                      ? "border-nomaya-purple bg-nomaya-purple/15 text-foreground"
                       : "border-input bg-card text-muted-foreground"
                   }`}
                 >
