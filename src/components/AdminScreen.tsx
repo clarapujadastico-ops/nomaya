@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ArrowLeft, QrCode, ListChecks, Check, Calendar } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import jsQR from "jsqr";
@@ -95,6 +95,11 @@ function AdminCheckInScreen({ event, onBack, onClose }: { event: AppEvent; onBac
   const { mutate: checkIn, isPending } = useCheckInAttendee();
   const [confirmation, setConfirmation] = useState<{ name: string } | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  function scrollToList() {
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   async function handleScan() {
     setScanError(null);
@@ -159,20 +164,23 @@ function AdminCheckInScreen({ event, onBack, onClose }: { event: AppEvent; onBac
           <QrCode size={20} />
           {lang === 'es' ? "Escanear QR" : "Scan QR"}
         </button>
-        <div className="py-4 rounded-2xl bg-card border border-border text-foreground font-medium text-sm flex flex-col items-center gap-1.5">
+        <button
+          onClick={scrollToList}
+          className="py-4 rounded-2xl bg-card border border-border text-foreground font-medium text-sm flex flex-col items-center gap-1.5 active:opacity-70"
+        >
           <ListChecks size={20} className="text-muted-foreground" />
           {lang === 'es' ? "Check-in manual" : "Check in manually"}
-        </div>
+        </button>
       </div>
       <p className="text-xs text-muted-foreground text-center mt-2 px-5">
-        {lang === 'es' ? "O toca a alguien en la lista de abajo." : "Or tap someone in the list below."}
+        {lang === 'es' ? "Toca a alguien en la lista de abajo para registrarla." : "Tap someone in the list below to check them in."}
       </p>
 
       {scanError && (
         <p className="mx-5 mt-3 text-xs text-destructive text-center">{scanError}</p>
       )}
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+      <div ref={listRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
         {isLoading && <p className="text-sm text-muted-foreground text-center py-8">{lang === 'es' ? "Cargando…" : "Loading…"}</p>}
         {!isLoading && attendees.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">{lang === 'es' ? "Nadie reservado todavía." : "No one booked yet."}</p>
