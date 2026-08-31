@@ -1024,20 +1024,23 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           "yoga":      { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
           "longevity": { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
         };
-        const venueKey = Object.keys(VENUE_OVERRIDES).find(k => event.title.toLowerCase().includes(k));
+        const venueKey = event.city === "Madrid" ? Object.keys(VENUE_OVERRIDES).find(k => event.title.toLowerCase().includes(k)) : undefined;
         const venueOverride = event.latitude == null && venueKey ? VENUE_OVERRIDES[venueKey] : null;
 
         const lat = event.latitude ?? venueOverride?.lat ?? 40.4168;
         const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
         const hasExact = event.latitude != null || venueOverride != null;
         const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
-        const mapsDestination = event.venueName ?? event.venueAddress ?? (hasExact ? event.title : event.city);
+        // Only offer directions once we know a specific place — a bare city
+        // name is too vague for Google's geocoder and can resolve to an
+        // unrelated nearby business instead of a neutral area.
+        const mapsDestination = event.venueName ?? event.venueAddress ?? venueOverride?.name ?? null;
         // Google's dir API reliably computes a route from the user's current
         // location — Apple's daddr link only works when launched natively
         // (e.g. tapped in Safari directly), not when opened from inside the
         // app, where it lands on the maps.apple.com website with a dead
         // "Directions" panel instead of an actual route.
-        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsDestination)}`;
+        const mapsUrl = mapsDestination ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsDestination)}` : null;
 
         async function addToCalendar() {
           const date = event.rawDate ?? "";
@@ -1113,16 +1116,17 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                     <p className="text-sm font-semibold text-foreground">{event.venueName}</p>
                   )}
                   <p className={event.venueName ? "text-xs text-muted-foreground mt-0.5" : "text-sm font-medium text-foreground"}>{locationLabel}</p>
-                  {event.latitude == null && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{t("event.exact_address")}</p>
+                  {!mapsUrl && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{t("event.address_pending")}</p>
                   )}
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => window.open(mapsUrl, "_blank")}
-                    className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium"
+                    onClick={() => mapsUrl && window.open(mapsUrl, "_blank")}
+                    disabled={!mapsUrl}
+                    className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium disabled:opacity-40"
                   >
-                    {t("event.open_maps")}
+                    {mapsUrl ? t("event.open_maps") : t("event.address_pending")}
                   </button>
                   <button
                     onClick={addToCalendar}
