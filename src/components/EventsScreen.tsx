@@ -1031,7 +1031,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
         const hasExact = event.latitude != null || venueOverride != null;
         const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
-        const mapsUrl = `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(hasExact ? event.title : event.city)}`;
+        const mapsQuery = event.venueName ?? (hasExact ? event.title : event.city);
+        const mapsUrl = `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(mapsQuery)}`;
 
         async function addToCalendar() {
           const date = event.rawDate ?? "";
@@ -1103,7 +1104,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               <div className="px-5 py-4 space-y-3">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-muted-foreground mb-0.5">{t("event.location")}</p>
-                  <p className="text-sm font-medium text-foreground">{locationLabel}</p>
+                  {event.venueName && (
+                    <p className="text-sm font-semibold text-foreground">{event.venueName}</p>
+                  )}
+                  <p className={event.venueName ? "text-xs text-muted-foreground mt-0.5" : "text-sm font-medium text-foreground"}>{locationLabel}</p>
                   {event.latitude == null && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">{t("event.exact_address")}</p>
                   )}

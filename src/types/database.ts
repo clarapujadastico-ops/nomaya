@@ -430,6 +430,7 @@ export interface Database {
           title_es: string | null
           description_es: string | null
           venue_address: string | null
+          venue_name: string | null
         }
       }
     }
@@ -518,6 +519,7 @@ export interface AppEvent {
   latitude: number | null
   longitude: number | null
   venueAddress: string | null
+  venueName: string | null
 }
 
 /** Booking row with nested event data from Supabase joined query */
@@ -577,6 +579,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     latitude: row.latitude,
     longitude: row.longitude,
     venueAddress: row.venue_address,
+    venueName: row.venue_name,
   }
 }
 
