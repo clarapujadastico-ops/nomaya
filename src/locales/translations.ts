@@ -68,7 +68,7 @@ export const translations: TranslationMap = {
   "event.refund_initiated":     { en: "refund initiated", es: "reembolso iniciado" },
   "event.reservation_cancelled": { en: "Reservation cancelled", es: "Reserva cancelada" },
   "event.exact_address":        { en: "Exact address shared after booking confirmation", es: "La dirección exacta se comparte tras confirmar la reserva" },
-  "event.open_maps":            { en: "📍 Open in Maps", es: "📍 Abrir en Mapas" },
+  "event.open_maps":            { en: "📍 Get directions", es: "📍 Cómo llegar" },
   "event.add_calendar":         { en: "📅 Add to Calendar", es: "📅 Añadir al calendario" },
   "event.loading":              { en: "Loading event…", es: "Cargando evento…" },
   "events.your_bookings": { en: "Your bookings", es: "Tus reservas" },

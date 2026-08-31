@@ -1032,9 +1032,12 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const hasExact = event.latitude != null || venueOverride != null;
         const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
         const mapsDestination = event.venueName ?? event.venueAddress ?? (hasExact ? event.title : event.city);
-        // daddr (not q) puts Maps straight into "Directions" mode with a route
-        // from the user's current location, instead of a static search result.
-        const mapsUrl = `https://maps.apple.com/?daddr=${encodeURIComponent(mapsDestination)}`;
+        // Google's dir API reliably computes a route from the user's current
+        // location — Apple's daddr link only works when launched natively
+        // (e.g. tapped in Safari directly), not when opened from inside the
+        // app, where it lands on the maps.apple.com website with a dead
+        // "Directions" panel instead of an actual route.
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsDestination)}`;
 
         async function addToCalendar() {
           const date = event.rawDate ?? "";
