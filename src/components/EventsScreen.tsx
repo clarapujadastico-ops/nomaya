@@ -1031,7 +1031,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
         const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
         const hasExact = event.latitude != null || venueOverride != null;
         const locationLabel = event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid");
-        const mapsUrl = `maps://?ll=${lat},${lng}&q=${encodeURIComponent(hasExact ? event.title : event.city)}`;
+        const mapsUrl = `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(hasExact ? event.title : event.city)}`;
 
         async function addToCalendar() {
           const date = event.rawDate ?? "";
