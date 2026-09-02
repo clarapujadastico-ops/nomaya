@@ -44,7 +44,7 @@ export const translations: TranslationMap = {
   "event.date_tbc":             { en: "Date & details to be confirmed", es: "Fecha y detalles por confirmar" },
   "event.when":                 { en: "When",         es: "Cuándo" },
   "event.spots_left_label":     { en: "Spots left",   es: "Plazas libres" },
-  "event.price_at_venue":       { en: "Price · at venue", es: "Precio · en el lugar" },
+  "event.price_at_venue":       { en: "Paid at venue (approx.)", es: "Pagado en el lugar (aprox.)" },
   "event.price":                { en: "Price",        es: "Precio" },
   "event.see_map":              { en: "See map →",    es: "Ver mapa →" },
   "event.register_address":     { en: "Register to see address", es: "Regístrate para ver la dirección" },

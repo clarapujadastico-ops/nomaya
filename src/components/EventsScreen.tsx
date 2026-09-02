@@ -677,7 +677,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: t("event.spots_left_label"), value: `${event.spotsLeft} ${t("card.spots_left")}` },
-                { label: event.paymentAtVenue ? t("event.price_at_venue") : t("event.price"), value: event.price === 'Free' && event.paymentAtVenue ? '—' : event.price === 'Free' ? t("event.free") : event.price },
+                { label: event.paymentAtVenue ? t("event.price_at_venue") : t("event.price"), value: event.paymentAtVenue && event.priceNote ? event.priceNote : event.price === 'Free' && event.paymentAtVenue ? '—' : event.price === 'Free' ? t("event.free") : event.price },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-card rounded-xl p-3.5 shadow-soft">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -865,6 +865,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 ? t("event.processing")
                 : event.spotsLeft === 0
                 ? t("events.fully_booked")
+                : event.paymentAtVenue
+                ? t("event.reserve")
                 : `${t("event.reserve")} · ${event.price === "Free" ? t("event.free") : event.price}`}
             </button>
           )}

@@ -69,7 +69,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
                   {event.spotsLeft} {t("card.spots_left")}
                 </span>
                 {event.price && (
-                  <span className="text-xs font-medium text-white/90">{event.price === "Free" ? t("event.free") : event.price}</span>
+                  <span className="text-xs font-medium text-white/90">{event.paymentAtVenue && event.priceNote ? event.priceNote : event.price === "Free" ? t("event.free") : event.price}</span>
                 )}
               </div>
             </>

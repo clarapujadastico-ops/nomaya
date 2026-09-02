@@ -244,7 +244,7 @@ export function MapScreen() {
                       <p className="text-sm font-serif font-medium text-gray-800 leading-snug">{selectedEvent.title}</p>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Calendar size={10} /> {selectedEvent.date}
-                        <span className="ml-1 font-medium text-gray-700">{selectedEvent.price}</span>
+                        <span className="ml-1 font-medium text-gray-700">{selectedEvent.paymentAtVenue && selectedEvent.priceNote ? selectedEvent.priceNote : selectedEvent.price}</span>
                       </div>
 
                       {/* My Reservations: show exact address */}
@@ -464,7 +464,7 @@ export function MapScreen() {
                       )}
                     </div>
                     {view !== "reservations" && (
-                      <span className="text-xs font-medium text-primary flex-shrink-0">{event.price}</span>
+                      <span className="text-xs font-medium text-primary flex-shrink-0">{event.paymentAtVenue && event.priceNote ? event.priceNote : event.price}</span>
                     )}
                   </button>
                   {view === "reservations" && isBooked && (

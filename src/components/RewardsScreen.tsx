@@ -32,7 +32,7 @@ export function RewardsScreen() {
   }
 
   function shareOnWhatsApp() {
-    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
+    const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid and Barcelona. Use my code ${referralCode} for 15% off your first event + early access. https://nomaya.app`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 

@@ -63,7 +63,7 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
     const lines = events.map(e =>
       e.isTbc
         ? `• ${e.title} — Coming soon (join waitlist)`
-        : `• ${e.title} — ${e.date} · ${e.price}${e.spotsLeft <= 3 && e.spotsLeft > 0 ? ` (only ${e.spotsLeft} spots left!)` : e.spotsLeft === 0 ? ' (fully booked)' : ''}`
+        : `• ${e.title} — ${e.date} · ${e.paymentAtVenue && e.priceNote ? e.priceNote : e.price}${e.spotsLeft <= 3 && e.spotsLeft > 0 ? ` (only ${e.spotsLeft} spots left!)` : e.spotsLeft === 0 ? ' (fully booked)' : ''}`
     );
     return `Here's what's coming up in Madrid:\n\n${lines.join('\n')}\n\nTap any event in the Experiences tab to book your spot 🎨`;
   }
@@ -94,8 +94,8 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
   // Payment
   if (/payment|pay|card|stripe|price|cost|how much|precio/.test(lower)) {
     if (events.length > 0) {
-      const paid = events.filter(e => !e.isTbc && e.price !== 'Free');
-      if (paid.length > 0) return `We use Stripe for secure payments. Current event prices:\n\n${paid.map(e => `• ${e.title}: ${e.price}`).join('\n')}\n\nProblems paying? Email hola@nomaya.app.`;
+      const paid = events.filter(e => !e.isTbc && (e.price !== 'Free' || (e.paymentAtVenue && e.priceNote)));
+      if (paid.length > 0) return `We use Stripe for secure payments. Current event prices:\n\n${paid.map(e => `• ${e.title}: ${e.paymentAtVenue && e.priceNote ? `${e.priceNote} (paid at venue)` : e.price}`).join('\n')}\n\nProblems paying? Email hola@nomaya.app.`;
     }
     return "We accept card payments via Stripe. All transactions are secure. For payment issues email hola@nomaya.app.";
   }
@@ -567,7 +567,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
             setTimeout(() => setReferralCopied(false), 2000);
           }
           function shareWhatsApp() {
-            const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid. Use my code ${code} for 15% off your first event + early access. https://nomaya.app`;
+            const text = `I'd love to see you at my table 💜 Join Nomaya — a curated community for women in Madrid and Barcelona. Use my code ${code} for 15% off your first event + early access. https://nomaya.app`;
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
           }
           return (
