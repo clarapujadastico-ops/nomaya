@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift, Calendar } from "lucide-react";
+import { ChevronRight, Check, Instagram, Linkedin, Music2, Gift, Calendar, Phone } from "lucide-react";
 import { INTERESTS, LIFE_STAGES } from "@/data/mockData";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,7 +73,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const [birthdate, setBirthdate] = useState("");
   const [lifeStages, setLifeStages] = useState<string[]>([]);
   const [profile, setProfile] = useState({
-    name: "", city: "", bio: "",
+    name: "", city: "", bio: "", phone_number: "",
     instagram_url: "", linkedin_url: "", tiktok_url: "",
     favourite_song: "", favourite_food: "",
   });
@@ -127,6 +127,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
         name: profile.name.trim() || "",
         city: profile.city || "",
         bio: profile.bio || null,
+        phone_number: profile.phone_number.trim() || null,
         language,
         interests: selectedInterests,
         instagram_url: profile.instagram_url || null,
@@ -525,6 +526,22 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             />
           </div>
 
+          {/* Phone number — required so we can reach members personally */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.phone_number")}</label>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-input bg-card">
+              <Phone size={15} className="text-muted-foreground flex-shrink-0" />
+              <input
+                type="tel"
+                placeholder={t("onboarding.phone_placeholder")}
+                value={profile.phone_number}
+                onChange={(e) => setProfile((p) => ({ ...p, phone_number: e.target.value }))}
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">{t("onboarding.phone_sub")}</p>
+          </div>
+
           {/* City — two options */}
           <div>
             <label className="text-xs uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("onboarding.city")}</label>
@@ -628,7 +645,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
           {saveError && <p className="text-xs text-destructive px-1">{saveError}</p>}
           <button
             onClick={uploadAvatarAndSave}
-            disabled={isBusy || !profile.name}
+            disabled={isBusy || !profile.name || !profile.phone_number.trim()}
             className="w-full py-4 rounded-2xl font-medium text-sm tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
             style={{
               background: "hsl(var(--nomaya-purple))",

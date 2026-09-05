@@ -19,6 +19,7 @@ export interface Database {
           instagram_url: string | null
           linkedin_url: string | null
           tiktok_url: string | null
+          phone_number: string | null
           verification_status: 'unverified' | 'pending' | 'verified'
           badges: string[]
           favourite_song: string | null
@@ -45,6 +46,7 @@ export interface Database {
           instagram_url?: string | null
           linkedin_url?: string | null
           tiktok_url?: string | null
+          phone_number?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
           badges?: string[]
           favourite_song?: string | null
@@ -71,6 +73,7 @@ export interface Database {
           instagram_url?: string | null
           linkedin_url?: string | null
           tiktok_url?: string | null
+          phone_number?: string | null
           verification_status?: 'unverified' | 'pending' | 'verified'
           badges?: string[]
           favourite_song?: string | null

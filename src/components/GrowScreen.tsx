@@ -16,8 +16,11 @@ function plansAttendedCount(bookings: BookingWithEvent[]) {
   return bookings.filter(b => b.checked_in_at).length;
 }
 
-// Feature-gated: set once the private community invite link exists.
-const NOMAYA_COMMUNITY_URL = '';
+// WhatsApp community group invite links, one per city.
+const WHATSAPP_GROUP_URLS: Record<string, string> = {
+  Madrid: 'https://chat.whatsapp.com/H4u4nh0ESRhIvCQ19WRCsi?mode=gi_t',
+  Barcelona: 'https://chat.whatsapp.com/LvvwWEtMyA72VCq0mTLj3w?mode=gi_t',
+};
 
 function getMemberId(profile: any) {
   return profile?.member_number != null
@@ -187,6 +190,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOp
   const referralCode = profile?.id
     ? profile.id.replace(/-/g, '').substring(0, 8).toUpperCase()
     : '········';
+  const whatsappGroupUrl = profile?.city ? WHATSAPP_GROUP_URLS[profile.city] : undefined;
 
   const FEEDBACK_CHIPS = [
     { key: "love_events",      label: lang === 'es' ? "🎨 Me encantan los eventos"     : "🎨 Love the events" },
@@ -318,17 +322,17 @@ export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOp
             </h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {lang === 'es'
-                ? "Ya viniste a tu primer plan Nomaya. Ahora puedes unirte a nuestra comunidad privada y seguir en contacto más allá de los planes."
-                : "You came to your first Nomaya plan. Now you can join our private community and stay connected beyond the plans."}
+                ? "Ya viniste a tu primer plan Nomaya. Ahora puedes unirte al grupo de WhatsApp de tu ciudad y seguir en contacto más allá de los planes."
+                : "You came to your first Nomaya plan. Now you can join your city's WhatsApp group and stay connected beyond the plans."}
             </p>
-            {NOMAYA_COMMUNITY_URL ? (
+            {whatsappGroupUrl ? (
               <a
-                href={NOMAYA_COMMUNITY_URL}
+                href={whatsappGroupUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full text-center py-3 rounded-2xl gradient-cta text-white font-medium text-sm"
               >
-                {lang === 'es' ? "Únete a la comunidad Nomaya" : "Join the Nomaya community"}
+                {lang === 'es' ? `Únete al grupo de WhatsApp (${profile?.city})` : `Join the WhatsApp group (${profile?.city})`}
               </a>
             ) : (
               <p className="text-[11px] text-muted-foreground italic">

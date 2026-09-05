@@ -630,7 +630,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             <span className="text-xs font-medium px-2.5 py-1 rounded-full mb-2 inline-block" style={{ background: "hsl(347 86% 77%)", color: "hsl(0 0% 100%)" }}>
               {event.category}
             </span>
-            <h2 className="font-serif text-2xl font-medium text-white">{localizedTitle(event, lang)}</h2>
+            <h2 className="font-serif text-2xl font-bold text-white">{localizedTitle(event, lang)}</h2>
           </div>
         </div>
 
@@ -1265,7 +1265,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                       <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full inline-block" style={{ background: "hsl(347 86% 77%)", color: "#fff" }}>
                         {ev.category}
                       </span>
-                      <p className="text-xs font-semibold text-white leading-snug">{localizedTitle(ev, lang)}</p>
+                      <p className="text-xs font-bold text-white leading-snug">{localizedTitle(ev, lang)}</p>
                       {!ev.isTbc && (
                         <p className="text-[10px] text-white/70">{ev.date}</p>
                       )}
@@ -1332,7 +1332,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 >
                   <span className="text-2xl flex-shrink-0">{emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground leading-snug truncate">{localizedTitle(nextEvent, lang)}</p>
+                    <p className="text-sm font-bold text-foreground leading-snug truncate">{localizedTitle(nextEvent, lang)}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {new Date(nextEvent.rawDate + 'T00:00:00').toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                       {nextEvent.time && nextEvent.time !== '00:00' ? ` · ${new Date(`2000-01-01T${nextEvent.time}`).toLocaleTimeString(lang === 'es' ? 'es-ES' : 'en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase()}` : ''}

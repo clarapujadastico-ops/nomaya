@@ -22,7 +22,16 @@ const PREVIEW_CIRCLES = [
   { name: "Foodies", tagline: "For girls who are always saving restaurants and planning where to eat next.", image: `${EVENTS_BUCKET}/circle-foodies.jpg` },
 ];
 
-const TAG_KEYS = ["circles.tag_running", "circles.tag_books", "circles.tag_yoga", "circles.tag_art", "circles.tag_travel", "circles.tag_foodies"];
+// canonical (language-independent) names stored in circle_interest, so an
+// admin sees the same value regardless of which language the tag was tapped in
+const INTEREST_TAGS = [
+  { key: "circles.tag_running", canonical: "Running" },
+  { key: "circles.tag_books", canonical: "Books" },
+  { key: "circles.tag_yoga", canonical: "Yoga" },
+  { key: "circles.tag_art", canonical: "Art" },
+  { key: "circles.tag_travel", canonical: "Travel" },
+  { key: "circles.tag_foodies", canonical: "Foodies" },
+];
 
 export function CirclesComingSoon() {
   const { t } = useLang();
@@ -31,7 +40,12 @@ export function CirclesComingSoon() {
   const { data: interestedCircles = [] } = useCircleInterestSignups();
   const { mutate: signalCircleInterest, isPending: isSignalling } = useSignalCircleInterest();
   const [error, setError] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const alreadyInterested = profile?.circle_launch_interest ?? false;
+
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  }
 
   function handleNotifyMe() {
     setError(null);
@@ -39,6 +53,9 @@ export function CirclesComingSoon() {
       { circle_launch_interest: true },
       { onError: (e) => setError(e.message) }
     );
+    selectedTags.forEach((tag) => {
+      if (!interestedCircles.includes(tag)) signalCircleInterest(tag);
+    });
   }
 
   function handleCircleInterest(circleName: string) {
@@ -66,13 +83,26 @@ export function CirclesComingSoon() {
         </p>
       </div>
 
-      {/* Interest tags */}
+      {/* Interest tags — selectable, feed into circle_interest alongside the general "notify me" signal */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {TAG_KEYS.map((key) => (
-          <span key={key} className="px-3 py-1.5 rounded-full text-xs font-medium bg-card text-foreground border border-border">
-            {t(key)}
-          </span>
-        ))}
+        {INTEREST_TAGS.map(({ key, canonical }) => {
+          const isSelected = selectedTags.includes(canonical) || interestedCircles.includes(canonical);
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => !alreadyInterested && toggleTag(canonical)}
+              disabled={alreadyInterested}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 disabled:active:scale-100"
+              style={{
+                borderColor: isSelected ? "hsl(var(--nomaya-purple))" : "hsl(var(--border))",
+                background: isSelected ? "hsl(var(--nomaya-purple) / 0.15)" : "hsl(var(--card))",
+              }}
+            >
+              {t(key)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Preview cards — clearly illustrative, not real circles. Tapping one

@@ -127,6 +127,12 @@
     @apply border-border;
   }
 
+  html {
+    /* One notch bigger than the 16px default across the whole app —
+       every Tailwind text-* size is rem-based so this scales all of it. */
+    font-size: 106.25%;
+  }
+
   html, body {
     height: 100%;
     overscroll-behavior: none;

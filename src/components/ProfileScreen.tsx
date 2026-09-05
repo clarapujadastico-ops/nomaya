@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import {
   ChevronRight, Globe, Bell, Heart, Star, Camera, Instagram,
   Linkedin, Music2, Edit2, Check, X, Shield, Pencil, Lock, MessageCircle,
-  Sparkles, FileText, ArrowLeft, Settings, LogOut, Copy, QrCode,
+  Sparkles, FileText, ArrowLeft, Settings, LogOut, Copy, QrCode, Phone,
 } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useCircles } from "@/hooks/useCircles";
@@ -159,6 +159,8 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
   const [links, setLinks] = useState({ instagram_url: "", linkedin_url: "", tiktok_url: "" });
   const [editingBirthday, setEditingBirthday] = useState(false);
   const [birthdayValue, setBirthdayValue] = useState("");
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
   const [showHoroscopeSheet, setShowHoroscopeSheet] = useState(false);
   const [showInterestsSheet, setShowInterestsSheet] = useState(false);
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
@@ -370,6 +372,11 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
   function saveBirthday() {
     updateProfile({ birthday: birthdayValue || null });
     setEditingBirthday(false);
+  }
+
+  function savePhone() {
+    updateProfile({ phone_number: phoneValue.trim() || null });
+    setEditingPhone(false);
   }
 
   function saveHoroscope(sign: string) {
@@ -1244,6 +1251,36 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
       {/* About me */}
       <div className="mx-5 mt-4 bg-card rounded-2xl p-4 shadow-soft">
         <h3 className="font-serif text-base font-medium text-foreground mb-3">{t("profile.about_me")}</h3>
+
+        {/* Phone number */}
+        <div className="flex items-center justify-between py-2 border-b border-border">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("profile.phone")}</p>
+            {editingPhone ? (
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="tel"
+                  value={phoneValue}
+                  onChange={(e) => setPhoneValue(e.target.value)}
+                  placeholder="+34 600 000 000"
+                  className="bg-muted rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none"
+                />
+                <button onClick={savePhone} className="text-primary text-xs font-medium">{t("profile.save")}</button>
+                <button onClick={() => setEditingPhone(false)} className="text-muted-foreground text-xs">{t("profile.cancel")}</button>
+              </div>
+            ) : (
+              <p className="text-sm text-foreground mt-0.5 flex items-center gap-1.5">
+                <Phone size={12} className="text-muted-foreground" />
+                {profile?.phone_number || <span className="text-muted-foreground italic text-xs">{t("profile.add_phone")}</span>}
+              </p>
+            )}
+          </div>
+          {!editingPhone && (
+            <button onClick={() => { setPhoneValue(profile?.phone_number ?? ""); setEditingPhone(true); }}>
+              <Edit2 size={13} className="text-muted-foreground" />
+            </button>
+          )}
+        </div>
 
         {/* Birthday */}
         <div className="flex items-center justify-between py-2 border-b border-border">

@@ -49,7 +49,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-white backdrop-blur-sm mb-2 inline-block">
             {categoryLabel}
           </span>
-          <h3 className="font-serif text-xl text-white font-medium leading-tight mb-1">{title}</h3>
+          <h3 className="font-serif text-xl text-white font-bold leading-tight mb-1">{title}</h3>
           {event.isTbc ? (
             <span className="text-xs font-medium text-white/70 italic">{t("card.coming_soon")}</span>
           ) : (
@@ -160,7 +160,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
         {/* Info below image */}
         <div className="p-2.5">
           {!event.isTbc && <p className="text-[10px] text-muted-foreground">{dateDisplay}</p>}
-          <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mt-0.5">
+          <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2 mt-0.5">
             {title}
           </h3>
           <p className={`text-xs mt-0.5 ${isAlmostFull ? "text-primary font-medium" : "text-muted-foreground"}`}>
@@ -186,7 +186,7 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
       <div className="flex-1 p-3.5 flex flex-col justify-between">
         <div>
           <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{categoryLabel}</span>
-          <h3 className="font-serif text-base font-medium text-foreground leading-snug mt-0.5">{title}</h3>
+          <h3 className="font-serif text-base font-bold text-foreground leading-snug mt-0.5">{title}</h3>
         </div>
         {event.isTbc ? (
           <p className="text-xs text-muted-foreground italic mt-2">{t("card.coming_soon")}</p>
