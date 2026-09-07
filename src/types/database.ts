@@ -30,6 +30,7 @@ export interface Database {
           referral_code: string | null
           referred_by: string | null
           circle_launch_interest: boolean
+          whatsapp_group_joined: boolean
           is_admin: boolean
           created_at: string
         }
@@ -57,6 +58,7 @@ export interface Database {
           referral_code?: string | null
           referred_by?: string | null
           circle_launch_interest?: boolean
+          whatsapp_group_joined?: boolean
           is_admin?: boolean
           created_at?: string
         }
@@ -82,6 +84,7 @@ export interface Database {
           age_range?: string | null
           life_stage?: string | null
           circle_launch_interest?: boolean
+          whatsapp_group_joined?: boolean
           is_admin?: boolean
           created_at?: string
         }
@@ -435,6 +438,7 @@ export interface Database {
           venue_address: string | null
           venue_name: string | null
           price_note: string | null
+          visibility_scope: 'local' | 'global'
         }
       }
     }
@@ -525,6 +529,7 @@ export interface AppEvent {
   venueAddress: string | null
   venueName: string | null
   priceNote: string | null
+  visibilityScope: 'local' | 'global'
 }
 
 /** Booking row with nested event data from Supabase joined query */
@@ -541,6 +546,7 @@ export interface BookingWithEvent {
     title: string
     title_es: string | null
     date: string
+    time: string | null
     city: string
     image_url: string | null
     price_cents: number
@@ -586,6 +592,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     venueAddress: row.venue_address,
     venueName: row.venue_name,
     priceNote: row.price_note,
+    visibilityScope: row.visibility_scope ?? 'local',
   }
 }
 

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local Xcode archives — regenerated per build, not source
+build/*.xcarchive
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

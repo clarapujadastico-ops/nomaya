@@ -21,6 +21,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type' } })
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
+  try {
+    return await handle(req)
+  } catch (e) {
+    // Surface the real cause instead of an opaque 500 — this function has no
+    // other way to be diagnosed once deployed (no console access in prod).
+    console.error('send-push crashed:', e)
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), { status: 500 })
+  }
+})
+
+async function handle(req: Request): Promise<Response> {
   const { userId, userIds, circleId, excludeUserId, title, body, data = {} } = await req.json()
 
   const supabase = createClient(
@@ -78,10 +89,22 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ sent: 0, total: tokens.length, warning: 'APNs not configured' }), { status: 200 })
   }
 
-  const pemKey = p8.includes('-----BEGIN') ? p8 : `-----BEGIN PRIVATE KEY-----\n${p8}\n-----END PRIVATE KEY-----`
+  // importKey('pkcs8', ...) needs the raw DER bytes, not the PEM text — the
+  // header/footer/newlines have to come off and what's left base64-decoded
+  // first. Passing the PEM string's own UTF-8 bytes (as this used to) throws
+  // an ASN.1 decode error every time and crashes the request with a 500,
+  // which is why this function silently never worked once actually deployed.
+  const pemBody = p8
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s+/g, '')
+  const binary = atob(pemBody)
+  const keyBytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) keyBytes[i] = binary.charCodeAt(i)
+
   const cryptoKey = await crypto.subtle.importKey(
     'pkcs8',
-    new TextEncoder().encode(pemKey),
+    keyBytes.buffer,
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign'],
@@ -129,4 +152,4 @@ Deno.serve(async (req) => {
     JSON.stringify({ sent, total: tokens.length, failed }),
     { headers: { 'content-type': 'application/json' } },
   )
-})
+}

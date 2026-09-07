@@ -37,6 +37,12 @@ interface ProfileScreenProps {
   onGoToEvents?: () => void;
 }
 
+// Published Notion docs — editing them there reflects here instantly, no app build needed.
+const PRIVACY_POLICY_URL = {
+  es: "https://curly-freezer-85d.notion.site/Pol-tica-de-Privacidad-de-Nomaya-6f0deb9449108207a67901d5ebe1bfbe",
+  en: "https://curly-freezer-85d.notion.site/Nomaya-Privacy-Policy-3d2deb94491080c59c25caa5daab200f",
+};
+
 const STAR_SIGNS = [
   "Aries ♈", "Taurus ♉", "Gemini ♊", "Cancer ♋", "Leo ♌", "Virgo ♍",
   "Libra ♎", "Scorpio ♏", "Sagittarius ♐", "Capricorn ♑", "Aquarius ♒", "Pisces ♓",
@@ -174,7 +180,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
   const [referralCopied, setReferralCopied] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
-  const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | 'guidelines' | 'refunds' | null>(null);
+  const [legalDoc, setLegalDoc] = useState<'terms' | 'guidelines' | 'refunds' | null>(null);
   const [showContactSheet, setShowContactSheet] = useState(false);
   const [showReportSheet, setShowReportSheet] = useState<'user' | 'event' | null>(null);
   const [reportStep, setReportStep] = useState<'select' | 'describe'>('select');
@@ -257,9 +263,10 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
     ? new Date(profile.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: "short", year: "numeric" })
     : t("profile.recently");
 
+  const cityCode = profile?.city === 'Barcelona' ? 'BCN' : 'MAD';
   const memberId = (profile as any)?.member_number != null
-    ? `NM-MAD-${String((profile as any).member_number).padStart(4, '0')}`
-    : 'NM-MAD-????';
+    ? `NM-${cityCode}-${String((profile as any).member_number).padStart(4, '0')}`
+    : `NM-${cityCode}-????`;
 
   // Treat "Member" or empty as no name set — they're onboarding artifacts
   const displayName = (profile?.name && profile.name !== "Member" && profile.name.trim())
@@ -403,7 +410,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
         items: [
           { icon: Pencil, label: t("settings.edit_profile"), value: null, onPress: () => setShowSettings(false) },
           { icon: Bell, label: t("profile.notifications"), value: null, onPress: () => setShowNotificationsSheet(true) },
-          { icon: Lock, label: t("settings.privacy"), value: null, onPress: () => window.open("https://nomaya.app/privacy", "_blank") },
+          { icon: Lock, label: t("settings.privacy"), value: null, onPress: () => window.open(PRIVACY_POLICY_URL[lang], "_blank") },
         ],
       },
       {
@@ -424,7 +431,7 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
         title: "Legal",
         items: [
           { icon: FileText, label: t("settings.terms"), value: null, onPress: () => setLegalDoc('terms') },
-          { icon: FileText, label: t("settings.privacy_policy"), value: null, onPress: () => setLegalDoc('privacy') },
+          { icon: FileText, label: t("settings.privacy_policy"), value: null, onPress: () => window.open(PRIVACY_POLICY_URL[lang], "_blank") },
           { icon: FileText, label: t("settings.guidelines"), value: null, onPress: () => setLegalDoc('guidelines') },
           { icon: FileText, label: t("settings.refunds"), value: null, onPress: () => setLegalDoc('refunds') },
         ],
@@ -845,32 +852,6 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                 ],
               },
             },
-            privacy: {
-              en: {
-                title: "Privacy Policy",
-                sections: [
-                  { heading: null, body: "Nomaya respects your privacy and is committed to protecting your personal data." },
-                  { heading: "Information We Collect", body: "We may collect the following information:\n• Name and profile information\n• Email address\n• Event participation activity\n• Circle membership activity\n• Identity verification data (when applicable)" },
-                  { heading: "Identity Verification", body: "To maintain a safe women-only community, Nomaya may request identity verification.\n\nThis may include:\n• A photo of a government-issued ID\n• A selfie for facial matching\n\nVerification images are used only for identity confirmation and are deleted after the review process. Nomaya does not store ID documents long-term." },
-                  { heading: "How We Use Your Data", body: "We use your data to:\n• Operate the Nomaya platform\n• Verify user eligibility\n• Facilitate events and community interactions\n• Improve the user experience" },
-                  { heading: "Data Sharing", body: "Nomaya does not sell personal data.\n\nInformation may be shared only with trusted service providers necessary to operate the platform (such as payment processors or identity verification tools)." },
-                  { heading: "Data Security", body: "We take reasonable measures to protect user data from unauthorized access." },
-                  { heading: "Your Rights", body: "Users may request access, modification, or deletion of their data at any time.\n\nRequests can be sent to:\nhola.nomaya@gmail.com" },
-                ],
-              },
-              es: {
-                title: "Política de Privacidad",
-                sections: [
-                  { heading: null, body: "Nomaya respeta tu privacidad y se compromete a proteger tus datos personales." },
-                  { heading: "Información que recopilamos", body: "Podemos recopilar la siguiente información:\n• Nombre e información de perfil\n• Dirección de correo electrónico\n• Actividad de participación en eventos\n• Actividad de membresía en círculos\n• Datos de verificación de identidad (cuando aplique)" },
-                  { heading: "Verificación de identidad", body: "Para mantener una comunidad segura exclusiva para mujeres, Nomaya puede solicitar verificación de identidad.\n\nEsto puede incluir:\n• Una foto de un documento de identidad oficial\n• Un selfie para verificación facial\n\nLas imágenes de verificación se usan únicamente para confirmar la identidad y se eliminan tras la revisión. Nomaya no almacena documentos de identidad a largo plazo." },
-                  { heading: "Cómo usamos tus datos", body: "Usamos tus datos para:\n• Operar la plataforma Nomaya\n• Verificar la elegibilidad de las usuarias\n• Facilitar eventos e interacciones comunitarias\n• Mejorar la experiencia de usuario" },
-                  { heading: "Compartición de datos", body: "Nomaya no vende datos personales.\n\nLa información solo puede compartirse con proveedores de servicios de confianza necesarios para operar la plataforma (como procesadores de pago o herramientas de verificación de identidad)." },
-                  { heading: "Seguridad de los datos", body: "Tomamos medidas razonables para proteger los datos de las usuarias frente a accesos no autorizados." },
-                  { heading: "Tus derechos", body: "Las usuarias pueden solicitar acceso, modificación o eliminación de sus datos en cualquier momento.\n\nLas solicitudes pueden enviarse a:\nhola.nomaya@gmail.com" },
-                ],
-              },
-            },
             guidelines: {
               en: {
                 title: "Community Guidelines",
@@ -1199,10 +1180,10 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
               className="w-full bg-muted rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
             />
             <div className="flex gap-2">
-              <button onClick={saveBio} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+              <button onClick={saveBio} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
                 <Check size={12} /> {t("profile.save")}
               </button>
-              <button onClick={() => setEditingBio(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
+              <button onClick={() => setEditingBio(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
                 <X size={12} /> {t("profile.cancel")}
               </button>
             </div>
@@ -1265,8 +1246,8 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                   placeholder="+34 600 000 000"
                   className="bg-muted rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none"
                 />
-                <button onClick={savePhone} className="text-primary text-xs font-medium">{t("profile.save")}</button>
-                <button onClick={() => setEditingPhone(false)} className="text-muted-foreground text-xs">{t("profile.cancel")}</button>
+                <button onClick={savePhone} className="text-muted-foreground text-xs">{t("profile.save")}</button>
+                <button onClick={() => setEditingPhone(false)} className="text-primary text-xs font-medium">{t("profile.cancel")}</button>
               </div>
             ) : (
               <p className="text-sm text-foreground mt-0.5 flex items-center gap-1.5">
@@ -1294,8 +1275,8 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                   onChange={(e) => setBirthdayValue(e.target.value)}
                   className="bg-muted rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none"
                 />
-                <button onClick={saveBirthday} className="text-primary text-xs font-medium">{t("profile.save")}</button>
-                <button onClick={() => setEditingBirthday(false)} className="text-muted-foreground text-xs">{t("profile.cancel")}</button>
+                <button onClick={saveBirthday} className="text-muted-foreground text-xs">{t("profile.save")}</button>
+                <button onClick={() => setEditingBirthday(false)} className="text-primary text-xs font-medium">{t("profile.cancel")}</button>
               </div>
             ) : (
               <p className="text-sm text-foreground mt-0.5">
@@ -1350,10 +1331,10 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                 </div>
               ))}
               <div className="flex gap-2 mt-2">
-                <button onClick={saveLinks} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+                <button onClick={saveLinks} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
                   <Check size={12} /> {t("profile.save")}
                 </button>
-                <button onClick={() => setEditingLinks(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs">
+                <button onClick={() => setEditingLinks(false)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
                   <X size={12} /> {t("profile.cancel")}
                 </button>
               </div>

@@ -18,6 +18,8 @@ import { supabase } from "@/lib/supabase";
 import type { AppEvent } from "@/types/database";
 import { localizedTitle, localizedDescription } from "@/types/database";
 import { useEventAttendees } from "@/hooks/useEventAttendees";
+import { useFamiliarFaces } from "@/hooks/useFamiliarFaces";
+import { FamiliarFacesSheet } from "./FamiliarFacesSheet";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { useCityPreference } from "@/hooks/useCityPreference";
@@ -453,13 +455,19 @@ interface EventsScreenProps {
   onOpenCircle?: (id: string, tab?: 'chat' | 'about') => void;
   onOpenMap?: () => void;
   onSeeAllBookings?: () => void;
+  initialEventId?: string;
 }
 
-export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: EventsScreenProps = {}) {
+export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initialEventId }: EventsScreenProps = {}) {
   const { t, lang } = useLang();
   function tCat(cat: string) { return t(CAT_KEYS[cat] ?? "") || cat; }
   const [activeFilter, setActiveFilter] = useState("All");
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(initialEventId ?? null);
+  // Keep in sync if a push notification arrives targeting a different event
+  // while this screen is already mounted (tab already on Experiences).
+  useEffect(() => {
+    if (initialEventId) setSelectedEvent(initialEventId);
+  }, [initialEventId]);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [pendingFilters, setPendingFilters] = useState<FilterState>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(defaultFilters);
@@ -489,6 +497,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { mutate: cancelWaitlist, isPending: isCancellingWaitlist } = useCancelWaitlist();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
+  const { data: familiarFaces = [] } = useFamiliarFaces(selectedEvent, attendees.map((a) => a.user_id));
+  const [showFamiliarFaces, setShowFamiliarFaces] = useState(false);
   const [selectedAttendee, setSelectedAttendee] = useState<{ profile: import("@/hooks/useCircleMembers").MemberProfile; userId: string } | null>(null);
 
   // Compute isBooked here (before any useEffect that depends on it) to avoid TDZ
@@ -514,12 +524,28 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
   const { isInterested, toggle: toggleInterest, isPending: isTogglingInterest } = useEventInterest(selectedEvent ?? "");
   const { data: interestCount = 0 } = useEventInterestCount(selectedEvent ?? "");
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Compare against the event's actual start time (plus an assumed 2h
+  // duration — events have no stored end time), not just its calendar date —
+  // otherwise a past event (e.g. this morning's 10am class) stays in
+  // "upcoming" for the rest of its calendar day.
+  const now = new Date();
   const upcomingEvents = events
-    .filter((e) => e.isTbc || new Date(e.rawDate) >= today)
-    .filter((e) => !e.city || e.city === selectedCity);
+    .filter((e) => e.isTbc || new Date(new Date(`${e.rawDate}T${e.time || '00:00'}`).getTime() + 2 * 3_600_000) >= now)
+    // Global-scope plans (multi-city trips, retreats) show alongside every
+    // city's local plans, not filtered out just because their own city
+    // doesn't match the selected tab.
+    .filter((e) => !e.city || e.city === selectedCity || e.visibilityScope === 'global');
   const featured = upcomingEvents.filter((e) => e.featured);
+  const beyondCityEvents = upcomingEvents.filter((e) => e.visibilityScope === 'global');
+
+  // Same "2h after start" cutoff for the compact "Your Bookings" strip (and
+  // its event chat link) — a finished plan shouldn't linger there forever.
+  const activeBookings = bookings.filter((b) => {
+    if (b.status !== 'confirmed' || !b.event) return false;
+    if (!b.event.date) return true;
+    const start = new Date(`${b.event.date}T${b.event.time || '00:00:00'}`);
+    return new Date(start.getTime() + 2 * 3_600_000) >= now;
+  });
 
   // Simple month header ("September 2026" / "septiembre de 2026") derived
   // from the earliest dated upcoming event, instead of a tab switcher.
@@ -606,6 +632,66 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           <p className="text-muted-foreground text-sm">{t("event.loading")}</p>
         </div>
       );
+    }
+
+    // Venue overrides for events without DB coordinates (keyed by title fragment)
+    const VENUE_OVERRIDES: Record<string, { lat: number; lng: number; name: string }> = {
+      "vinyasa":   { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+      "holistic":  { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+      "yoga":      { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+      "longevity": { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
+    };
+    const venueKey = event.city === "Madrid" ? Object.keys(VENUE_OVERRIDES).find(k => event.title.toLowerCase().includes(k)) : undefined;
+    const venueOverride = event.latitude == null && venueKey ? VENUE_OVERRIDES[venueKey] : null;
+    const lat = event.latitude ?? venueOverride?.lat ?? 40.4168;
+    const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
+    const hasExact = event.latitude != null || venueOverride != null;
+    const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
+    const mapsUrl = hasExact ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : null;
+
+    async function addToCalendar() {
+      const dateStr = event.rawDate ?? "";
+      if (!dateStr) return;
+      const timeStr = event.time || "00:00";
+
+      // Real Date arithmetic instead of manual string slicing — handles
+      // late-evening events correctly (e.g. 23:00 + 2h rolls over to the
+      // next day at 01:00 instead of producing an invalid hour like "25").
+      const start = new Date(`${dateStr}T${timeStr}:00`);
+      const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      const toICSDateTime = (d: Date) =>
+        `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}` +
+        `T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
+      const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+      const ics = [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Nomaya//EN", "CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        // UID and DTSTAMP are required by the iCalendar spec (RFC 5545) —
+        // without them some calendar apps silently discard the event instead
+        // of importing it, which is why "add to calendar" could appear to do
+        // nothing at all.
+        `UID:${event.id}@nomaya.app`,
+        `DTSTAMP:${dtStamp}`,
+        `DTSTART:${toICSDateTime(start)}`,
+        `DTEND:${toICSDateTime(end)}`,
+        `SUMMARY:${localizedTitle(event, lang)}`,
+        `LOCATION:${locationLabel}`,
+        `DESCRIPTION:${localizedDescription(event, lang).replace(/\n/g, "\\n")}`,
+        "END:VEVENT", "END:VCALENDAR",
+      ].join("\r\n");
+
+      // Navigating directly to a text/calendar resource (no `download`
+      // attribute, no share sheet) is what makes iOS show its native "Add
+      // Event" preview with an Add to Calendar button built in. Routing this
+      // through the share sheet instead (as this used to) just offers to
+      // send the .ics as a generic file — Messages, Mail, Save to Files —
+      // with no calendar import option at all.
+      const a = document.createElement("a");
+      a.href = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     return (
@@ -702,6 +788,31 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </>
           )}
 
+          {familiarFaces.length > 0 && (() => {
+            const [first, ...rest] = familiarFaces;
+            const firstName = first.name.split(" ")[0];
+            const metEventTitle = lang === "es" && first.metEventTitleEs ? first.metEventTitleEs : first.metEventTitle;
+            return (
+              <div className="bg-card rounded-2xl p-4 shadow-soft">
+                {familiarFaces.length === 1 ? (
+                  <>
+                    <p className="text-xs font-medium text-primary mb-1">{t("event.familiar_face_heading")}</p>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      <span className="font-medium">{firstName}</span>, {t("event.familiar_single_pre")} {metEventTitle}, {t("event.familiar_single_post")}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-foreground leading-relaxed">
+                    <span className="font-medium">{firstName}</span> {t("event.familiar_multi_and")}{" "}
+                    <button onClick={() => setShowFamiliarFaces(true)} className="font-medium text-primary underline underline-offset-2">
+                      {rest.length} {t("event.familiar_multi_suffix")}
+                    </button>
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="bg-card rounded-2xl p-4 shadow-soft">
             <h3 className="font-serif text-lg font-medium text-foreground mb-2">{t("event.about")}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -709,7 +820,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
             </p>
           </div>
 
-          {attendees.length > 0 && (
+          {isBooked && attendees.length > 0 && (
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-lg font-medium text-foreground mb-3">{t("event.whos_coming")}</h3>
               <div className="space-y-2">
@@ -889,12 +1000,20 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
                 {isCancellingWaitlist ? "Leaving…" : "Leave waitlist"}
               </button>
             ) : (
-              <button
-                onClick={() => { setCancelOutcome(null); setShowCancelSheet(true); }}
-                className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98]"
-              >
-                {t("events.cancel_reservation")}
-              </button>
+              <>
+                <button
+                  onClick={addToCalendar}
+                  className="w-full py-3 rounded-2xl bg-muted border border-border text-foreground text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  {t("event.add_calendar")}
+                </button>
+                <button
+                  onClick={() => { setCancelOutcome(null); setShowCancelSheet(true); }}
+                  className="w-full py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  {t("events.cancel_reservation")}
+                </button>
+              </>
             )
           )}
         </div>
@@ -1020,61 +1139,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {showMapSheet && (() => {
         const token = import.meta.env.VITE_MAPBOX_TOKEN;
 
-        // Venue overrides for events without DB coordinates (keyed by title fragment)
-        const VENUE_OVERRIDES: Record<string, { lat: number; lng: number; name: string }> = {
-          "vinyasa":   { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
-          "holistic":  { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
-          "yoga":      { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
-          "longevity": { lat: 40.4310342, lng: -3.7008764, name: "C. de Alburquerque, 14, Chamberí, 28010 Madrid" },
-        };
-        const venueKey = event.city === "Madrid" ? Object.keys(VENUE_OVERRIDES).find(k => event.title.toLowerCase().includes(k)) : undefined;
-        const venueOverride = event.latitude == null && venueKey ? VENUE_OVERRIDES[venueKey] : null;
-
-        const lat = event.latitude ?? venueOverride?.lat ?? 40.4168;
-        const lng = event.longitude ?? venueOverride?.lng ?? -3.7038;
-        const hasExact = event.latitude != null || venueOverride != null;
-        const locationLabel = event.venueAddress ?? (event.latitude != null ? event.city : (venueOverride?.name ?? "Puerta del Sol, Madrid"));
-        // Only offer directions once we know a specific place. Destination is
-        // the raw coordinates, not the venue name/address as text — a text
-        // destination goes through Google's own search/autocomplete, which
-        // factors in the viewer's account history and location and can
-        // resolve to a completely unrelated place with no way for us to
-        // control or predict it. Coordinates are a fixed point: no search,
-        // no ambiguity, no dependence on what Google (or the user's account)
-        // thinks is the "best match" for a name.
-        const mapsUrl = hasExact ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : null;
-
-        async function addToCalendar() {
-          const date = event.rawDate ?? "";
-          const time = (event.time ?? "00:00").replace(":", "");
-          const dtStart = date ? `${date.replace(/-/g, "")}T${time}00` : "";
-          const dtEnd = dtStart ? `${date.replace(/-/g, "")}T${String(parseInt(time.slice(0, 2)) + 2).padStart(2, "0")}${time.slice(2)}00` : "";
-          const ics = [
-            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Nomaya//EN",
-            "BEGIN:VEVENT",
-            dtStart ? `DTSTART:${dtStart}` : "",
-            dtEnd ? `DTEND:${dtEnd}` : "",
-            `SUMMARY:${localizedTitle(event, lang)}`,
-            `LOCATION:${locationLabel}`,
-            `DESCRIPTION:${localizedDescription(event, lang).replace(/\n/g, "\\n")}`,
-            "END:VEVENT", "END:VCALENDAR",
-          ].filter(Boolean).join("\r\n");
-
-          // iOS: share the .ics file — iOS routes it to Calendar app
-          const file = new File([ics], "nomaya-event.ics", { type: "text/calendar" });
-          if (navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: localizedTitle(event, lang) });
-            return;
-          }
-          // Fallback for non-iOS
-          const a = document.createElement("a");
-          a.href = `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
-          a.download = "nomaya-event.ics";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }
-
         return (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMapSheet(false)} />
@@ -1146,6 +1210,10 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
       {/* Member profile sheet */}
       {selectedAttendee && (
         <MemberProfileSheet profile={selectedAttendee.profile} userId={selectedAttendee.userId} onClose={() => setSelectedAttendee(null)} />
+      )}
+
+      {showFamiliarFaces && (
+        <FamiliarFacesSheet faces={familiarFaces} onClose={() => setShowFamiliarFaces(false)} />
       )}
 
 </>
@@ -1277,14 +1345,14 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
           )}
 
           {/* Your Bookings */}
-          {bookings.filter(b => b.status === 'confirmed' && b.event).length > 0 && !searchQuery && !hasFilters && (
+          {activeBookings.length > 0 && !searchQuery && !hasFilters && (
             <div className="mb-5 px-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">{t("events.your_bookings")}</h2>
                 <button onClick={() => onSeeAllBookings?.()} className="text-xs text-primary">{t("events.see_all_arrow")}</button>
               </div>
               <div className="space-y-2">
-                {bookings.filter(b => b.status === 'confirmed' && b.event).map((booking) => {
+                {activeBookings.map((booking) => {
                   const ev = booking.event!;
                   const imgSrc = resolveEventImage(ev.title, ev.image_url ?? "");
                   return (
@@ -1344,6 +1412,25 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings }: Even
               </div>
             );
           })()}
+
+          {/* Beyond your city — global-scope plans (trips, retreats) that bring
+              the whole Nomaya community together, shown regardless of which
+              city tab is selected. Only rendered when there's actually one
+              to show, rather than a permanent empty section. */}
+          {!hasFilters && !searchQuery && beyondCityEvents.length > 0 && (
+            <div className="mb-5">
+              <div className="px-5 mb-3">
+                <h2 className="font-serif text-lg font-medium text-foreground">{t("events.beyond_city")}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("events.beyond_city_sub")}</p>
+              </div>
+              <div className="flex gap-3 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: "none" }}>
+                {beyondCityEvents.map((event) => (
+                  <EventCard key={event.id} event={event} variant="featured" locked={isUnverified}
+                    onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Upcoming events grid */}
           {!hasFilters && !searchQuery ? (

@@ -166,7 +166,8 @@ Deno.serve(async (req) => {
       .eq('status', 'confirmed')
 
     const memberNum   = (profile as any)?.member_number
-    const memberId    = memberNum != null ? `NM-MAD-${String(memberNum).padStart(4, '0')}` : `NM-MAD-0001`
+    const cityCode    = profile?.city === 'Barcelona' ? 'BCN' : 'MAD'
+    const memberId    = memberNum != null ? `NM-${cityCode}-${String(memberNum).padStart(4, '0')}` : `NM-${cityCode}-0001`
     const displayName = (profile?.name && profile.name !== 'Member' && profile.name.trim())
       ? profile.name.trim() : 'Member'
     // Use auth user.created_at (immutable signup date) so profile updates never change this
@@ -186,15 +187,12 @@ Deno.serve(async (req) => {
       foregroundColor: 'rgb(255, 255, 255)',
       backgroundColor: 'rgb(95, 80, 149)',
       labelColor: 'rgb(200, 185, 240)',
-      // storeCard is Apple's dedicated membership/loyalty-card style — much
-      // less reserved blank space than `generic`, which is built for
-      // longer/flexible content and always renders with a tall body.
-      storeCard: {
-        primaryFields:   [{ key: 'memberId', label: 'MEMBERSHIP NUMBER', value: memberId }],
-        secondaryFields: [{ key: 'name',     label: 'MEMBER NAME',       value: displayName }],
-        auxiliaryFields: [{ key: 'city',     label: 'CITY',              value: profile?.city || 'Madrid' },
-                          { key: 'since',    label: 'SINCE',             value: memberSince },
-                          { key: 'tier',     label: 'TIER',              value: tier }],
+      generic: {
+        primaryFields:   [{ key: 'name',     label: 'MEMBER',    value: displayName }],
+        secondaryFields: [{ key: 'memberId', label: 'MEMBER ID', value: memberId },
+                          { key: 'since',    label: 'SINCE',     value: memberSince }],
+        auxiliaryFields: [{ key: 'city',     label: 'CITY',      value: profile?.city || 'Madrid' },
+                          { key: 'tier',     label: 'TIER',      value: tier }],
       },
     })
 

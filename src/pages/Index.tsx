@@ -12,8 +12,10 @@ import { CirclesScreen } from "@/components/CirclesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { BookingsScreen } from "@/components/BookingsScreen";
 import { EventFeedbackModal } from "@/components/EventFeedbackModal";
+import { ReferralJoinedModal } from "@/components/ReferralJoinedModal";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 import { usePendingEventFeedback } from "@/hooks/usePendingEventFeedback";
+import { usePendingReferralNotice } from "@/hooks/usePendingReferralNotice";
 
 type Tab = "events" | "community" | "groups" | "profile";
 
@@ -31,9 +33,14 @@ function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("events");
   const [openCircleId, setOpenCircleId] = useState<string | undefined>(undefined);
   const [openCircleTab, setOpenCircleTab] = useState<'chat' | 'about' | undefined>(undefined);
+  const [openEventId, setOpenEventId] = useState<string | undefined>(undefined);
   const [showAllBookings, setShowAllBookings] = useState(false);
   const { data: pendingFeedbackEvent } = usePendingEventFeedback();
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
+  const { data: pendingReferralNotice } = usePendingReferralNotice();
+  const [referralNoticeDismissed, setReferralNoticeDismissed] = useState(false);
+  const showFeedbackModal = !!pendingFeedbackEvent && !feedbackDismissed;
+  const showReferralModal = !showFeedbackModal && !!pendingReferralNotice && !referralNoticeDismissed;
 
   // Determine ONCE whether onboarding is needed.
   // We intentionally do NOT re-evaluate when profile updates mid-onboarding
@@ -51,6 +58,11 @@ function AppShell() {
       setOpenCircleId(dest.circleId);
     } else if (dest.tab !== 'groups') {
       setOpenCircleId(undefined);
+    }
+    if (dest.tab === 'events' && 'eventId' in dest && dest.eventId) {
+      setOpenEventId(dest.eventId);
+    } else if (dest.tab !== 'events') {
+      setOpenEventId(undefined);
     }
     setActiveTab(dest.tab);
   }
@@ -82,6 +94,7 @@ function AppShell() {
             <EventsScreen
               onOpenCircle={handleOpenCircle}
               onSeeAllBookings={() => setShowAllBookings(true)}
+              initialEventId={openEventId}
             />
           )}
           {activeTab === "community" && (
@@ -103,10 +116,16 @@ function AppShell() {
         </div>
         <BottomNav active={activeTab} onChange={handleTabChange} />
       </div>
-      {pendingFeedbackEvent && !feedbackDismissed && (
+      {showFeedbackModal && (
         <EventFeedbackModal
           event={pendingFeedbackEvent}
           onDismiss={() => setFeedbackDismissed(true)}
+        />
+      )}
+      {showReferralModal && (
+        <ReferralJoinedModal
+          referral={pendingReferralNotice}
+          onDismiss={() => setReferralNoticeDismissed(true)}
         />
       )}
     </div>

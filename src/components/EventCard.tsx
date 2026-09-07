@@ -49,6 +49,11 @@ export function EventCard({ event, variant = "default", onClick, locked = false 
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-rose/80 text-white backdrop-blur-sm mb-2 inline-block">
             {categoryLabel}
           </span>
+          {event.visibilityScope === "global" && (
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-nomaya-gold/90 text-white backdrop-blur-sm mb-2 ml-1.5 inline-block">
+              {t("card.open_to_all")}
+            </span>
+          )}
           <h3 className="font-serif text-xl text-white font-bold leading-tight mb-1">{title}</h3>
           {event.isTbc ? (
             <span className="text-xs font-medium text-white/70 italic">{t("card.coming_soon")}</span>

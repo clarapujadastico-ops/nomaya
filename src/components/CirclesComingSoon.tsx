@@ -86,7 +86,11 @@ export function CirclesComingSoon() {
       {/* Interest tags — selectable, feed into circle_interest alongside the general "notify me" signal */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
         {INTEREST_TAGS.map(({ key, canonical }) => {
-          const isSelected = selectedTags.includes(canonical) || interestedCircles.includes(canonical);
+          // Only reflects the current in-progress selection — deliberately NOT
+          // merged with interestedCircles, since a tag can share its name with
+          // a specific preview circle (e.g. "Foodies") and would otherwise
+          // show as pre-selected just because that unrelated card was tapped.
+          const isSelected = selectedTags.includes(canonical);
           return (
             <button
               key={key}

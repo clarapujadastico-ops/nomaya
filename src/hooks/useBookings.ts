@@ -23,6 +23,7 @@ export function useBookings() {
             title,
             title_es,
             date,
+            time,
             city,
             image_url,
             price_cents,

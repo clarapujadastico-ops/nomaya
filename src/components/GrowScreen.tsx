@@ -2,8 +2,12 @@ import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import { Copy, Check, ChevronRight } from "lucide-react";
 import { Logo } from "./Logo";
+// Same logo used on the purple Wallet pass — the eye is pre-rendered white,
+// every other shape keeps its original brand color (unlike a CSS filter,
+// which would flatten the whole mark to solid white).
+import nomayaLogoCard from "@/assets/nomaya-logo-card.png";
 import { YourNomayaModal } from "./YourNomayaModal";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useBookings } from "@/hooks/useBookings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLang } from "@/contexts/LanguageContext";
@@ -22,10 +26,13 @@ const WHATSAPP_GROUP_URLS: Record<string, string> = {
   Barcelona: 'https://chat.whatsapp.com/LvvwWEtMyA72VCq0mTLj3w?mode=gi_t',
 };
 
+const CITY_CODES: Record<string, string> = { Madrid: 'MAD', Barcelona: 'BCN' };
+
 function getMemberId(profile: any) {
+  const cityCode = CITY_CODES[profile?.city] ?? 'MAD';
   return profile?.member_number != null
-    ? `NM-MAD-${String(profile.member_number).padStart(4, '0')}`
-    : 'NM-MAD-????';
+    ? `NM-${cityCode}-${String(profile.member_number).padStart(4, '0')}`
+    : `NM-${cityCode}-????`;
 }
 
 function getMemberSince(profile: any, lang: 'en' | 'es') {
@@ -110,19 +117,21 @@ function MemberCardModal({ onClose }: { onClose: () => void }) {
         </p>
         <div className="rounded-2xl overflow-hidden shadow-card" style={{ background: "#5f5095" }}>
           <div className="px-6 pt-6 pb-4 border-b border-white/10 flex justify-center">
-            <Logo className="h-14 w-auto mx-auto object-contain opacity-95" />
+            <img src={nomayaLogoCard} alt="Nomaya" className="h-14 w-auto mx-auto object-contain opacity-95" />
           </div>
           <div className="px-6 py-5 space-y-4">
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Membership Number</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">{lang === 'es' ? "Número de socia" : "Membership Number"}</p>
               <p className="font-mono text-xl font-semibold text-white tracking-wider">{memberId}</p>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">Full Name</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-1">{lang === 'es' ? "Nombre completo" : "Full Name"}</p>
               <p className="font-serif text-lg text-white">{displayName ?? (lang === 'es' ? 'Miembro' : 'Member')}</p>
             </div>
             <div className="pt-1 border-t border-white/10 flex items-center justify-between">
-              <p className="text-xs text-white/40">{profile?.city || "Madrid"} · Member since {memberSince}</p>
+              <p className="text-xs text-white/40">
+                {profile?.city || "Madrid"} · {lang === 'es' ? `Miembro desde ${memberSince}` : `Member since ${memberSince}`}
+              </p>
               {isFoundingMember && <span className="text-[10px] text-white/50 flex-shrink-0 ml-2">🌸 Founding Member</span>}
             </div>
             <div className="pt-1 border-t border-white/10">
@@ -171,6 +180,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOp
   const { lang } = useLang();
   const { data: profile } = useProfile();
   const { data: bookings = [] } = useBookings();
+  const { mutate: updateProfile } = useUpdateProfile();
 
   const [showMemberCard, setShowMemberCard] = useState(false);
   const [showYourNomaya, setShowYourNomaya] = useState(false);
@@ -315,7 +325,7 @@ export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOp
         </div>
 
         {/* ── COMMUNITY ACCESS — unlocked by real attendance, not signup/booking/referral (2026-08-28) ── */}
-        {plansAttended >= 1 && (
+        {plansAttended >= 1 && !profile?.whatsapp_group_joined && (
           <div className="bg-card rounded-2xl shadow-soft px-5 py-5 space-y-3">
             <h2 className="font-serif text-lg font-medium text-foreground leading-snug">
               {lang === 'es' ? "Bienvenida a la comunidad 💜" : "Welcome to the community 💜"}
@@ -330,6 +340,10 @@ export function GrowScreen({ onOpenCircle, onGoToCircles, onGoToEvents }: { onOp
                 href={whatsappGroupUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                // We have no way to verify real WhatsApp membership from the
+                // app, so tapping the link is treated as having joined —
+                // this is what stops the card from showing again.
+                onClick={() => updateProfile({ whatsapp_group_joined: true })}
                 className="block w-full text-center py-3 rounded-2xl gradient-cta text-white font-medium text-sm"
               >
                 {lang === 'es' ? `Únete al grupo de WhatsApp (${profile?.city})` : `Join the WhatsApp group (${profile?.city})`}
