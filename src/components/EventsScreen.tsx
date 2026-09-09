@@ -820,7 +820,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
             </p>
           </div>
 
-          {isBooked && attendees.length > 0 && (
+          {attendees.length > 0 && (
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <h3 className="font-serif text-lg font-medium text-foreground mb-3">{t("event.whos_coming")}</h3>
               <div className="space-y-2">
