@@ -13,6 +13,8 @@ export const translations: TranslationMap = {
   "chats.subtitle": { en: "Keep talking with the girls from plans you've attended.", es: "Sigue hablando con las chicas de los planes a los que has ido." },
   "chats.empty":    { en: "Once you attend a plan, its chat will show up here — forever.", es: "En cuanto asistas a un plan, su chat aparecerá aquí — para siempre." },
   "chats.attended": { en: "You attended this plan", es: "Asististe a este plan" },
+  "poll.eyebrow":    { en: "Help us plan", es: "Ayúdanos a organizar" },
+  "poll.multi_hint": { en: "Pick everything that works for you.", es: "Marca todo lo que te venga bien." },
 
   // Events screen
   "events.heading":     { en: "Experiences",     es: "Experiencias" },

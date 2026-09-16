@@ -35,6 +35,9 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
     case 'tbc_event_available':
       return { tab: 'events', eventId: event_id }
 
+    case 'new_poll':
+      return { tab: 'events' }
+
     default:
       return null
   }

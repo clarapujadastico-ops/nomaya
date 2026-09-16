@@ -20,6 +20,7 @@ import { localizedTitle, localizedDescription } from "@/types/database";
 import { useEventAttendees } from "@/hooks/useEventAttendees";
 import { useFamiliarFaces } from "@/hooks/useFamiliarFaces";
 import { FamiliarFacesSheet } from "./FamiliarFacesSheet";
+import { PollBanner } from "./PollBanner";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { useCityPreference } from "@/hooks/useCityPreference";
@@ -1317,6 +1318,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
         </div>
       ) : (
         <>
+          {!hasFilters && !searchQuery && <PollBanner city={selectedCity} />}
+
           {/* Nomaya Only — single compact banner */}
           {!hasFilters && !searchQuery && featured.length > 0 && (
             <div className="mb-5">
