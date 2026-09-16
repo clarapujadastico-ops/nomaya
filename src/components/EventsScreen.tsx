@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, X, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight, Users } from "lucide-react";
+import { Search, SlidersHorizontal, X, Bell, BellOff, ArrowLeft, Image as ImageIcon, Send, Star, ChevronRight, Users, CloudRain } from "lucide-react";
 import { MemberProfileSheet } from "./MemberProfileSheet";
 import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInterest";
 import { EventCard } from "./EventCard";
@@ -812,6 +812,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
               </div>
             );
           })()}
+
+          {event.weatherDependent && (
+            <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex items-start gap-2.5">
+              <CloudRain size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground leading-relaxed">{t("event.weather_notice")}</p>
+            </div>
+          )}
 
           <div className="bg-card rounded-2xl p-4 shadow-soft">
             <h3 className="font-serif text-lg font-medium text-foreground mb-2">{t("event.about")}</h3>

@@ -7,7 +7,12 @@ export const translations: TranslationMap = {
   "nav.community": { en: "Community", es: "Comunidad" },
   "nav.rewards":   { en: "Rewards",   es: "Premios" },
   "nav.circles":   { en: "Circles", es: "Círculos" },
+  "nav.chats":     { en: "Chats", es: "Chats" },
   "nav.profile":   { en: "Profile", es: "Perfil" },
+  "chats.title":    { en: "Your plan chats", es: "Tus chats de planes" },
+  "chats.subtitle": { en: "Keep talking with the girls from plans you've attended.", es: "Sigue hablando con las chicas de los planes a los que has ido." },
+  "chats.empty":    { en: "Once you attend a plan, its chat will show up here — forever.", es: "En cuanto asistas a un plan, su chat aparecerá aquí — para siempre." },
+  "chats.attended": { en: "You attended this plan", es: "Asististe a este plan" },
 
   // Events screen
   "events.heading":     { en: "Experiences",     es: "Experiencias" },
@@ -49,6 +54,7 @@ export const translations: TranslationMap = {
   "event.see_map":              { en: "See map →",    es: "Ver mapa →" },
   "event.register_address":     { en: "Register to see address", es: "Regístrate para ver la dirección" },
   "event.about":                { en: "About this event", es: "Sobre este evento" },
+  "event.weather_notice":       { en: "This is an outdoor plan — we reserve the right to cancel it if the weather doesn't cooperate. If we do, you'll get a full refund to your card, or you can convert it to credits for a future plan with an extra bonus, just like when you cancel yourself with enough notice.", es: "Este es un plan al aire libre — nos reservamos el derecho a cancelarlo si el tiempo no acompaña. Si lo hacemos, recibirás un reembolso completo a tu tarjeta, o puedes convertirlo en créditos para un próximo plan con un extra adicional, igual que cuando cancelas tú misma con tiempo suficiente." },
   "event.whos_coming":          { en: "Who's coming", es: "Quién viene" },
   "event.familiar_face_heading":{ en: "A familiar face 💜", es: "Una cara conocida 💜" },
   "event.familiar_single_pre":  { en: "who you met at", es: "a quien conociste en" },

@@ -1,7 +1,7 @@
-import { Calendar, Sparkles, Users, User } from "lucide-react";
+import { Calendar, Sparkles, Users, User, MessageCircle } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 
-type Tab = "events" | "community" | "groups" | "profile";
+type Tab = "events" | "community" | "groups" | "chats" | "profile";
 
 interface BottomNavProps {
   active: Tab;
@@ -12,6 +12,7 @@ const tabs: { id: Tab; labelKey: string; icon: typeof Calendar }[] = [
   { id: "events",    labelKey: "nav.events",    icon: Calendar },
   { id: "community", labelKey: "nav.community", icon: Sparkles },
   { id: "groups",    labelKey: "nav.circles",   icon: Users },
+  { id: "chats",     labelKey: "nav.chats",     icon: MessageCircle },
   { id: "profile",   labelKey: "nav.profile",   icon: User },
 ];
 

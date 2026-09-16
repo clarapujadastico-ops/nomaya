@@ -439,6 +439,7 @@ export interface Database {
           venue_name: string | null
           price_note: string | null
           visibility_scope: 'local' | 'global'
+          weather_dependent: boolean
         }
       }
     }
@@ -530,6 +531,7 @@ export interface AppEvent {
   venueName: string | null
   priceNote: string | null
   visibilityScope: 'local' | 'global'
+  weatherDependent: boolean
 }
 
 /** Booking row with nested event data from Supabase joined query */
@@ -593,6 +595,7 @@ export function toAppEvent(row: EventRow): AppEvent {
     venueName: row.venue_name,
     priceNote: row.price_note,
     visibilityScope: row.visibility_scope ?? 'local',
+    weatherDependent: row.weather_dependent ?? false,
   }
 }
 

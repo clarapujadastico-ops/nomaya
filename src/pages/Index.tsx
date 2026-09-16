@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GrowScreen } from "@/components/GrowScreen";
 import { CirclesScreen } from "@/components/CirclesScreen";
+import { ChatsScreen } from "@/components/ChatsScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { BookingsScreen } from "@/components/BookingsScreen";
 import { EventFeedbackModal } from "@/components/EventFeedbackModal";
@@ -17,7 +18,7 @@ import { usePushNotifications, type NotificationDestination } from "@/hooks/useP
 import { usePendingEventFeedback } from "@/hooks/usePendingEventFeedback";
 import { usePendingReferralNotice } from "@/hooks/usePendingReferralNotice";
 
-type Tab = "events" | "community" | "groups" | "profile";
+type Tab = "events" | "community" | "groups" | "chats" | "profile";
 
 function LoadingScreen() {
   return (
@@ -105,6 +106,7 @@ function AppShell() {
             />
           )}
           {activeTab === "groups" && <CirclesScreen initialCircleId={openCircleId} initialTab={openCircleTab} />}
+          {activeTab === "chats" && <ChatsScreen />}
           {activeTab === "profile" && (
             <ProfileScreen onLogout={signOut} onOpenCircle={handleOpenCircle} onGoToEvents={() => handleTabChange("events")} />
           )}
