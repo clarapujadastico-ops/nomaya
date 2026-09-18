@@ -61,6 +61,12 @@
 	<string>Nomaya needs microphone access as part of the camera used for ID verification and photos.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Nomaya uses your location to show events and circles near you.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Nomaya needs calendar access to add an event when you tap "Add to calendar".</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Nomaya needs calendar access to add an event when you tap "Add to calendar".</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Nomaya needs calendar access to add an event when you tap "Add to calendar".</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

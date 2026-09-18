@@ -22,6 +22,7 @@ import { useFamiliarFaces } from "@/hooks/useFamiliarFaces";
 import { FamiliarFacesSheet } from "./FamiliarFacesSheet";
 import { PollBanner } from "./PollBanner";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
+import { Calendar as DeviceCalendar } from "@capacitor/calendar";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { useCityPreference } from "@/hooks/useCityPreference";
 
@@ -38,7 +39,7 @@ async function uploadEventPhoto(circleId: string, file: File): Promise<string | 
   }
 }
 
-export function EventChatSheet({ circleId, event, onClose }: { circleId: string; event: { id: string; title: string }; onClose: () => void }) {
+export function EventChatSheet({ circleId, event, onClose, onLeave }: { circleId: string; event: { id: string; title: string }; onClose: () => void; onLeave?: () => void }) {
   const { user } = useAuth();
   const { t: tl } = useLang();
   const { data: profile } = useProfile();
@@ -49,6 +50,7 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
   const { mutate: rateAttendee } = useRateAttendee();
   const [tab, setTab] = useState<"photos" | "chat" | "rate" | "members">("chat");
   const [selectedMember, setSelectedMember] = useState<{ profile: import("@/hooks/useCircleMembers").MemberProfile; userId: string } | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [text, setText] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -292,11 +294,45 @@ export function EventChatSheet({ circleId, event, onClose }: { circleId: string;
               <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
             </button>
           ))}
+
+          {onLeave && (
+            <button
+              onClick={() => setShowLeaveConfirm(true)}
+              className="w-full py-3 mt-2 rounded-2xl bg-transparent border border-border text-red-400 text-sm font-medium transition-all active:scale-[0.98]"
+            >
+              {tl("chats.leave")}
+            </button>
+          )}
         </div>
       )}
 
       {selectedMember && (
         <MemberProfileSheet profile={selectedMember.profile} userId={selectedMember.userId} onClose={() => setSelectedMember(null)} />
+      )}
+
+      {showLeaveConfirm && onLeave && (
+        <div className="fixed inset-0 z-[400] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLeaveConfirm(false)} />
+          <div className="relative w-full max-w-sm bg-card rounded-t-3xl p-6 space-y-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2.5rem)" }}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto" />
+            <h2 className="font-serif text-xl font-medium text-foreground text-center">{tl("chats.leave")}</h2>
+            <p className="text-sm text-muted-foreground text-center">{tl("chats.leave_confirm")}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-sm font-medium border border-border"
+              >
+                {tl("event.keep_spot")}
+              </button>
+              <button
+                onClick={() => { setShowLeaveConfirm(false); onLeave(); }}
+                className="flex-1 py-3 rounded-2xl bg-red-500/80 text-white text-sm font-medium"
+              >
+                {tl("chats.leave")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -659,39 +695,27 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
       // next day at 01:00 instead of producing an invalid hour like "25").
       const start = new Date(`${dateStr}T${timeStr}:00`);
       const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-      const toICSDateTime = (d: Date) =>
-        `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}` +
-        `T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
-      const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
-      const ics = [
-        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Nomaya//EN", "CALSCALE:GREGORIAN",
-        "BEGIN:VEVENT",
-        // UID and DTSTAMP are required by the iCalendar spec (RFC 5545) —
-        // without them some calendar apps silently discard the event instead
-        // of importing it, which is why "add to calendar" could appear to do
-        // nothing at all.
-        `UID:${event.id}@nomaya.app`,
-        `DTSTAMP:${dtStamp}`,
-        `DTSTART:${toICSDateTime(start)}`,
-        `DTEND:${toICSDateTime(end)}`,
-        `SUMMARY:${localizedTitle(event, lang)}`,
-        `LOCATION:${locationLabel}`,
-        `DESCRIPTION:${localizedDescription(event, lang).replace(/\n/g, "\\n")}`,
-        "END:VEVENT", "END:VCALENDAR",
-      ].join("\r\n");
-
-      // Navigating directly to a text/calendar resource (no `download`
-      // attribute, no share sheet) is what makes iOS show its native "Add
-      // Event" preview with an Add to Calendar button built in. Routing this
-      // through the share sheet instead (as this used to) just offers to
-      // send the .ics as a generic file — Messages, Mail, Save to Files —
-      // with no calendar import option at all.
-      const a = document.createElement("a");
-      a.href = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // A generated .ics clicked as a data: URI never triggered iOS's native
+      // "Add Event" sheet inside a Capacitor WKWebView the way it does in
+      // Safari — it just silently did nothing. Writing straight to EventKit
+      // via the system event editor is the only path that actually works
+      // packaged as a native app.
+      try {
+        await DeviceCalendar.createEventInteractively({
+          title: localizedTitle(event, lang),
+          location: locationLabel,
+          notes: localizedDescription(event, lang),
+          startDate: start.getTime(),
+          endDate: end.getTime(),
+        });
+      } catch (err) {
+        // OS-PLUG-CLDR-0006 = user closed the editor without saving — not an error.
+        const code = (err as { code?: string })?.code;
+        if (code !== "OS-PLUG-CLDR-0006") {
+          setBookingError(err instanceof Error ? err.message : String(err));
+        }
+      }
     }
 
     return (

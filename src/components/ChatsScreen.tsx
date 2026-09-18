@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { useAttendedEventChats, type AttendedEventChat } from "@/hooks/useAttendedEventChats";
+import { useAttendedEventChats, useLeaveEventChat, type AttendedEventChat } from "@/hooks/useAttendedEventChats";
 import { useEnsureEventCircle } from "@/hooks/useCircles";
 import { EventChatSheet } from "./EventsScreen";
 import { resolveEventImage } from "@/assets/eventImages";
@@ -10,6 +10,7 @@ export function ChatsScreen() {
   const { t, lang } = useLang();
   const { data: chats = [], isLoading } = useAttendedEventChats();
   const { mutateAsync: ensureEventCircle, isPending } = useEnsureEventCircle();
+  const { mutate: leaveEventChat } = useLeaveEventChat();
   const [openChat, setOpenChat] = useState<{ circleId: string; event: { id: string; title: string } } | null>(null);
 
   async function openEventChat(ev: AttendedEventChat) {
@@ -64,7 +65,15 @@ export function ChatsScreen() {
       )}
 
       {openChat && (
-        <EventChatSheet circleId={openChat.circleId} event={openChat.event} onClose={() => setOpenChat(null)} />
+        <EventChatSheet
+          circleId={openChat.circleId}
+          event={openChat.event}
+          onClose={() => setOpenChat(null)}
+          onLeave={() => {
+            leaveEventChat({ circleId: openChat.circleId, eventId: openChat.event.id });
+            setOpenChat(null);
+          }}
+        />
       )}
     </div>
   );

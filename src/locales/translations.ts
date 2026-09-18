@@ -13,6 +13,8 @@ export const translations: TranslationMap = {
   "chats.subtitle": { en: "Keep talking with the girls from plans you've attended.", es: "Sigue hablando con las chicas de los planes a los que has ido." },
   "chats.empty":    { en: "Once you attend a plan, its chat will show up here — forever.", es: "En cuanto asistas a un plan, su chat aparecerá aquí — para siempre." },
   "chats.attended": { en: "You attended this plan", es: "Asististe a este plan" },
+  "chats.leave":    { en: "Leave chat", es: "Salir del chat" },
+  "chats.leave_confirm": { en: "You'll leave the group chat and it will no longer appear in your Chats tab.", es: "Saldrás del chat de grupo y dejará de aparecer en tu pestaña de Chats." },
   "poll.eyebrow":    { en: "Help us plan", es: "Ayúdanos a organizar" },
   "poll.multi_hint": { en: "Pick everything that works for you.", es: "Marca todo lo que te venga bien." },
 
@@ -56,7 +58,7 @@ export const translations: TranslationMap = {
   "event.see_map":              { en: "See map →",    es: "Ver mapa →" },
   "event.register_address":     { en: "Register to see address", es: "Regístrate para ver la dirección" },
   "event.about":                { en: "About this event", es: "Sobre este evento" },
-  "event.weather_notice":       { en: "This is an outdoor plan — we reserve the right to cancel it if the weather doesn't cooperate. If we do, you'll get a full refund to your card, or you can convert it to credits for a future plan with an extra bonus, just like when you cancel yourself with enough notice.", es: "Este es un plan al aire libre — nos reservamos el derecho a cancelarlo si el tiempo no acompaña. Si lo hacemos, recibirás un reembolso completo a tu tarjeta, o puedes convertirlo en créditos para un próximo plan con un extra adicional, igual que cuando cancelas tú misma con tiempo suficiente." },
+  "event.weather_notice":       { en: "This is an outdoor plan — we reserve the right to cancel it if the weather doesn't cooperate. If we do, you'll get a full refund to your card, just like when you cancel yourself with enough notice.", es: "Este es un plan al aire libre — nos reservamos el derecho a cancelarlo si el tiempo no acompaña. Si lo hacemos, recibirás un reembolso completo a tu tarjeta, igual que cuando cancelas tú misma con tiempo suficiente." },
   "event.whos_coming":          { en: "Who's coming", es: "Quién viene" },
   "event.familiar_face_heading":{ en: "A familiar face 💜", es: "Una cara conocida 💜" },
   "event.familiar_single_pre":  { en: "who you met at", es: "a quien conociste en" },
