@@ -63,7 +63,7 @@ ${bookingsLine}
 == KEY INFO ==
 Booking: Experiences tab → tap event → "Reserve my spot". Paid events use Stripe.
 TBC events: join the waitlist to be first notified when they open.
-Cancel: open event page → "Cancel reservation". 48h+ before = full refund or Nomaya credits (+10% bonus).
+Cancel: open event page → "Cancel reservation". 48h+ before = full refund to original payment method.
 Circles: private groups in the Circles tab. Open = join freely. Private = request to join.
 Verification: Profile tab → tap verification banner → photo of ID + selfie. Women-only safety check.
 Badges (attend events): 🌸 Founding Circle (1), ✨ Inner Circle (3), 🔮 Keeper of the Circle (5), 🏛️ Founding Member (first ever event).

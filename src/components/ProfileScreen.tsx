@@ -91,11 +91,11 @@ function getBotResponse(msg: string, events: BotEvent[] = [], bookings: string[]
 
   // Cancel
   if (/cancel|leave waitlist|withdraw|remove.*booking/.test(lower))
-    return "To cancel a booking, open the event in the Experiences tab and tap 'Cancel reservation'. Cancellations more than 48h before the event are eligible for a refund or credits.";
+    return "To cancel a booking, open the event in the Experiences tab and tap 'Cancel reservation'. Cancellations more than 48h before the event are eligible for a full refund.";
 
   // Refund
   if (/refund|money back|charged|paid/.test(lower))
-    return "For paid events cancelled 48h+ in advance you can get a full refund or Nomaya credits (+15% bonus). Cancel from the event page. Still need help? Email hola@nomaya.app.";
+    return "For paid events cancelled 48h+ in advance you can get a full refund to your original payment method. Cancel from the event page. Still need help? Email hola@nomaya.app.";
 
   // Payment
   if (/payment|pay|card|stripe|price|cost|how much|precio/.test(lower)) {
@@ -879,18 +879,18 @@ export function ProfileScreen({ onLogout, onOpenCircle, onGoToEvents }: ProfileS
                 title: "Refund & Cancellation Policy",
                 sections: [
                   { heading: "Event Cancellation", body: "Users may cancel participation in an event according to the cancellation window specified in the event details." },
-                  { heading: "Refunds", body: "If a cancellation occurs within the allowed window, users may receive:\n• A refund\n• Or Nomaya credits for future bookings" },
-                  { heading: "Host Cancellations", body: "If an event is cancelled by the host or by Nomaya, participants will receive a full refund or credit." },
-                  { heading: "Credits", body: "Nomaya credits can be used for future experiences within the platform and cannot be exchanged for cash." },
+                  { heading: "Refunds", body: "If a cancellation occurs within the allowed window, users will receive a full refund to their original payment method." },
+                  { heading: "Host Cancellations", body: "If an event is cancelled by the host or by Nomaya, participants will receive a full refund." },
+                  { heading: "Credits", body: "Nomaya credits (earned through referrals and other rewards) can be used for future experiences within the platform and cannot be exchanged for cash." },
                 ],
               },
               es: {
                 title: "Política de Cancelación y Reembolso",
                 sections: [
                   { heading: "Cancelación de evento", body: "Las usuarias pueden cancelar su participación en un evento según el período de cancelación especificado en los detalles del evento." },
-                  { heading: "Reembolsos", body: "Si la cancelación se realiza dentro del período permitido, las usuarias pueden recibir:\n• Un reembolso\n• O créditos Nomaya para futuras reservas" },
-                  { heading: "Cancelaciones por parte del anfitrión", body: "Si un evento es cancelado por el anfitrión o por Nomaya, los participantes recibirán un reembolso completo o un crédito." },
-                  { heading: "Créditos", body: "Los créditos Nomaya pueden utilizarse para futuras experiencias en la plataforma y no pueden canjearse por dinero en efectivo." },
+                  { heading: "Reembolsos", body: "Si la cancelación se realiza dentro del período permitido, las usuarias recibirán un reembolso completo a su método de pago original." },
+                  { heading: "Cancelaciones por parte del anfitrión", body: "Si un evento es cancelado por el anfitrión o por Nomaya, los participantes recibirán un reembolso completo." },
+                  { heading: "Créditos", body: "Los créditos Nomaya (obtenidos por referidos y otras recompensas) pueden utilizarse para futuras experiencias en la plataforma y no pueden canjearse por dinero en efectivo." },
                 ],
               },
             },

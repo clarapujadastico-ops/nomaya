@@ -81,13 +81,12 @@ export function useBookEvent() {
 
 interface CancelBookingParams {
   bookingId: string
-  choice: 'refund' | 'credits' | 'none'
+  choice: 'refund' | 'none'
 }
 
 interface CancelBookingResult {
   success: boolean
   refunded_cents?: number
-  credits_awarded?: number
 }
 
 /** Direct cancel for waitlist / free bookings — no edge function needed */

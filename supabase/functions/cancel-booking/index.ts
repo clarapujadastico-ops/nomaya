@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   try {
     const { bookingId, choice } = await req.json() as {
       bookingId: string
-      choice: 'refund' | 'credits' | 'none'
+      choice: 'refund' | 'none'
     }
 
     if (!bookingId) {
@@ -68,54 +68,35 @@ Deno.serve(async (req) => {
     }
 
     let refunded_cents: number | undefined
-    let credits_awarded: number | undefined
 
-    if (isPaid && hoursUntil >= 48) {
-      if (choice === 'refund' && booking.stripe_payment_intent_id) {
-        // Call Stripe refund API
-        const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
-        if (stripeKey) {
-          const stripeRes = await fetch('https://api.stripe.com/v1/refunds', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${stripeKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              payment_intent: booking.stripe_payment_intent_id,
-            }),
+    if (isPaid && hoursUntil >= 48 && choice === 'refund' && booking.stripe_payment_intent_id) {
+      // Call Stripe refund API
+      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
+      if (stripeKey) {
+        const stripeRes = await fetch('https://api.stripe.com/v1/refunds', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${stripeKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            payment_intent: booking.stripe_payment_intent_id,
+          }),
+        })
+        const stripeData = await stripeRes.json()
+        if (!stripeRes.ok) {
+          return new Response(JSON.stringify({ error: stripeData?.error?.message ?? 'Stripe refund failed' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
-          const stripeData = await stripeRes.json()
-          if (!stripeRes.ok) {
-            return new Response(JSON.stringify({ error: stripeData?.error?.message ?? 'Stripe refund failed' }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
-          }
-          refunded_cents = booking.amount_cents_paid ?? 0
-
-          // Update booking payment_status
-          await supabase
-            .from('bookings')
-            .update({ payment_status: 'refunded' })
-            .eq('id', bookingId)
         }
-      } else if (choice === 'credits') {
-        // Award credits with 15% bonus
-        credits_awarded = Math.round((booking.amount_cents_paid ?? 0) * 1.15)
+        refunded_cents = booking.amount_cents_paid ?? 0
 
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('credits_cents')
-          .eq('id', userId)
-          .single()
-
-        const currentCredits = (profileData as { credits_cents: number } | null)?.credits_cents ?? 0
-
+        // Update booking payment_status
         await supabase
-          .from('profiles')
-          .update({ credits_cents: currentCredits + credits_awarded })
-          .eq('id', userId)
+          .from('bookings')
+          .update({ payment_status: 'refunded' })
+          .eq('id', bookingId)
       }
     }
 
@@ -133,7 +114,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, refunded_cents, credits_awarded }),
+      JSON.stringify({ success: true, refunded_cents }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err) {

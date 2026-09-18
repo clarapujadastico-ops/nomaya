@@ -491,7 +491,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
   const [showMapSheet, setShowMapSheet] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showCancelSheet, setShowCancelSheet] = useState(false);
-  const [cancelChoice, setCancelChoice] = useState<'refund' | 'credits'>('credits');
   const [cancelOutcome, setCancelOutcome] = useState<string | null>(null);
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
@@ -1035,7 +1034,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
         const isEligible = isPaid && hoursUntil >= 48;
         const isTooLate = isPaid && hoursUntil < 48;
         const amountEur = ((booking.amount_cents_paid ?? 0) / 100).toFixed(2);
-        const creditsEur = (Math.round((booking.amount_cents_paid ?? 0) * 1.15) / 100).toFixed(2);
 
         return (
           <div className="fixed inset-0 z-[300] flex items-end justify-center">
@@ -1046,40 +1044,14 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
 
               {isEligible && (
                 <>
-                  <p className="text-xs text-muted-foreground text-center">{t("event.choose_refund")}</p>
-                  <div className="space-y-3">
-                    {/* Credits option */}
-                    <button
-                      onClick={() => setCancelChoice('credits')}
-                      className={`w-full rounded-2xl p-4 border-2 text-left transition-all ${cancelChoice === 'credits' ? 'border-primary bg-primary/10' : 'border-border bg-muted'}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-xl mt-0.5">✨</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{t("event.credits_bonus")}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">€{creditsEur} {t("event.credits_future")}</p>
-                        </div>
-                        <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'credits' ? 'border-primary bg-primary' : 'border-border'}`}>
-                          {cancelChoice === 'credits' && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
+                  <div className="rounded-2xl p-4 border-2 border-primary bg-primary/10 text-left">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl mt-0.5">💳</span>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{t("event.full_refund")}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">€{amountEur} {t("event.refund_original")}</p>
                       </div>
-                    </button>
-                    {/* Refund option */}
-                    <button
-                      onClick={() => setCancelChoice('refund')}
-                      className={`w-full rounded-2xl p-4 border-2 text-left transition-all ${cancelChoice === 'refund' ? 'border-primary bg-primary/10' : 'border-border bg-muted'}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-xl mt-0.5">💳</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{t("event.full_refund")}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">€{amountEur} {t("event.refund_original")}</p>
-                        </div>
-                        <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${cancelChoice === 'refund' ? 'border-primary bg-primary' : 'border-border'}`}>
-                          {cancelChoice === 'refund' && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                      </div>
-                    </button>
+                    </div>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
                     {t("event.cancel_policy")}
@@ -1112,15 +1084,13 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
                 <button
                   disabled={isCancelling}
                   onClick={() => {
-                    const choice = isEligible ? cancelChoice : 'none';
+                    const choice = isEligible ? 'refund' : 'none';
                     cancelBooking(
                       { bookingId: booking.id, choice },
                       {
                         onSuccess: (result) => {
                           setShowCancelSheet(false);
-                          if (result.credits_awarded) {
-                            setCancelOutcome(`✨ €${(result.credits_awarded / 100).toFixed(2)} ${t("event.credits_added")}`);
-                          } else if (result.refunded_cents) {
+                          if (result.refunded_cents) {
                             setCancelOutcome(`✓ €${(result.refunded_cents / 100).toFixed(2)} ${t("event.refund_initiated")}`);
                           } else {
                             setCancelOutcome(`✓ ${t("event.reservation_cancelled")}`);
