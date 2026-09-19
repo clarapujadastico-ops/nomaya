@@ -702,6 +702,21 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
       // via the system event editor is the only path that actually works
       // packaged as a native app.
       try {
+        // The plugin's editor still resolves a default calendar internally
+        // before presenting itself, which throws an I/O error when calendar
+        // access has never been granted yet (EventKit reports no default
+        // calendar pre-permission) — despite iOS 17+ not otherwise requiring
+        // permission just to show the editor. Requesting access up front
+        // avoids that.
+        const status = await DeviceCalendar.checkPermissions();
+        if (status.writeCalendar !== "granted") {
+          const requested = await DeviceCalendar.requestPermissions({ permissions: ["writeCalendar"] });
+          if (requested.writeCalendar !== "granted") {
+            setBookingError(t("event.calendar_permission_denied"));
+            return;
+          }
+        }
+
         await DeviceCalendar.createEventInteractively({
           title: localizedTitle(event, lang),
           location: locationLabel,

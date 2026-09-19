@@ -73,6 +73,7 @@ export const translations: TranslationMap = {
   "event.cancel_policy":        { en: "Cancellations 48h+ before the event receive a full refund to your original payment method.", es: "Las cancelaciones con 48h o más de antelación reciben un reembolso completo a tu método de pago original." },
   "event.non_refundable":       { en: "Non-refundable cancellation", es: "Cancelación no reembolsable" },
   "event.non_refundable_desc":  { en: "This event is less than 48 hours away. Cancellations within 48h of the event are non-refundable.", es: "Este evento es en menos de 48 horas. Las cancelaciones dentro de las 48h previas al evento no son reembolsables." },
+  "event.calendar_permission_denied": { en: "Enable calendar access for Nomaya in Settings to add this event.", es: "Activa el acceso al calendario para Nomaya en Ajustes para añadir este evento." },
   "event.confirm_cancel_free":  { en: "Are you sure you want to cancel your spot?", es: "¿Seguro que quieres cancelar tu plaza?" },
   "event.keep_spot":            { en: "Keep my spot", es: "Mantener mi plaza" },
   "event.cancelling":           { en: "Cancelling…",  es: "Cancelando…" },
