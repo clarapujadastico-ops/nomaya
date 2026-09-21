@@ -6,6 +6,8 @@ export interface PollOption {
   id: string
   label: string
   label_es: string
+  /** Instead of a plain toggle, this option opens a native date picker and votes with the chosen date. */
+  isCustomDate?: boolean
 }
 
 export interface Poll {
@@ -37,18 +39,23 @@ export function useActivePoll(city: string) {
   })
 }
 
+export interface MyPollVote {
+  option_id: string
+  custom_date: string | null
+}
+
 export function useMyPollVotes(pollId: string | undefined) {
   const { user } = useAuth()
   return useQuery({
     queryKey: ['my_poll_votes', pollId, user?.id],
-    queryFn: async (): Promise<string[]> => {
+    queryFn: async (): Promise<MyPollVote[]> => {
       const { data, error } = await supabase
         .from('poll_votes')
-        .select('option_id')
+        .select('option_id, custom_date')
         .eq('poll_id', pollId!)
         .eq('user_id', user!.id)
       if (error) throw error
-      return (data ?? []).map((v) => v.option_id)
+      return data ?? []
     },
     enabled: !!pollId && !!user,
   })
@@ -64,11 +71,14 @@ export function useTogglePollVote() {
       optionId,
       currentlySelected,
       multiSelect,
+      customDate,
     }: {
       pollId: string
       optionId: string
       currentlySelected: boolean
       multiSelect: boolean
+      /** Only for a custom-date option — the date the member picked. */
+      customDate?: string
     }) => {
       if (currentlySelected) {
         await supabase
@@ -83,7 +93,12 @@ export function useTogglePollVote() {
         // Single-select: clear any other choice first so only one sticks.
         await supabase.from('poll_votes').delete().eq('poll_id', pollId).eq('user_id', user!.id)
       }
-      await supabase.from('poll_votes').insert({ poll_id: pollId, user_id: user!.id, option_id: optionId })
+      await supabase.from('poll_votes').insert({
+        poll_id: pollId,
+        user_id: user!.id,
+        option_id: optionId,
+        custom_date: customDate ?? null,
+      })
     },
     onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: ['my_poll_votes', vars.pollId, user?.id] })

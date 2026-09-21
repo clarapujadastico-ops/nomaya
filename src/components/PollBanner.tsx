@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Check } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useActivePoll, useMyPollVotes, useTogglePollVote } from "@/hooks/usePolls";
@@ -7,6 +8,7 @@ export function PollBanner({ city }: { city: string }) {
   const { data: poll } = useActivePoll(city);
   const { data: myVotes = [] } = useMyPollVotes(poll?.id);
   const { mutate: toggleVote } = useTogglePollVote();
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   if (!poll) return null;
 
@@ -19,7 +21,51 @@ export function PollBanner({ city }: { city: string }) {
       <div className="flex flex-wrap gap-2">
         {poll.options.map((opt) => {
           const label = lang === "es" && opt.label_es ? opt.label_es : opt.label;
-          const isSelected = myVotes.includes(opt.id);
+          const myVote = myVotes.find((v) => v.option_id === opt.id);
+          const isSelected = !!myVote;
+
+          if (opt.isCustomDate) {
+            const pillLabel = myVote?.custom_date
+              ? new Date(`${myVote.custom_date}T00:00:00`).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { day: "numeric", month: "short" })
+              : label;
+            return (
+              <div key={opt.id} className="relative">
+                <button
+                  onClick={() => {
+                    if (isSelected) {
+                      toggleVote({ pollId: poll.id, optionId: opt.id, currentlySelected: true, multiSelect: poll.multi_select });
+                    } else {
+                      dateInputRef.current?.click();
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95"
+                  style={{
+                    borderColor: isSelected ? "hsl(var(--nomaya-purple))" : "hsl(var(--border))",
+                    background: isSelected ? "hsl(var(--nomaya-purple) / 0.15)" : "hsl(var(--card))",
+                  }}
+                >
+                  {isSelected && <Check size={11} />}
+                  {pillLabel}
+                </button>
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    toggleVote({
+                      pollId: poll.id,
+                      optionId: opt.id,
+                      currentlySelected: false,
+                      multiSelect: poll.multi_select,
+                      customDate: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+            );
+          }
+
           return (
             <button
               key={opt.id}
