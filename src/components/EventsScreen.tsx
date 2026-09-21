@@ -782,6 +782,8 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
                 <p className="text-sm font-medium text-foreground">{event.city}</p>
                 <p className="text-xs text-muted-foreground mt-1 italic">{t("event.date_tbc")}</p>
               </div>
+              {/* Help pin down the date for this waitlisted plan, if there's an active poll for its city */}
+              <PollBanner city={event.city} className="" />
             </div>
           ) : (
             <>
