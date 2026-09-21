@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { DatetimePicker } from "@capawesome-team/capacitor-datetime-picker";
 import { useLang } from "@/contexts/LanguageContext";
 import { useActivePoll, useMyPollVotes, useTogglePollVote } from "@/hooks/usePolls";
 
@@ -27,53 +28,45 @@ export function PollBanner({ city }: { city: string }) {
               ? new Date(`${myVote.custom_date}T00:00:00`).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { day: "numeric", month: "short" })
               : label;
 
-            // Once a date is picked, this becomes a plain toggle button (tap
-            // to remove) — the date input only needs to sit on top, capturing
-            // the real tap directly, while nothing has been picked yet.
-            // A synthetic input.click() from a separate button's onClick does
-            // NOT reliably open iOS's native date wheel; only a genuine touch
-            // on the input itself does.
-            if (isSelected) {
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() =>
-                    toggleVote({ pollId: poll.id, optionId: opt.id, currentlySelected: true, multiSelect: poll.multi_select })
-                  }
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95"
-                  style={{ borderColor: "hsl(var(--nomaya-purple))", background: "hsl(var(--nomaya-purple) / 0.15)" }}
-                >
-                  <Check size={11} />
-                  {pillLabel}
-                </button>
-              );
-            }
-
             return (
-              <div key={opt.id} className="relative">
-                <button
-                  tabIndex={-1}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200"
-                  style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }}
-                >
-                  {label}
-                </button>
-                <input
-                  type="date"
-                  aria-label={label}
-                  className="absolute inset-0 w-full h-full opacity-0"
-                  onChange={(e) => {
-                    if (!e.target.value) return;
+              <button
+                key={opt.id}
+                onClick={async () => {
+                  if (isSelected) {
+                    toggleVote({ pollId: poll.id, optionId: opt.id, currentlySelected: true, multiSelect: poll.multi_select });
+                    return;
+                  }
+                  // An <input type="date"> overlay opened and immediately
+                  // closed iOS's native date wheel inside the WKWebView —
+                  // a long-standing WKWebView quirk with that form control.
+                  // The native picker plugin doesn't have that problem.
+                  try {
+                    const { value } = await DatetimePicker.present({
+                      mode: "date",
+                      format: "yyyy-MM-dd",
+                      value: myVote?.custom_date ?? new Date().toISOString().slice(0, 10),
+                      locale: lang === "es" ? "es-ES" : "en-US",
+                    });
                     toggleVote({
                       pollId: poll.id,
                       optionId: opt.id,
                       currentlySelected: false,
                       multiSelect: poll.multi_select,
-                      customDate: e.target.value,
+                      customDate: value,
                     });
-                  }}
-                />
-              </div>
+                  } catch {
+                    // User cancelled the picker — nothing to do.
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95"
+                style={{
+                  borderColor: isSelected ? "hsl(var(--nomaya-purple))" : "hsl(var(--border))",
+                  background: isSelected ? "hsl(var(--nomaya-purple) / 0.15)" : "hsl(var(--card))",
+                }}
+              >
+                {isSelected && <Check size={11} />}
+                {pillLabel}
+              </button>
             );
           }
 
