@@ -23,7 +23,7 @@ import { FamiliarFacesSheet } from "./FamiliarFacesSheet";
 import { PollBanner } from "./PollBanner";
 import { Stripe, PaymentSheetEventsEnum } from "@capacitor-community/stripe";
 import { Calendar as DeviceCalendar } from "@capacitor/calendar";
-import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
+import MapGL, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { useCityPreference } from "@/hooks/useCityPreference";
 
 const IMG_PREFIX = "__img__:";
@@ -1180,7 +1180,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
               <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-1" />
               <div style={{ height: 240 }}>
                 {token ? (
-                  <Map
+                  <MapGL
                     mapboxAccessToken={token}
                     initialViewState={{ longitude: lng, latitude: lat, zoom: 14 }}
                     style={{ width: "100%", height: "100%" }}
@@ -1202,7 +1202,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
                         }} />
                       </div>
                     </Marker>
-                  </Map>
+                  </MapGL>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted">
                     <p className="text-sm text-muted-foreground">📍 {event.city}</p>
