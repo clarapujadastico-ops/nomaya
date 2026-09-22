@@ -583,34 +583,6 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
     return new Date(start.getTime() + 2 * 3_600_000) >= now;
   });
 
-  // Group the main grid by actual calendar month — previously every
-  // upcoming event (regardless of month) was dumped under one shared
-  // heading derived only from the earliest date, so e.g. October plans
-  // silently showed up under a "September 2026" header. TBC/waitlist
-  // events have no committed date, so they get their own trailing group.
-  const groupedByMonth = useMemo(() => {
-    const groups = new Map<string, { label: string; events: AppEvent[] }>();
-    for (const event of filtered) {
-      if (event.isTbc || !event.rawDate) {
-        const key = "tbc";
-        if (!groups.has(key)) groups.set(key, { label: t("events.coming_soon"), events: [] });
-        groups.get(key)!.events.push(event);
-        continue;
-      }
-      const key = event.rawDate.slice(0, 7); // YYYY-MM
-      if (!groups.has(key)) {
-        const rawLabel = new Date(event.rawDate + 'T00:00:00')
-          .toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'long', year: 'numeric' });
-        groups.set(key, { label: rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1), events: [] });
-      }
-      groups.get(key)!.events.push(event);
-    }
-    // Chronological month keys first, "tbc" bucket always last.
-    return [...groups.entries()]
-      .sort(([a], [b]) => (a === "tbc" ? 1 : b === "tbc" ? -1 : a.localeCompare(b)))
-      .map(([, group]) => group);
-  }, [filtered, lang, t]);
-
   // Scoring inputs
   const userInterests: string[] = profile?.interests ?? [];
   const bookedCategories = useMemo(
@@ -673,6 +645,34 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
   }, [upcomingEvents, activeFilter, appliedFilters, searchQuery]);
 
   const hasFilters = appliedFilters.groupSize !== null || appliedFilters.dateRange !== null || appliedFilters.type !== "";
+
+  // Group the main grid by actual calendar month — previously every
+  // upcoming event (regardless of month) was dumped under one shared
+  // heading derived only from the earliest date, so e.g. October plans
+  // silently showed up under a "September 2026" header. TBC/waitlist
+  // events have no committed date, so they get their own trailing group.
+  const groupedByMonth = useMemo(() => {
+    const groups = new Map<string, { label: string; events: AppEvent[] }>();
+    for (const event of filtered) {
+      if (event.isTbc || !event.rawDate) {
+        const key = "tbc";
+        if (!groups.has(key)) groups.set(key, { label: t("events.coming_soon"), events: [] });
+        groups.get(key)!.events.push(event);
+        continue;
+      }
+      const key = event.rawDate.slice(0, 7); // YYYY-MM
+      if (!groups.has(key)) {
+        const rawLabel = new Date(event.rawDate + 'T00:00:00')
+          .toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'long', year: 'numeric' });
+        groups.set(key, { label: rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1), events: [] });
+      }
+      groups.get(key)!.events.push(event);
+    }
+    // Chronological month keys first, "tbc" bucket always last.
+    return [...groups.entries()]
+      .sort(([a], [b]) => (a === "tbc" ? 1 : b === "tbc" ? -1 : a.localeCompare(b)))
+      .map(([, group]) => group);
+  }, [filtered, lang, t]);
 
   // ── Event detail view ──────────────────────────────────────────────────────
   if (selectedEvent) {
