@@ -583,18 +583,33 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
     return new Date(start.getTime() + 2 * 3_600_000) >= now;
   });
 
-  // Simple month header ("September 2026" / "septiembre de 2026") derived
-  // from the earliest dated upcoming event, instead of a tab switcher.
-  const earliestDated = [...upcomingEvents]
-    .filter((e) => !e.isTbc && e.rawDate)
-    .sort((a, b) => a.rawDate.localeCompare(b.rawDate))[0];
-  const monthLabel = earliestDated
-    ? (() => {
-        const label = new Date(earliestDated.rawDate + 'T00:00:00')
+  // Group the main grid by actual calendar month — previously every
+  // upcoming event (regardless of month) was dumped under one shared
+  // heading derived only from the earliest date, so e.g. October plans
+  // silently showed up under a "September 2026" header. TBC/waitlist
+  // events have no committed date, so they get their own trailing group.
+  const groupedByMonth = useMemo(() => {
+    const groups = new Map<string, { label: string; events: AppEvent[] }>();
+    for (const event of filtered) {
+      if (event.isTbc || !event.rawDate) {
+        const key = "tbc";
+        if (!groups.has(key)) groups.set(key, { label: t("events.coming_soon"), events: [] });
+        groups.get(key)!.events.push(event);
+        continue;
+      }
+      const key = event.rawDate.slice(0, 7); // YYYY-MM
+      if (!groups.has(key)) {
+        const rawLabel = new Date(event.rawDate + 'T00:00:00')
           .toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'long', year: 'numeric' });
-        return label.charAt(0).toUpperCase() + label.slice(1);
-      })()
-    : t("events.upcoming");
+        groups.set(key, { label: rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1), events: [] });
+      }
+      groups.get(key)!.events.push(event);
+    }
+    // Chronological month keys first, "tbc" bucket always last.
+    return [...groups.entries()]
+      .sort(([a], [b]) => (a === "tbc" ? 1 : b === "tbc" ? -1 : a.localeCompare(b)))
+      .map(([, group]) => group);
+  }, [filtered, lang, t]);
 
   // Scoring inputs
   const userInterests: string[] = profile?.interests ?? [];
@@ -1453,25 +1468,26 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
             </div>
           )}
 
-          {/* Upcoming events grid */}
+          {/* Upcoming events grid — one heading per calendar month, TBC last */}
           {!hasFilters && !searchQuery ? (
             <>
-              {/* All upcoming below */}
-              <div className="px-5">
-                <h2 className="font-serif text-lg font-medium text-foreground mb-3">{monthLabel}</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {filtered.map((event) => (
-                    <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
-                      onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
-                  ))}
+              {groupedByMonth.map((group) => (
+                <div key={group.label} className="px-5 mb-5 last:mb-0">
+                  <h2 className="font-serif text-lg font-medium text-foreground mb-3">{group.label}</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {group.events.map((event) => (
+                      <EventCard key={event.id} event={event} variant="grid" locked={isUnverified}
+                        onClick={() => isUnverified ? setShowVerifyPrompt(true) : setSelectedEvent(event.id)} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ))}
             </>
           ) : (
             <div className="px-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-serif text-lg font-medium text-foreground">
-                  {activeFilter === "All" ? monthLabel : tCat(activeFilter)}
+                  {activeFilter === "All" ? t("events.upcoming") : tCat(activeFilter)}
                 </h2>
                 {hasFilters && (
                   <button onClick={() => setAppliedFilters(defaultFilters)} className="flex items-center gap-1 text-xs text-primary">
