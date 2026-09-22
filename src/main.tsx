@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
 import "./index.css";
 
 // A blank screen with zero feedback is undebuggable from a bug report alone.
@@ -32,16 +33,17 @@ window.addEventListener("unhandledrejection", (e) => console.error("[unhandledre
   document.addEventListener('focusout', () => setTimeout(resetViewport, 80), true);
 })();
 
-// Dynamic import so a throw during App.tsx's own module evaluation (or
-// anything it imports) lands in this .catch too — a plain top-level
-// `import App from "./App"` would fail before this file's try/catch could
-// ever run, which is exactly the kind of failure that produces a silent
-// blank screen with nothing in the visible UI to explain it.
-import("./App.tsx")
-  .then(({ default: App }) => {
-    createRoot(document.getElementById("root")!).render(<App />);
-  })
-  .catch((err) => {
-    console.error("[bootstrap]", err);
-    showFatalError(err instanceof Error ? `${err.name}: ${err.message}\n\n${err.stack}` : String(err));
-  });
+// NOTE: this used to be `import("./App.tsx")` (dynamic) so a throw during
+// App's own module evaluation would land in a .catch here too. That's what
+// actually caught today's bug — but the dynamic import itself was the cause:
+// splitting App.tsx into its own chunk exposed a circular-import ordering
+// issue between it and the vendor chunk ("Cannot access 'X' before
+// initialization"), which the single-chunk static import doesn't hit. Back
+// to a plain static import; the ErrorBoundary below still catches render
+// errors, just not ones during this exact import line.
+try {
+  createRoot(document.getElementById("root")!).render(<App />);
+} catch (err) {
+  console.error("[bootstrap]", err);
+  showFatalError(err instanceof Error ? `${err.name}: ${err.message}\n\n${err.stack}` : String(err));
+}
