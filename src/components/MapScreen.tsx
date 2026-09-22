@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Calendar, Ticket, Users, CheckCircle2, MapPin, MessageCircle, Star, Share2, ExternalLink } from "lucide-react";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
+import MapGL, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
@@ -152,7 +152,7 @@ export function MapScreen() {
             <p className="text-sm text-muted-foreground">Loading map…</p>
           </div>
         ) : (
-          <Map
+          <MapGL
             mapboxAccessToken={MAPBOX_TOKEN}
             initialViewState={{ longitude: -3.7038, latitude: 40.4168, zoom: 12.5 }}
             style={{ width: "100%", height: "100%" }}
@@ -352,7 +352,7 @@ export function MapScreen() {
                 </Popup>
               );
             })()}
-          </Map>
+          </MapGL>
         )}
       </div>
 

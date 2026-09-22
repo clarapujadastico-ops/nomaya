@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Users, Plus, ChevronRight, Lock, Send, MessageCircle, Check, X, UserPlus, CalendarDays, MapPin, Clock, Info, Camera, Shield, Mail, ImageIcon, Heart, ExternalLink, Sparkles, Flag, UserX } from "lucide-react";
-import Map, { Marker, Popup } from "react-map-gl/mapbox";
+import MapGL, { Marker, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string;
@@ -1323,7 +1323,7 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
     <div className="space-y-4 relative pb-16">
       {/* Mapbox map */}
       <div className="rounded-2xl overflow-hidden shadow-soft" style={{ height: 220 }}>
-        <Map
+        <MapGL
           mapboxAccessToken={MAPBOX_TOKEN}
           initialViewState={{ longitude: centerLng, latitude: centerLat, zoom: 12.5 }}
           style={{ width: "100%", height: "100%" }}
@@ -1367,7 +1367,7 @@ function SpotsTab({ circleId, isMember, isAdmin, city }: { circleId: string; isM
               </Popup>
             );
           })()}
-        </Map>
+        </MapGL>
       </div>
       {mappedSpots.length === 0 && spots.length === 0 && (
         <p className="text-[10px] text-center text-muted-foreground -mt-2">Add spots below — they'll appear on the map once you include a Google Maps link with coordinates.</p>
@@ -1701,7 +1701,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
           <div className="space-y-3">
             {/* Map with clickable pins */}
             <div className="rounded-2xl overflow-hidden shadow-soft" style={{ height: 210 }}>
-              <Map
+              <MapGL
                 mapboxAccessToken={MAPBOX_TOKEN}
                 initialViewState={{ longitude: centerLng, latitude: centerLat, zoom: 12.5 }}
                 style={{ width: "100%", height: "100%" }}
@@ -1744,7 +1744,7 @@ function PlansTab({ circle, isMember }: { circle: AppCircle; isMember: boolean }
                     </Popup>
                   );
                 })()}
-              </Map>
+              </MapGL>
             </div>
 
             {/* Spot cards — tappable to expand */}
