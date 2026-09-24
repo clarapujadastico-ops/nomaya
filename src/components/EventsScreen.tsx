@@ -5,7 +5,7 @@ import { useEventInterest, useEventInterestCount } from "@/hooks/useEventInteres
 import { EventCard } from "./EventCard";
 import { Logo } from "./Logo";
 import { useEvents } from "@/hooks/useEvents";
-import { useBookings, useBookEvent, useCancelBooking, useCancelWaitlist } from "@/hooks/useBookings";
+import { useBookings, useBookEvent, useCancelBooking, useCancelWaitlist, useReconfirmBooking } from "@/hooks/useBookings";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useLang } from "@/contexts/LanguageContext";
 import { useEnsureEventCircle, useCircles } from "@/hooks/useCircles";
@@ -531,6 +531,7 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
   const { mutate: bookEvent, isPending: isBooking } = useBookEvent();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
   const { mutate: cancelWaitlist, isPending: isCancellingWaitlist } = useCancelWaitlist();
+  const { mutate: reconfirmBooking, isPending: isReconfirming } = useReconfirmBooking();
   const { mutateAsync: ensureEventCircle, isPending: isOpeningChat } = useEnsureEventCircle();
   const { data: attendees = [] } = useEventAttendees(selectedEvent);
   const { data: familiarFaces = [] } = useFamiliarFaces(selectedEvent, attendees.map((a) => a.user_id));
@@ -1048,6 +1049,28 @@ export function EventsScreen({ onOpenCircle, onOpenMap, onSeeAllBookings, initia
           {cancelOutcome && (
             <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 text-sm text-foreground text-center">
               {cancelOutcome}
+            </div>
+          )}
+
+          {isBooked && !cancelOutcome && !event.isTbc && booking?.reconfirmation_sent_at && !booking?.reconfirmed_at && (
+            <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 space-y-3">
+              <p className="text-sm font-medium text-foreground text-center">{t("event.still_coming")}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => booking && reconfirmBooking({ bookingId: booking.id, eventId: selectedEvent!, stillComing: false })}
+                  disabled={isReconfirming}
+                  className="flex-1 py-3 rounded-2xl bg-transparent border border-border text-muted-foreground text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {t("event.cant_make_it")}
+                </button>
+                <button
+                  onClick={() => booking && reconfirmBooking({ bookingId: booking.id, eventId: selectedEvent!, stillComing: true })}
+                  disabled={isReconfirming}
+                  className="flex-1 py-3 rounded-2xl gradient-cta text-white text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {t("event.yes_im_coming")}
+                </button>
+              </div>
             </div>
           )}
 

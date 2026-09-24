@@ -18,6 +18,8 @@ export function useBookings() {
           amount_cents_paid,
           checked_in_at,
           created_at,
+          reconfirmation_sent_at,
+          reconfirmed_at,
           event:events (
             id,
             title,
@@ -98,6 +100,36 @@ export function useCancelWaitlist() {
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'cancelled' })
+        .eq('id', bookingId)
+        .eq('user_id', user!.id)
+      if (error) throw error
+    },
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event_interest_count', eventId] })
+    },
+  })
+}
+
+/**
+ * "Still coming?" reconfirmation for unpaid/pay-at-venue bookings — tapping
+ * "Sí, voy" marks reconfirmed_at; "No puedo ir" cancels the booking outright
+ * (same direct-cancel path as useCancelWaitlist — there's no payment to
+ * refund on these plans).
+ */
+export function useReconfirmBooking() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ bookingId, stillComing }: { bookingId: string; eventId: string; stillComing: boolean }) => {
+      const { error } = await supabase
+        .from('bookings')
+        .update(
+          stillComing
+            ? { reconfirmed_at: new Date().toISOString() }
+            : { status: 'cancelled' }
+        )
         .eq('id', bookingId)
         .eq('user_id', user!.id)
       if (error) throw error

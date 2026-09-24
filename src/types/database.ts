@@ -543,6 +543,8 @@ export interface BookingWithEvent {
   amount_cents_paid: number | null
   checked_in_at: string | null
   created_at: string
+  reconfirmation_sent_at: string | null
+  reconfirmed_at: string | null
   event: {
     id: string
     title: string

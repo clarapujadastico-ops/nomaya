@@ -33,6 +33,7 @@ function resolveDestination(data: Record<string, string>): NotificationDestinati
     case 'new_event':
     case 'event_reminder':
     case 'tbc_event_available':
+    case 'reconfirmation_reminder':
       return { tab: 'events', eventId: event_id }
 
     case 'new_poll':
