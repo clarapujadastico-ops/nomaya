@@ -17,6 +17,8 @@ import { ReferralJoinedModal } from "@/components/ReferralJoinedModal";
 import { usePushNotifications, type NotificationDestination } from "@/hooks/usePushNotifications";
 import { usePendingEventFeedback } from "@/hooks/usePendingEventFeedback";
 import { usePendingReferralNotice } from "@/hooks/usePendingReferralNotice";
+import { useAppUpdateCheck } from "@/hooks/useAppUpdateCheck";
+import { UpdateAvailableBanner } from "@/components/UpdateAvailableBanner";
 
 type Tab = "events" | "community" | "groups" | "chats" | "profile";
 
@@ -40,6 +42,7 @@ function AppShell() {
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
   const { data: pendingReferralNotice } = usePendingReferralNotice();
   const [referralNoticeDismissed, setReferralNoticeDismissed] = useState(false);
+  const updateUrl = useAppUpdateCheck();
   const showFeedbackModal = !!pendingFeedbackEvent && !feedbackDismissed;
   const showReferralModal = !showFeedbackModal && !!pendingReferralNotice && !referralNoticeDismissed;
 
@@ -89,6 +92,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
+      {updateUrl && <UpdateAvailableBanner updateUrl={updateUrl} />}
       <div className="w-full max-w-md relative">
         <div className="mobile-container">
           {activeTab === "events" && (

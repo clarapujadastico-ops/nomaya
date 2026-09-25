@@ -79,6 +79,8 @@ export const translations: TranslationMap = {
   "event.cancelling":           { en: "Cancelling…",  es: "Cancelando…" },
   "event.cancel_anyway":        { en: "Cancel anyway", es: "Cancelar de todos modos" },
   "event.confirm_cancellation": { en: "Confirm cancellation", es: "Confirmar cancelación" },
+  "update.banner_text": { en: "A new version of Nomaya is available.", es: "Hay una nueva versión de Nomaya disponible." },
+  "update.button":      { en: "Update", es: "Actualizar" },
   "event.still_coming":         { en: "Still coming to this plan?", es: "¿Sigues viniendo a este plan?" },
   "event.yes_im_coming":        { en: "Yes, I'm coming", es: "Sí, voy" },
   "event.cant_make_it":         { en: "Can't make it", es: "No puedo ir" },
